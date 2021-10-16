@@ -1,3 +1,14 @@
+:root {
+    --color-main: #53D19A;
+    --color-background: #3E3E3E;
+    
+    --color-other-yellow: #D0C245;
+    --color-other-red: #BC5252;
+    --color-other-pink: #C140D6;
+    --color-other-cyan: #35BABA;
+    --color-other-blue: #7D6FFF;
+}
+
 body {
     font-family: 'IBM Plex Mono', monospace;
 
@@ -6,6 +17,9 @@ body {
     
     display: grid;
     grid-template-rows: 0.5fr 2fr 10fr;
+
+    color: var(--color-main);
+    background-color: var(--color-background);
 }
 
 #searchbar-outer-container{
@@ -18,7 +32,7 @@ body {
 }
 
 #search-container{
-    border: 2px solid;
+    border: 1px solid var(--color-main);
     height: 3.5ch;
 }
 
@@ -31,5 +45,5 @@ body {
 }
 
 #results-container{
-    border: 2px solid;
+    border: 1px solid var(--color-main);
 }
