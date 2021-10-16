@@ -1,3 +1,35 @@
 body {
     font-family: 'IBM Plex Mono', monospace;
+
+    height: 100vh;
+    margin: 0px;
+    
+    display: grid;
+    grid-template-rows: 0.5fr 2fr 10fr;
+}
+
+#searchbar-outer-container{
+    display: grid;
+
+    /*  end: vertically bottomed
+        center: horizontally centered   */
+    place-content: end center; 
+    grid-template-columns: minmax(30ch, 40ch);
+}
+
+#search-container{
+    border: 2px solid;
+    height: 3.5ch;
+}
+
+#results-outer-container{
+    display: grid;
+    place-content: center;
+
+    grid-template-columns: minmax(30ch, 80ch);
+    grid-template-rows: minmax(20ch, 50ch);
+}
+
+#results-container{
+    border: 2px solid;
 }
