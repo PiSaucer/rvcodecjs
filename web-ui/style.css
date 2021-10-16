@@ -16,10 +16,20 @@ body {
     margin: 0px;
     
     display: grid;
-    grid-template-rows: 0.5fr 2fr 10fr;
+    grid-template-rows: 0.5fr minmax(4ch, 12vh) minmax(30ch, 10fr);
+    gap:1ch;
 
     color: var(--color-main);
     background-color: var(--color-background);
+}
+
+#title-container{
+    margin: 1ch 1ch 0ch 1ch;
+    display: grid;
+}
+#title-box{
+    font-size: 0.875rem;
+    width:max-content;
 }
 
 #searchbar-outer-container{
