@@ -44,6 +44,7 @@ body {
 #search-container{
     border: 1px solid var(--color-main);
     height: 3.5ch;
+    margin: 0ch 1ch 1ch 1ch;
 }
 
 #results-outer-container{
@@ -54,8 +55,52 @@ body {
     grid-template-rows: minmax(20ch, 50ch);
 }
 
-#results-container{
+#results-container-box{
     border: 1px solid var(--color-main);
+    margin: 0ch 1ch 1ch 1ch;
+}
+
+#results-inner-container{
+    height: 100%;
+
+    display: grid;
+    grid-auto-flow: row;
+
+    /* Adds 1fr spacing on top and bottom that shrinks to 0px on smaller viewports. */
+    grid-template-rows: minmax(0px, 2fr) 5fr minmax(0px, 2fr);
+}
+
+.rows-container{
+    display: grid;
+    align-items: stretch;
+    column-gap: 5ch;
+
+    /* Labels (on left) will shrink when data needs more space */
+    grid-template-columns: minmax(10ch, 4fr) 5fr;
+}
+
+.result-row {
+    min-width: max-content;
+    height: 4ch;
+    display: grid;
+    place-content: center;
+}
+
+
+/* label - left */
+.result-row:nth-child(odd){
+    display: grid;
+    place-content: center end;
+}
+
+/* data - right */
+.result-row:nth-child(even){
+    place-content: center start;
+}
+
+.subtitle {
+    margin-bottom: -100%; /* Pulls subtitle down by it's height so its aligned with label.*/
+    font-size: 0.875rem;
 }
 
 .offset-label{
