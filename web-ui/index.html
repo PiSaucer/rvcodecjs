@@ -20,12 +20,37 @@
             <span class='offset-label'>[ Search ]</span>
         </div>
     </div>
+
     <div id="results-outer-container">
-        <div id="results-container">
+        <div id="results-container-box">
             <span class='offset-label'>[ Results ]</span>
+                <div id="results-inner-container">
+                    <div class="results-container-spacing"></div>
+                        <div class="rows-container">
+
+                            <div class="result-row result-row-title">ASM = </div>
+                            <div id="asm-data" class="result-row result-row-data">ADD x5,x6,x7</div>
+                            
+                            <div class="result-row">BIN = </div>
+                            <div id="binary-data" class="result-row">
+                            </div>
+
+                            <div class="result-row"> HEX =  </div>
+                            <div id="hex-data" class="result-row"> 0x123123AF  </div>
+
+
+                            <div class="result-row"> FORMAT = </div>
+                            <div id="format-data" class="result-row"> R-TYPE  </div>
+                
+                            <div class="result-row">SET = </div>
+                            <div id="set-data" class="result-row">RV32I <span class='subtitle'>“Base Integer Set”</span></div>
+                        </div>
+                    <div class="results-container-spacing"></div>
+                </div>
+            </div>
         </div>
     </div>
-    
+
     <script src="main.js"></script>
 </body>
 
