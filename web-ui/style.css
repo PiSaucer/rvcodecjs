@@ -1,0 +1,113 @@
+:root {
+    --color-main: #53D19A;
+    --color-background: #3E3E3E;
+    
+    --color-other-yellow: #D0C245;
+    --color-other-red: #BC5252;
+    --color-other-pink: #C140D6;
+    --color-other-cyan: #35BABA;
+    --color-other-blue: #7D6FFF;
+}
+
+body {
+    font-family: 'IBM Plex Mono', monospace;
+
+    height: 100vh;
+    margin: 0px;
+    
+    display: grid;
+    grid-template-rows: 0.5fr minmax(4ch, 12vh) minmax(30ch, 10fr);
+    gap:1ch;
+
+    color: var(--color-main);
+    background-color: var(--color-background);
+}
+
+#title-container{
+    margin: 1ch 1ch 0ch 1ch;
+    display: grid;
+}
+#title-box{
+    font-size: 0.875rem;
+    width:max-content;
+}
+
+#searchbar-outer-container{
+    display: grid;
+
+    /*  end: vertically bottomed
+        center: horizontally centered   */
+    place-content: end center; 
+    grid-template-columns: minmax(30ch, 40ch);
+}
+
+#search-container{
+    border: 1px solid var(--color-main);
+    height: 3.5ch;
+    margin: 0ch 1ch 1ch 1ch;
+}
+
+#results-outer-container{
+    display: grid;
+    place-content: center;
+
+    grid-template-columns: minmax(30ch, 80ch);
+    grid-template-rows: minmax(20ch, 50ch);
+}
+
+#results-container-box{
+    border: 1px solid var(--color-main);
+    margin: 0ch 1ch 1ch 1ch;
+}
+
+#results-inner-container{
+    height: 100%;
+
+    display: grid;
+    grid-auto-flow: row;
+
+    /* Adds 1fr spacing on top and bottom that shrinks to 0px on smaller viewports. */
+    grid-template-rows: minmax(0px, 2fr) 5fr minmax(0px, 2fr);
+}
+
+.rows-container{
+    display: grid;
+    align-items: stretch;
+    column-gap: 5ch;
+
+    /* Labels (on left) will shrink when data needs more space */
+    grid-template-columns: minmax(10ch, 4fr) 5fr;
+}
+
+.result-row {
+    min-width: max-content;
+    height: 4ch;
+    display: grid;
+    place-content: center;
+}
+
+
+/* label - left */
+.result-row:nth-child(odd){
+    display: grid;
+    place-content: center end;
+}
+
+/* data - right */
+.result-row:nth-child(even){
+    place-content: center start;
+}
+
+.subtitle {
+    margin-bottom: -100%; /* Pulls subtitle down by it's height so its aligned with label.*/
+    font-size: 0.875rem;
+}
+
+.offset-label{
+    font-size: 0.875rem;
+    position: absolute;
+    transform: translate(20%, -60%);
+
+    padding: 0% 0.25%;
+    background-color: var(--color-background) ;
+}
