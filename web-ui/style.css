@@ -9,6 +9,13 @@
     --color-other-blue: #7D6FFF;
 }
 
+::selection {
+    background-color: #2b634a;
+}
+::-moz-selection {
+    background-color: #2b634a;
+}
+
 body {
     font-family: 'IBM Plex Mono', monospace;
 
