@@ -1,12 +1,12 @@
 {
   "name": "rvcodecjs",
   "description": "RISC-V instruction encoding/decoding",
+  "type": "module",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "build": "tsc",
-    "test": "npm run build && node ./out/tests/test_runner.js"
+    "test": "node out/tests/test_runner.js"
   },
   "repository": {
     "type": "git",
