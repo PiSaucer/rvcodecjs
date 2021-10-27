@@ -44,3 +44,56 @@ let instruction = {
         }
     ]
 }
+
+const colors = [
+    '--color-other-yellow',
+    '--color-other-red',
+    '--color-other-pink',
+    '--color-other-cyan',
+    '--color-other-blue',
+]
+
+const fieldColorMap = {
+    'opcode': colors[0],
+    'funct3': colors[0],
+    'funct7': colors[0],
+    'rs1': colors[2],
+    'rs2': colors[4],
+    'rd': colors[3]
+}
+
+function renderInstructionData(instruction) {
+    document.getElementById('hex-data').innerText = '0x' + instruction.hex;
+    document.getElementById('format-data').innerText = instruction.format;
+    document.getElementById('set-data').innerText = instruction.set;
+    document.getElementById('set-subtitle-data').innerText = instruction.setSubtitle;
+
+    let asmElmString = instruction.assembly;
+
+    let frags = instruction.Fragments;
+    frags.sort((a, b) => a.index - b.index); //sort by index
+
+    let head = 0;
+    let handledAsmInstructions = [];
+    for (let frag of frags) {
+        console.log(frag);
+
+        //set binary bits
+        for (let bit of Array.from(frag.bits)) {
+            let bitElm = document.getElementsByClassName('binary-bit')[head];
+            bitElm.innerText = bit;
+            bitElm.style.color = `var(${fieldColorMap[frag.field]})`;
+            head++;
+        }
+
+        //create assembly data element
+        if (!handledAsmInstructions.includes(frag.assembly)) {
+            handledAsmInstructions.push(frag.assembly)
+            asmElmString = asmElmString.replace(frag.assembly, 
+                `<span style='color:var(${fieldColorMap[frag.field]})'>${
+                    frag.assembly
+                }<span/>`)
+        }
+    }
+    document.getElementById('asm-data').innerHTML = asmElmString;
+}
