@@ -62,6 +62,18 @@ const fieldColorMap = {
     'rd': colors[3]
 }
 
+document.getElementById('search-input').onkeyup = function (event) {
+    if (event.key != 'Enter') {
+        return;
+    }
+    
+    let value = event.currentTarget.value.trim();
+
+    //TODO call core with search value to get instructionData
+    const instructionData = instruction;
+    renderInstructionData(instructionData);
+}
+
 function renderInstructionData(instruction) {
     document.getElementById('hex-data').innerText = '0x' + instruction.hex;
     document.getElementById('format-data').innerText = instruction.format;
