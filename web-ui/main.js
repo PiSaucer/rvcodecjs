@@ -62,16 +62,28 @@ const fieldColorMap = {
     'rd': colors[3]
 }
 
+window.onload = function () {
+    const input = document.getElementById('search-input');
+    if (!window.location.hash) {
+        return; //no instruction
+    }
+    //set input value to data encoded in url
+    input.value = decodeURIComponent(window.location.hash.replace('#', ''));
+
+    //send input event to trigger on-input handler
+    input.dispatchEvent(new Event('input'));
+}
+
 document.getElementById('search-input').onkeyup = function (event) {
     if (event.key != 'Enter') {
         return;
-    }
-    
-    let value = event.currentTarget.value.trim();
+    }    let value = event.currentTarget.value.trim();
 
     //TODO call core with search value to get instructionData
     const instructionData = instruction;
     renderInstructionData(instructionData);
+
+    window.location.hash = value;
 }
 
 function renderInstructionData(instruction) {
