@@ -9,6 +9,9 @@
     --color-other-blue: #7D6FFF;
 }
 
+::placeholder{
+    color: #53D19AAA;
+}
 ::selection {
     background-color: #2b634a;
 }
@@ -50,8 +53,26 @@ body {
 
 #search-container{
     border: 1px solid var(--color-main);
+    height: 100%;
+    width: 43ch;
     height: 3.5ch;
-    margin: 0ch 1ch 1ch 1ch;
+}
+
+#search-input {
+    border: none;
+    padding: 0px;
+    font-size: 1rem;
+
+    height: 100%;
+    width: 92%;
+    padding:0% 4% 0% 4%;
+
+    background-color: transparent;
+    color:var(--color-main);
+    font-family: inherit;
+}
+#search-input:focus-visible { 
+    outline:none;
 }
 
 #results-outer-container{
