@@ -44,6 +44,27 @@ export const FIELD_RTYPE = {
     }
 }
 
+// Start and end indices of I-TYPE fields
+export const FIELD_ITYPE = {
+    HIGHIMM: {
+        START: 25,
+        END: 31
+    },
+
+    SHAMT: {
+        START: 20,
+        END: 24
+    },
+
+    IMM11: {
+        START: 20,
+        END: 31
+    }
+}
+
 export const OPCODE = {
-    RTYPE:  '0110011'
+    RTYPE:  '0110011',
+    ITYPE:  '0010011',
+    JALR:   '1100111',
+    LOAD:   '0000011'
 }

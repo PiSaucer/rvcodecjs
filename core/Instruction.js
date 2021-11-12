@@ -1,4 +1,5 @@
-import {BASE, FIELD_COMMON, XLEN, OPCODE, FIELD_RTYPE} from './Constants.js'
+import {BASE, FIELD_COMMON, XLEN, OPCODE,
+        FIELD_RTYPE, FIELD_ITYPE} from './Constants.js'
 
 export class Instruction {
     /**
@@ -61,6 +62,13 @@ export class Instruction {
             case OPCODE.RTYPE:
                 this.decodeRType();
                 this.format = "R-TYPE";
+                break;
+            // I-TYPE
+            case OPCODE.ITYPE:
+            case OPCODE.JALR:
+            case OPCODE.LOAD:
+                this.decodeIType();
+                this.format = "I-TYPE";
                 break;
             // Invalid opcode
             default:
@@ -131,6 +139,128 @@ export class Instruction {
         // Construct assembly instruction
         this.assembly = renderAsmInstruction([operation, destReg, reg1, reg2]);
     }
+
+    /**
+     * Decodes I-type instruction
+     * @returns {String} output
+     */
+    decodeIType() {
+        // Get bits for each field
+        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
+        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
+                                    FIELD_COMMON.FUNCT3.END);
+        var rs1 = this.getBits(FIELD_COMMON.RS1.START, FIELD_COMMON.RS1.END);
+        var highImm = this.getBits(FIELD_ITYPE.HIGHIMM.START,
+                                    FIELD_ITYPE.HIGHIMM.END);
+
+        // Set to true if operation is a shift (slli, srai, srli)
+        var shift = false;
+
+        // Define funct3 + opcode / high-order immediate bits
+        var ifunct = {  // funct3 + opcode bits
+                        "0000010011": "ADDI",
+                        "0001100111": "JALR",
+                        "0000000011": "LB",
+                        "0010010011": "SLLI",
+                        "0010000011": "LH",
+                        "0100010011": "SLTI",
+                        "0100000011": "LW",
+                        "0110010011": "SLTIU",
+                        "1000010011": "XORI",
+                        "1000000011": "LBU",
+                        "1010000011": "LHU",
+                        "1100010011": "ORI",
+                        "1110010011": "ANDI",
+                        // funct3 + high-order immediate bits
+                        "1010000000": "SRLI",
+                        "1010100000": "SRAI"
+        };
+
+        var funct = funct3 + this.opcode;
+        // SRAI/SRLI have the same opcode (use high-order immediate instead)
+        if (funct3 == "101") {
+            funct = funct3 + highImm;
+        }
+
+        // Check for operation using funct3 and opcode / high-order immediate
+        if (funct in ifunct) {
+            var operation = ifunct[funct];
+        } else {
+            throw "Invalid funct3";
+        }
+
+        // Check if operation is a shift
+        var shiftOperations = ["SRLI", "SRAI", "SLLI"];
+        if (shiftOperations.includes(operation)) {
+            shift = true;
+        }
+
+        // Convert register numbers from binary to decimal
+        var reg1 = convertBinRegister(rs1);
+        var destReg = convertBinRegister(rd);
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(operation, this.opcode,
+                                        FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(operation, funct3,
+                                        FIELD_COMMON.FUNCT3.START, "funct3"));
+        this.fragments.push(new Fragment(reg1, rs1,
+                                        FIELD_COMMON.RS1.START, "rs1"));
+        this.fragments.push(new Fragment(destReg, rd,
+                                        FIELD_COMMON.RD.START, "rd"));
+
+        // For shift operations: can only use lower 5 bits of imm for shift
+        if (shift) {
+            // Get bits for shamt field
+            var shamt = this.getBits(ITYPE.SHAMT.START, ITYPE.SHAMT.END);
+
+            // Parse shamt bits to decimal
+            var shiftAmt = parseInt(shamt, BASE.BINARY);
+
+            // Create higher-order immediate fragment
+            this.fragments.push(new Fragment(operation, highImm,
+                        FIELD_ITYPE.HIGHIMM.START, "higher-order immediate"));
+            // Create shamt fragment
+            this.fragments.push(new Fragment(shiftAmt, shamt,
+                        FIELD_ITYPE.SHAMT.START, "shamt"));
+
+            // Construct assembly instruction
+            this.assembly = renderAsmInstruction([operation, destReg, reg1,
+                                                shamt]);
+
+        } else {
+            // Get bits for imm[11:0] field
+            var imm = this.getBits(FIELD_ITYPE.IMM11.START,
+                                    FIELD_ITYPE.IMM11.END);
+
+            // Convert immediate from binary to decimal
+            var immediate = parseImm(imm);
+
+            // Create immediate fragment
+            this.fragments.push(new Fragment(immediate, imm,
+                                FIELD_ITYPE.IMM11.START, "imm[11:0]"));
+
+            // Construct assembly instruction
+            if (this.opcode == OPCODE.LOAD) {
+                this.assembly = renderLoadStoreInstruction([operation, destReg,
+                                                        immediate, reg1]);
+            } else {
+                this.assembly = renderAsmInstruction([operation, destReg, reg1,
+                                                    immediate]);
+            }
+        }
+    }
+}
+
+// Parse given immediate to decimal
+function parseImm(immediate) {
+    // If first bit is 1, binary string represents a negative number
+    if (immediate[0] == '1') {
+        // Pad binary with 1s and convert number to 32 bit integer
+        return parseInt(immediate.padStart(32,'1'), BASE.BINARY) >> 0;
+    }
+    // Else, binary string represents 0 or positive number
+    return parseInt(immediate, BASE.BINARY);
 }
 
 // Convert register numbers from binary to decimal
@@ -156,6 +286,19 @@ function renderAsmInstruction(list) {
         output = output + " " + items.join(", ");
     }
     return output;
+}
+
+// Combine list of items into load/store assembly instruction
+function renderLoadStoreInstruction(list) {
+    // If list is empty, throw error
+    if (list.length < 1) {
+        throw "Empty List";
+    // If less than 4 items in list, throw error
+    } else if (list.length < 4) {
+        throw "Not enough items to render load/store instruction";
+    }
+    // Example of format: lw x2, 0(x8)
+    return list[0] + " " + list[1] + ", " + list[2] + "(" + list[3] + ")";
 }
 
 // Convert hexadecimal to 32 bit binary string
