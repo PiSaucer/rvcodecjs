@@ -1,5 +1,5 @@
 import {BASE, FIELD_COMMON, XLEN, OPCODE,
-        FIELD_RTYPE, FIELD_ITYPE} from './Constants.js'
+        FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE} from './Constants.js'
 
 export class Instruction {
     /**
@@ -69,6 +69,11 @@ export class Instruction {
             case OPCODE.LOAD:
                 this.decodeIType();
                 this.format = "I-TYPE";
+                break;
+            // S-TYPE
+            case OPCODE.STYPE:
+                this.decodeSType();
+                this.format = "S-TYPE";
                 break;
             // Invalid opcode
             default:
@@ -249,6 +254,60 @@ export class Instruction {
                                                     immediate]);
             }
         }
+    }
+
+    /**
+     * Decodes S-type instruction
+     * @returns {String} output
+     */
+    decodeSType() {
+        // Define funct3 bits
+        let sfunct3 = { "000": "SB",
+                        "001": "SH",
+                        "010": "SW"
+        };
+
+        // Get bits for each field
+        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
+                                    FIELD_COMMON.FUNCT3.END);
+        var rs1 = this.getBits(FIELD_COMMON.RS1.START, FIELD_COMMON.RS1.END);
+        var rs2 = this.getBits(FIELD_COMMON.RS2.START, FIELD_COMMON.RS2.END);
+        var imm4_0 = this.getBits(FIELD_STYPE.IMM4.START, FIELD_STYPE.IMM4.END);
+        var imm11_5 = this.getBits(FIELD_STYPE.IMM11.START,
+                                    FIELD_STYPE.IMM11.END);
+
+        // Parse binary immediate to decimal
+        var imm = imm11_5 + imm4_0;
+        var immediate = parseImm(imm);
+
+        // Convert binary register numbers to assembly format
+        var reg1 = convertBinRegister(rs1);
+        var reg2 = convertBinRegister(rs2);
+
+        // Check for operation using funct3
+        if (funct3 in sfunct3) {
+            var operation = sfunct3[funct3];
+        } else {
+            throw "Invalid funct3";
+        }
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(operation, this.opcode,
+                                        FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(operation, funct3,
+                                        FIELD_COMMON.FUNCT3.START, "funct3"));
+        this.fragments.push(new Fragment(reg1, rs1,
+                                        FIELD_COMMON.RS1.START, "rs1"));
+        this.fragments.push(new Fragment(reg2, rs2,
+                                        FIELD_COMMON.RS2.END, "rs2"));
+        this.fragments.push(new Fragment(immediate, imm4_0,
+                                        FIELD_STYPE.IMM4.START, "imm[4:0]"));
+        this.fragments.push(new Fragment(immediate, imm11_5,
+                                        FIELD_STYPE.IMM11.START, "imm[11:5]"));
+
+        // Construct assembly instruction
+        this.assembly = renderLoadStoreInstruction([operation, reg2,
+                                                immediate, reg1]);
     }
 }
 

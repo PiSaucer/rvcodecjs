@@ -62,9 +62,23 @@ export const FIELD_ITYPE = {
     }
 }
 
+// Start and end indices of S-TYPE fields
+export const FIELD_STYPE = {
+    IMM4: {
+        START: 7,
+        END: 11
+    },
+
+    IMM11: {
+        START: 25,
+        END: 31
+    }
+}
+
 export const OPCODE = {
     RTYPE:  '0110011',
     ITYPE:  '0010011',
     JALR:   '1100111',
-    LOAD:   '0000011'
+    LOAD:   '0000011',
+    STYPE:  '0100011'
 }
