@@ -1,6 +1,6 @@
 import {BASE, FIELD_COMMON, XLEN, OPCODE,
         FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
-        FIELD_BTYPE} from './Constants.js'
+        FIELD_BTYPE, FIELD_UTYPE} from './Constants.js'
 
 export class Instruction {
     /**
@@ -80,6 +80,12 @@ export class Instruction {
             case OPCODE.BTYPE:
                 this.decodeBType();
                 this.format = "B-TYPE";
+                break;
+            // U-TYPE:
+            case OPCODE.LUI:
+            case OPCODE.AUIPC:
+                this.decodeUType();
+                this.format = "U-TYPE";
                 break;
             // Invalid opcode
             default:
@@ -383,6 +389,37 @@ export class Instruction {
         // Construct assembly instruction
         this.assembly = renderAsmInstruction([operation, reg1, reg2,
                                             immediate]);
+    }
+
+    /**
+     * Decodes U-type instruction
+     * @returns {String} output
+     */
+    decodeUType() {
+        // Get bits for each field
+        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
+        var imm = this.getBits(FIELD_UTYPE.IMM31.START, FIELD_UTYPE.IMM31.END);
+
+        // Convert binary register / immediate to decimal
+        var destReg = convertBinRegister(rd);
+        var immediate = parseImm(imm);
+
+        // Check for operation using opcode
+        var operation = "LUI";
+        if (this.opcode == OPCODE.AUIPC) {
+            operation = "AUIPC";
+        }
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(operation, this.opcode,
+                                        FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(destReg, rd,
+                                        FIELD_COMMON.RD.START, "rd"));
+        this.fragments.push(new Fragment(immediate, imm,
+                                        FIELD_UTYPE.IMM31, "imm[31:12]"));
+
+        // Construct assembly instruction
+        this.assembly = renderAsmInstruction([operation, destReg, immediate]);
     }
 }
 

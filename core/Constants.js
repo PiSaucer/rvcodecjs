@@ -98,11 +98,21 @@ export const FIELD_BTYPE = {
     }
 }
 
+// Start and end indices of U-TYPE fields
+export const FIELD_UTYPE = {
+    IMM31: {
+        START: 12,
+        END: 31
+    }
+}
+
 export const OPCODE = {
     RTYPE:  '0110011',
     ITYPE:  '0010011',
     JALR:   '1100111',
     LOAD:   '0000011',
     STYPE:  '0100011',
-    BTYPE:  '1100011'
+    BTYPE:  '1100011',
+    LUI:    '0110111',
+    AUIPC:  '0010111'
 }
