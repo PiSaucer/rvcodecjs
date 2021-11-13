@@ -1,6 +1,6 @@
 import {BASE, FIELD_COMMON, XLEN, OPCODE,
         FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
-        FIELD_BTYPE, FIELD_UTYPE} from './Constants.js'
+        FIELD_BTYPE, FIELD_UTYPE, FIELD_JTYPE} from './Constants.js'
 
 export class Instruction {
     /**
@@ -86,6 +86,11 @@ export class Instruction {
             case OPCODE.AUIPC:
                 this.decodeUType();
                 this.format = "U-TYPE";
+                break;
+            // J-TYPE:
+            case OPCODE.JTYPE:
+                this.decodeJType();
+                this.format = "J-TYPE";
                 break;
             // Invalid opcode
             default:
@@ -417,6 +422,52 @@ export class Instruction {
                                         FIELD_COMMON.RD.START, "rd"));
         this.fragments.push(new Fragment(immediate, imm,
                                         FIELD_UTYPE.IMM31, "imm[31:12]"));
+
+        // Construct assembly instruction
+        this.assembly = renderAsmInstruction([operation, destReg, immediate]);
+    }
+
+    /**
+     * Decodes J-type instruction
+     * @returns {String} output
+     */
+    decodeJType() {
+        var operation = "JAL";
+
+        // Get bits for each field
+        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
+        var imm20 = this.getBits(FIELD_JTYPE.IMM20.START,
+                                FIELD_JTYPE.IMM20.END);
+        var imm10_1 = this.getBits(FIELD_JTYPE.IMM10.START,
+                                FIELD_JTYPE.IMM10.END);
+        var imm11 = this.getBits(FIELD_JTYPE.IMM11.START,
+                                FIELD_JTYPE.IMM11.END);
+        var imm19_12 = this.getBits(FIELD_JTYPE.IMM19.START,
+                                FIELD_JTYPE.IMM19.END);
+
+        // imm[0] = 0
+        var imm0 = '0';
+
+        // Concatenate binary bits for immediate
+        var imm = imm20 + imm19_12 + imm11 + imm10_1 + imm0;
+
+        // Convert binary register / immediate to decimal
+        var destReg = convertBinRegister(rd);
+        var immediate = parseImm(imm);
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(operation, this.opcode,
+                                        FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(destReg, rd,
+                                        FIELD_COMMON.RD.START, "rd"));
+        this.fragments.push(new Fragment(immediate, imm20,
+                                        FIELD_JTYPE.IMM20.START, "imm[20]"));
+        this.fragments.push(new Fragment(immediate, imm19_12,
+                                        FIELD_JTYPE.IMM19.START, "imm[19:12]"));
+        this.fragments.push(new Fragment(immediate, imm11,
+                                        FIELD_JTYPE.IMM11.START, "imm[11]"));
+        this.fragments.push(new Fragment(immediate, imm10_1,
+                                        FIELD_JTYPE.IMM10.START, "imm[10:1]"));
 
         // Construct assembly instruction
         this.assembly = renderAsmInstruction([operation, destReg, immediate]);

@@ -106,6 +106,29 @@ export const FIELD_UTYPE = {
     }
 }
 
+// Start and end indices of J-TYPE fields
+export const FIELD_JTYPE = {
+    IMM20: {
+        START: 31,
+        END: 31
+    },
+
+    IMM10: {
+        START: 21,
+        END: 30
+    },
+
+    IMM11: {
+        START: 20,
+        END: 20
+    },
+
+    IMM19: {
+        START: 12,
+        END: 19
+    }
+}
+
 export const OPCODE = {
     RTYPE:  '0110011',
     ITYPE:  '0010011',
@@ -114,5 +137,6 @@ export const OPCODE = {
     STYPE:  '0100011',
     BTYPE:  '1100011',
     LUI:    '0110111',
-    AUIPC:  '0010111'
+    AUIPC:  '0010111',
+    JTYPE:  '1101111'
 }
