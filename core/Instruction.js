@@ -1,5 +1,6 @@
 import {BASE, FIELD_COMMON, XLEN, OPCODE,
-        FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE} from './Constants.js'
+        FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
+        FIELD_BTYPE} from './Constants.js'
 
 export class Instruction {
     /**
@@ -74,6 +75,11 @@ export class Instruction {
             case OPCODE.STYPE:
                 this.decodeSType();
                 this.format = "S-TYPE";
+                break;
+            // B-TYPE
+            case OPCODE.BTYPE:
+                this.decodeBType();
+                this.format = "B-TYPE";
                 break;
             // Invalid opcode
             default:
@@ -308,6 +314,75 @@ export class Instruction {
         // Construct assembly instruction
         this.assembly = renderLoadStoreInstruction([operation, reg2,
                                                 immediate, reg1]);
+    }
+
+    /**
+     * Decodes B-type instruction
+     * @returns {String} output
+     */
+    decodeBType() {
+        // Define funct3 bits
+        let bfunct3 = { "000": "BEQ",
+                        "001": "BNE",
+                        "100": "BLT",
+                        "101": "BGE",
+                        "110": "BLTU",
+                        "111": "BGEU"
+        };
+
+        // Get bits for each field
+        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
+                                FIELD_COMMON.FUNCT3.END);
+        var rs1 = this.getBits(FIELD_COMMON.RS1.START,
+                                FIELD_COMMON.RS1.END);
+        var rs2 = this.getBits(FIELD_COMMON.RS2.START, FIELD_COMMON.RS2.END);
+        var imm4_1 = this.getBits(FIELD_BTYPE.IMM4.START, FIELD_BTYPE.IMM4.END);
+        var imm11 = this.getBits(FIELD_BTYPE.IMM11.START,
+                                FIELD_BTYPE.IMM11.END);
+        var imm10_5 = this.getBits(FIELD_BTYPE.IMM10.START,
+                                FIELD_BTYPE.IMM10.END);
+        var imm12 = this.getBits(FIELD_BTYPE.IMM12.START,
+                                FIELD_BTYPE.IMM12.END);
+
+        // imm[0] is always zero for B-type instructions
+        var imm0 = '0';
+
+        // Check for operation using funct3
+        if (funct3 in bfunct3) {
+            var operation = bfunct3[funct3];
+        } else {
+            throw "Invalid funct3";
+        }
+
+        // Concatenate binary bits imm[12|10:5], imm[4:1|11], and imm[0]
+        var imm = imm12 + imm11 + imm10_5 + imm4_1 + imm0;
+
+        // Parse binary registers / immediate to decimal
+        var reg1 = convertBinRegister(rs1);
+        var reg2 = convertBinRegister(rs2);
+        var immediate = parseImm(imm);
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(operation, this.opcode,
+                                        FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(operation, funct3,
+                                        FIELD_COMMON.FUNCT3.START, "funct3"));
+        this.fragments.push(new Fragment(reg1, rs1,
+                                        FIELD_COMMON.RS1.START, "rs1"));
+        this.fragments.push(new Fragment(reg2, rs2,
+                                        FIELD_COMMON.RS2.START, "rs2"));
+        this.fragments.push(new Fragment(immediate, imm12,
+                                        FIELD_BTYPE.IMM12.START, "imm[12]"));
+        this.fragments.push(new Fragment(immediate, imm10_5,
+                                        FIELD_BTYPE.IMM10.START, "imm[10:5]"));
+        this.fragments.push(new Fragment(immediate, imm4_1,
+                                        FIELD_BTYPE.IMM4.START, "imm[4:1]"));
+        this.fragments.push(new Fragment(immediate, imm11,
+                                        FIELD_BTYPE.IMM11.START, "imm[11]"));
+
+        // Construct assembly instruction
+        this.assembly = renderAsmInstruction([operation, reg1, reg2,
+                                            immediate]);
     }
 }
 

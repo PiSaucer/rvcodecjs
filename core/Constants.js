@@ -75,10 +75,34 @@ export const FIELD_STYPE = {
     }
 }
 
+// Start and end indices of B-TYPE fields
+export const FIELD_BTYPE = {
+    IMM4: {
+        START: 8,
+        END: 11
+    },
+
+    IMM11: {
+        START: 7,
+        END: 7
+    },
+
+    IMM10: {
+        START: 25,
+        END: 30
+    },
+
+    IMM12: {
+        START: 31,
+        END: 31
+    }
+}
+
 export const OPCODE = {
     RTYPE:  '0110011',
     ITYPE:  '0010011',
     JALR:   '1100111',
     LOAD:   '0000011',
-    STYPE:  '0100011'
+    STYPE:  '0100011',
+    BTYPE:  '1100011'
 }
