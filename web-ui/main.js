@@ -62,6 +62,15 @@ const fieldColorMap = {
     'rd': colors[3]
 }
 
+const resultsContainerElm = document.getElementsByClassName('rows-container')[0];
+const resultsLabelElm = document.getElementById('results-label');
+
+let ResultState = {
+    isErrorShown:false,
+    resultInnerHtml: resultsContainerElm.innerHTML
+}
+
+
 window.onload = function () {
     const input = document.getElementById('search-input');
     if (!window.location.hash) {
@@ -83,12 +92,20 @@ document.getElementById('search-input').onkeydown = function (event) {
 
     //TODO call core with search value to get instructionData
     const instructionData = instruction;
-    renderInstructionData(instructionData);
+
+    if (Math.random() > 0.5) renderInstructionData(instructionData);
+    else renderError({ name: 'Error Name', details: 'Details about why the error occured.' });
 
     window.location.hash = value;
 }
 
 function renderInstructionData(instruction) {
+
+    if(instruction && ResultState.isErrorShown){
+        ResultState.isErrorShown = false;
+        resultsContainerElm.innerHTML = ResultState.resultInnerHtml;
+        resultsLabelElm.innerText = '[ Results ]'
+    }
     document.getElementById('hex-data').innerText = '0x' + instruction.hex;
     document.getElementById('format-data').innerText = instruction.format;
     document.getElementById('set-data').innerText = instruction.set;
@@ -122,4 +139,38 @@ function renderInstructionData(instruction) {
         }
     }
     document.getElementById('asm-data').innerHTML = asmElmString;
+
+    ResultState.resultInnerHtml = resultsContainerElm.innerHTML;
+
+}
+
+function renderError(error) {
+    if (!ResultState.isErrorShown) {
+        ResultState.resultInnerHtml = resultsContainerElm.innerHTML;
+        resultsLabelElm.innerText = '[ Error ]'
+        ResultState.isErrorShown = true;
+    }
+
+    resultsContainerElm.innerHTML = '';
+
+    let errorNameTitle = document.createElement('div')
+    errorNameTitle.classList.add('result-row', 'result-row-title');
+    errorNameTitle.textContent = 'ERROR = '
+
+    let errorNameData = document.createElement('div')
+    errorNameData.classList.add('result-row');
+    errorNameData.textContent = error.name
+
+    let errorDetailsTitle = document.createElement('div')
+    errorDetailsTitle.classList.add('result-row', 'result-row-title');
+    errorDetailsTitle.textContent = 'DETAILS = '
+
+    let errorDetailsData = document.createElement('div')
+    errorDetailsData.classList.add('result-row');
+    errorDetailsData.textContent = error.details
+
+    resultsContainerElm.append(errorNameTitle)
+    resultsContainerElm.append(errorNameData)
+    resultsContainerElm.append(errorDetailsTitle)
+    resultsContainerElm.append(errorDetailsData)
 }
