@@ -8,7 +8,18 @@
     --color-other-cyan: #35BABA;
     --color-other-blue: #7D6FFF;
 }
-
+@media (prefers-color-scheme: light) {
+    :root {
+        --color-main: #3E3E3E;
+        --color-background: #fdf6e3;
+        
+        --color-other-yellow: #ecad00;
+        --color-other-red: #BC5252;
+        --color-other-pink: #C140D6;
+        --color-other-cyan: #35BABA;
+        --color-other-blue: #7D6FFF;
+    }
+}
 ::placeholder{
     color: #53D19AAA;
 }
