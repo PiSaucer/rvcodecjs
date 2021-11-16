@@ -71,10 +71,12 @@ window.onload = function () {
     input.value = decodeURIComponent(window.location.hash.replace('#', ''));
 
     //send input event to trigger on-input handler
-    input.dispatchEvent(new Event('input'));
+    let event = new Event('keydown');
+    event.key = 'Enter'
+    input.dispatchEvent(event);
 }
 
-document.getElementById('search-input').onkeyup = function (event) {
+document.getElementById('search-input').onkeydown = function (event) {
     if (event.key != 'Enter') {
         return;
     }    let value = event.currentTarget.value.trim();
