@@ -101,6 +101,9 @@ body {
 #results-container-box{
     border: 1px solid var(--color-main);
     margin: 0ch 1ch 1ch 1ch;
+
+    /* Results are hidden by default and dynamically shown on search*/
+    display: none;
 }
 
 #results-inner-container{

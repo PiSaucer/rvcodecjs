@@ -88,7 +88,9 @@ window.onload = function () {
 document.getElementById('search-input').onkeydown = function (event) {
     if (event.key != 'Enter') {
         return;
-    }    let value = event.currentTarget.value.trim();
+    }
+
+    document.getElementById('results-container-box').style.display = 'initial';
 
     //TODO call core with search value to get instructionData
     const instructionData = instruction;
@@ -96,6 +98,7 @@ document.getElementById('search-input').onkeydown = function (event) {
     if (Math.random() > 0.5) renderInstructionData(instructionData);
     else renderError({ name: 'Error Name', details: 'Details about why the error occured.' });
 
+    let value = event.currentTarget.value.trim();
     window.location.hash = value;
 }
 
