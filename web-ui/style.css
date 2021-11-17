@@ -7,6 +7,8 @@
     --color-other-pink: #C140D6;
     --color-other-cyan: #35BABA;
     --color-other-blue: #7D6FFF;
+
+    --selection-color: #2b634a;
 }
 @media (prefers-color-scheme: light) {
     :root {
@@ -18,16 +20,18 @@
         --color-other-pink: #C140D6;
         --color-other-cyan: #35BABA;
         --color-other-blue: #7D6FFF;
+
+        --selection-color: #bcffe1;
     }
 }
 ::placeholder{
     color: #53D19AAA;
 }
 ::selection {
-    background-color: #2b634a;
+    background-color: var(--selection-color);
 }
 ::-moz-selection {
-    background-color: #2b634a;
+    background-color: var(--selection-color);
 }
 
 body {
