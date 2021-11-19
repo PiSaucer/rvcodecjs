@@ -9,6 +9,7 @@ export class Instruction {
      */
     constructor(instruction) {
         // Create an array of fragments
+        /** @type {Fragment[]} */
         this.fragments = [];
 
         // Hard coded for now

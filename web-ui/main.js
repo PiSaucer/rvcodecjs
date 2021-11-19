@@ -55,6 +55,7 @@ document.getElementById('search-input').onkeydown = function (event) {
     window.location.hash = value;
 }
 
+/** @param {Instruction} instruction */
 function renderInstructionData(instruction) {
 
     if(instruction && ResultState.isErrorShown){
