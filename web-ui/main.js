@@ -51,7 +51,7 @@ document.getElementById('search-input').onkeydown = function (event) {
     try {
         const instructionData = new Instruction(value);
         renderInstructionData(instructionData);
-    } catch (error) { renderError({ name: error, details: error }); }
+    } catch (error) { renderError(error); }
     window.location.hash = value;
 }
 
@@ -100,6 +100,7 @@ function renderInstructionData(instruction) {
     ResultState.resultInnerHtml = resultsContainerElm.innerHTML;
 }
 
+/** @param {string} error */
 function renderError(error) {
     if (!ResultState.isErrorShown) {
         ResultState.resultInnerHtml = resultsContainerElm.innerHTML;
@@ -109,24 +110,14 @@ function renderError(error) {
 
     resultsContainerElm.innerHTML = '';
 
-    let errorNameTitle = document.createElement('div')
-    errorNameTitle.classList.add('result-row', 'result-row-title');
-    errorNameTitle.textContent = 'ERROR = '
+    let errorTitle = document.createElement('div')
+    errorTitle.classList.add('result-row', 'result-row-title');
+    errorTitle.textContent = 'ERROR = '
 
-    let errorNameData = document.createElement('div')
-    errorNameData.classList.add('result-row');
-    errorNameData.textContent = error.name
+    let errorData = document.createElement('div')
+    errorData.classList.add('result-row');
+    errorData.textContent = error;
 
-    let errorDetailsTitle = document.createElement('div')
-    errorDetailsTitle.classList.add('result-row', 'result-row-title');
-    errorDetailsTitle.textContent = 'DETAILS = '
-
-    let errorDetailsData = document.createElement('div')
-    errorDetailsData.classList.add('result-row');
-    errorDetailsData.textContent = error.details
-
-    resultsContainerElm.append(errorNameTitle)
-    resultsContainerElm.append(errorNameData)
-    resultsContainerElm.append(errorDetailsTitle)
-    resultsContainerElm.append(errorDetailsData)
+    resultsContainerElm.append(errorTitle);
+    resultsContainerElm.append(errorData);
 }
