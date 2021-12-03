@@ -1,6 +1,7 @@
 import { BASE, FIELD_COMMON, XLEN, OPCODE,
         FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
-        FIELD_BTYPE, FIELD_UTYPE, FIELD_JTYPE } from './Constants.js'
+        FIELD_BTYPE, FIELD_UTYPE, FIELD_JTYPE,
+        FIELD_SYSTEM } from './Constants.js'
 
 import { Fragment } from './Instruction.js'
 
@@ -59,6 +60,11 @@ export class Decoder {
             case OPCODE.JTYPE:
                 this.decodeJType();
                 this.format = "J-TYPE";
+                break;
+            // SYSTEM:
+            case OPCODE.SYSTEM:
+                this.decodeSystem();
+                this.format = "SYSTEM";
                 break;
             // Invalid opcode
             default:
@@ -433,6 +439,54 @@ export class Decoder {
 
         // Construct assembly instruction
         this.assembly = renderAsmInstruction([operation, destReg, immediate]);
+    }
+
+    /**
+     * Decode System instructions
+     */
+    decodeSystem() {
+        // Get bits for each field
+        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
+        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
+                                    FIELD_COMMON.FUNCT3.END);
+        var rs1 = this.getBits(FIELD_COMMON.RS1.START, FIELD_COMMON.RS1.END);
+        var funct12 = this.getBits(FIELD_SYSTEM.FUNCT12.START,
+                                    FIELD_SYSTEM.FUNCT12.END);
+        // Check funct3 bits
+        if (funct3 != '000') {
+            throw "Invalid funct3";
+        }
+
+        // Check rd bits
+        if (rd != '00000') {
+            throw "Invalid rd";
+        }
+
+        // Check rs1 bits
+        if (rs1 != '00000') {
+            throw "Invalid rs1";
+        }
+
+        // Check funct12 bits
+        if (funct12 == '000000000000') {
+            this.assembly = "ECALL";
+        } else if (funct12 == '000000000001') {
+            this.assembly = "EBREAK";
+        } else {
+            throw "Invalid funct12";
+        }
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(this.assembly, this.opcode,
+            FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(this.assembly, rd,
+            FIELD_COMMON.RD.START, "rd"));
+        this.fragments.push(new Fragment(this.assembly, funct3,
+            FIELD_COMMON.FUNCT3.START, "funct3"));
+        this.fragments.push(new Fragment(this.assembly, rs1,
+            FIELD_COMMON.RS1.START, "rs1"));
+        this.fragments.push(new Fragment(this.assembly, funct12,
+            FIELD_SYSTEM.FUNCT12.START, "funct12"));
     }
 }
 

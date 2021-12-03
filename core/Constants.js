@@ -129,6 +129,13 @@ export const FIELD_JTYPE = {
     }
 }
 
+export const FIELD_SYSTEM = {
+    FUNCT12: {
+        START: 20,
+        END: 31
+    }
+}
+
 export const OPCODE = {
     RTYPE:  '0110011',
     ITYPE:  '0010011',
@@ -138,5 +145,6 @@ export const OPCODE = {
     BTYPE:  '1100011',
     LUI:    '0110111',
     AUIPC:  '0010111',
-    JTYPE:  '1101111'
+    JTYPE:  '1101111',
+    SYSTEM: '1110011'
 }
