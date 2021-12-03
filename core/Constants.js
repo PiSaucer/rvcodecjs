@@ -136,6 +136,23 @@ export const FIELD_SYSTEM = {
     }
 }
 
+export const FIELD_FENCE = {
+    PRED: {
+        START: 24,
+        END: 27
+    },
+
+    SUCC: {
+        START: 20,
+        END: 23
+    },
+
+    FM: {
+        START: 28,
+        END: 31
+    }
+}
+
 export const OPCODE = {
     RTYPE:  '0110011',
     ITYPE:  '0010011',
@@ -146,5 +163,6 @@ export const OPCODE = {
     LUI:    '0110111',
     AUIPC:  '0010111',
     JTYPE:  '1101111',
-    SYSTEM: '1110011'
+    SYSTEM: '1110011',
+    FENCE:  '0001111'
 }

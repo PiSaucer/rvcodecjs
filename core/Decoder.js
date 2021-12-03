@@ -1,7 +1,7 @@
 import { BASE, FIELD_COMMON, XLEN, OPCODE,
         FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
         FIELD_BTYPE, FIELD_UTYPE, FIELD_JTYPE,
-        FIELD_SYSTEM } from './Constants.js'
+        FIELD_SYSTEM, FIELD_FENCE } from './Constants.js'
 
 import { Fragment } from './Instruction.js'
 
@@ -65,6 +65,11 @@ export class Decoder {
             case OPCODE.SYSTEM:
                 this.decodeSystem();
                 this.format = "SYSTEM";
+                break;
+            // FENCE:
+            case OPCODE.FENCE:
+                this.decodeFence();
+                this.format = "FENCE";
                 break;
             // Invalid opcode
             default:
@@ -488,6 +493,67 @@ export class Decoder {
         this.fragments.push(new Fragment(this.assembly, funct12,
             FIELD_SYSTEM.FUNCT12.START, "funct12"));
     }
+
+    /**
+     * Decode FENCE instruction
+     */
+    decodeFence() {
+        // Get bits for each field
+        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
+        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
+                                FIELD_COMMON.FUNCT3.END);
+        var rs1 = this.getBits(FIELD_COMMON.RS1.START, FIELD_COMMON.RS1.END);
+        var pred = this.getBits(FIELD_FENCE.PRED.START, FIELD_FENCE.PRED.END);
+        var succ = this.getBits(FIELD_FENCE.SUCC.START, FIELD_FENCE.SUCC.END);
+        var fm = this.getBits(FIELD_FENCE.FM.START, FIELD_FENCE.FM.END);
+
+        // Check funct3 bits
+        if (funct3 != '000') {
+            throw "Invalid funct3";
+        }
+
+        // Check rd bits
+        if (rd != '00000') {
+            throw "Invalid rd";
+        }
+
+        // Check rs1 bits
+        if (rs1 != '00000') {
+            throw "Invalid rs1";
+        }
+
+        if (fm != '0000') {
+            throw "Invalid fm";
+        }
+
+        var operation = "FENCE";
+
+        // Check predecessor bits
+        var predecessor = getAccessString(pred);
+
+        // Check successor bits
+        var successor = getAccessString(succ);
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(operation, this.opcode,
+            FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(operation, rd,
+            FIELD_COMMON.RD.START, "rd"));
+        this.fragments.push(new Fragment(operation, funct3,
+            FIELD_COMMON.FUNCT3.START, "funct3"));
+        this.fragments.push(new Fragment(operation, rs1,
+            FIELD_COMMON.RS1.START, "rs1"));
+        this.fragments.push(new Fragment(predecessor, pred,
+            FIELD_FENCE.PRED.START, "pred"));
+        this.fragments.push(new Fragment(successor, succ,
+            FIELD_FENCE.SUCC.START, "succ"));
+        this.fragments.push(new Fragment(operation, fm,
+            FIELD_FENCE.FM.START, "fm"));
+
+        // Construct assembly instruction
+        this.assembly = renderAsmInstruction([operation, predecessor,
+                                            successor]);
+    }
 }
 
 // Parse given immediate to decimal
@@ -537,4 +603,21 @@ function renderLoadStoreInstruction(list) {
     }
     // Example of format: lw x2, 0(x8)
     return list[0] + " " + list[1] + ", " + list[2] + "(" + list[3] + ")";
+}
+
+// Get device I/O and memory accesses corresponding to given bits
+function getAccessString(bits) {
+    var output = "";
+
+    // I: Device input, O: device output, R: memory reads, W: memory writes
+    var access = ['I', 'O', 'R', 'W'];
+
+    // Loop through the access array and binary string
+    for (let i = 0; i < access.length; i++) {
+        if (bits[i] == 1) {
+            output += access[i];
+        }
+    }
+
+    return output;
 }
