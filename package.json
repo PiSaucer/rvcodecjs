@@ -6,7 +6,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node out/tests/test_runner.js"
+    "test": "node ./tests/decoderTest.js"
   },
   "repository": {
     "type": "git",

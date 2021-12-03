@@ -12,14 +12,6 @@ export class Instruction {
 
         // Determine format of instruction and decode
         this.decodeInstruction(instruction);
-
-        // Print values of Instruction
-        console.log("ASSEMBLY: " + this.assembly);
-        console.log("BINARY: " + this.binary);
-        console.log("HEXADECIMAL: " + this.hex);
-        console.log("FORMAT: " + this.format);
-        console.log("SET: " + this.isa);
-        console.log(this.fragments);
     }
 
     // Check format of instruction and decode accordingly
