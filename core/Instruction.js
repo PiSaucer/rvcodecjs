@@ -17,20 +17,20 @@ export class Instruction {
     // Check format of instruction and decode accordingly
     decodeInstruction(instruction) {
         // Regular expression for 32 bit binary instruction
-        var binaryRegEx = /^[01]{32}$/;
+        var binaryRegEx = /^[01]{1,32}$/;
         // Regular expression for 8 digit hexadecimal instruction
-        var hexRegEx = /^(0x)?[0-9a-fA-F]{8}$/;
+        var hexRegEx = /^(0x)?[0-9a-fA-F]{1,8}$/;
 
         // If instruction is in binary format
         if (binaryRegEx.test(instruction)) {
-            this.binary = instruction;
+            this.binary = instruction.padStart(32, '0');
             // Convert to hex
             this.hex = convertBinToHex(instruction);
             // Convert to assembly
             this.convertToAsm();
         // If instruction is in hex format
         } else if (hexRegEx.test(instruction)) {
-            this.hex = instruction;
+            this.hex = instruction.padStart(8, '0');
             // Convert to binary
             this.binary = convertHexToBin(instruction);
             // Convert to assembly
