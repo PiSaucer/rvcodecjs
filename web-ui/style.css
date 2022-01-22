@@ -69,7 +69,6 @@ body {
 #search-container{
     border: 1px solid var(--color-main);
     height: 100%;
-    width: 43ch;
     height: 3.5ch;
 }
 
