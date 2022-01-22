@@ -20,6 +20,9 @@ const fieldColorMap = {
 const resultsContainerElm = document.getElementsByClassName('rows-container')[0];
 const resultsLabelElm = document.getElementById('results-label');
 
+/** @type {Instruction} instruction */
+let previousInstruction = null;
+
 let ResultState = {
     isErrorShown:false,
     resultInnerHtml: resultsContainerElm.innerHTML
@@ -40,6 +43,26 @@ window.onload = function () {
     input.dispatchEvent(event);
 }
 
+document.getElementById("binary-data").ondblclick = event => {
+    event.stopPropagation();
+    //copy binary-data to clipboard
+    navigator.clipboard.writeText(previousInstruction.binary).then(() => {
+        const binaryDataElm = document.getElementById("binary-data")
+        binaryDataElm.classList.add('copied')
+        setTimeout(() => {
+            binaryDataElm.classList.remove('copied')
+        }, 300);
+
+        let copiedText = document.createElement('div')
+        copiedText.classList.add('copied-text-popup')
+        copiedText.innerText = '[ copied to clipboard ]'
+        binaryDataElm.appendChild(copiedText);
+        setTimeout(() => {
+            copiedText.remove()
+        }, 2000);
+    });
+};
+
 document.getElementById('search-input').onkeydown = function (event) {
     if (event.key != 'Enter') {
         return;
@@ -50,6 +73,7 @@ document.getElementById('search-input').onkeydown = function (event) {
     let value = event.currentTarget.value.trim();
     try {
         const instructionData = new Instruction(value);
+        previousInstruction = instructionData;
         renderInstructionData(instructionData);
     } catch (error) { renderError(error); }
     window.location.hash = value;

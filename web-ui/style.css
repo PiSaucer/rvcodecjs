@@ -120,6 +120,7 @@ body {
     display: grid;
     align-items: stretch;
     column-gap: 5ch;
+    row-gap: 1ch;
 
     /* Labels (on left) will shrink when data needs more space */
     grid-template-columns: minmax(0, 2fr) 5fr;
@@ -157,14 +158,35 @@ body {
     padding: 0% 0.25%;
     background-color: var(--color-background) ;
 }
+.copied-text-popup {
+    font-size: 0.875rem;
+    position: absolute;
+    transform: translate(-50%, -120%);
+    width: fit-content;
+    background-color: var(--color-background) ;
+}
 
 #binary-data {
     height: fit-content;
     width: max-content;
-    margin: 1ch 0ch;
+
+    /* Increased padding to give users a wider area to select */
+    padding: 1ch 1ch;
+
+    /* Move left to compensate for left padding */
+    margin-left: -1ch;
+
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 1rem;
+
+    transition: background-color 400ms linear;
+}
+
+/* Used to pulse background color when element is copied
+   to clipboard. */
+.copied {
+    background-color: var(--color-main);
 }
 
 @media (max-width: 700px) {
