@@ -1,5 +1,6 @@
 import { BASE } from './Constants.js';
 import { Decoder } from './Decoder.js';
+import { Encoder } from './Encoder.js';
 
 export class Instruction {
     /**
@@ -20,6 +21,8 @@ export class Instruction {
         var binaryRegEx = /^[01]{1,32}$/;
         // Regular expression for 8 digit hexadecimal instruction
         var hexRegEx = /^(0x)?[0-9a-fA-F]{1,8}$/;
+        // Regular expression for alphabetic character
+        var alphaRegEx = /^[a-zA-Z]$/;
 
         // If instruction is in binary format
         if (binaryRegEx.test(instruction)) {
@@ -35,6 +38,13 @@ export class Instruction {
             this.binary = convertHexToBin(instruction);
             // Convert to assembly
             this.convertToAsm();
+        // If instruction starts with a letter, send to encoder for parsing
+        } else if (alphaRegEx.test(instruction[0])) {
+            this.assembly = instruction;
+            // Convert to binary
+            this.convertToBin();
+            // Convert to hex
+            this.hex = convertBinToHex(this.binary);
         } else {
             throw "Invalid instruction";
         }
@@ -48,6 +58,16 @@ export class Instruction {
         // Get assembly and fragments from Decoder
         this.assembly = decoder.assembly;
         this.fragments = decoder.fragments;
+    }
+
+    // Convert instruction to binary
+    convertToBin() {
+        // Create an Encoder for the instruction
+        var encoder = new Encoder(this.assembly);
+
+        // Get binary and fragments from Encoder
+        this.binary = encoder.binary;
+        this.fragments = encoder.fragments;
     }
 }
 
