@@ -88,16 +88,16 @@ export class Decoder {
      */
     decodeRType() {
         // Define funct3 and funct7 bits
-        let rfunct = {  "0000000000": "ADD",
-                        "0000100000": "SUB",
-                        "0010000000": "SLL",
-                        "0100000000": "SLT",
-                        "0110000000": "SLTU",
-                        "1000000000": "XOR",
-                        "1010000000": "SRL",
-                        "1010100000": "SRA",
-                        "1100000000": "OR",
-                        "1110000000": "AND"
+        let rfunct = {  "0000000000": "add",
+                        "0000100000": "sub",
+                        "0010000000": "sll",
+                        "0100000000": "slt",
+                        "0110000000": "sltu",
+                        "1000000000": "xor",
+                        "1010000000": "srl",
+                        "1010100000": "sra",
+                        "1100000000": "or",
+                        "1110000000": "and"
         };
 
         // Get bits for each field
@@ -157,22 +157,22 @@ export class Decoder {
 
         // Define funct3 + opcode / high-order immediate bits
         var ifunct = {  // funct3 + opcode bits
-                        "0000010011": "ADDI",
-                        "0001100111": "JALR",
-                        "0000000011": "LB",
-                        "0010010011": "SLLI",
-                        "0010000011": "LH",
-                        "0100010011": "SLTI",
-                        "0100000011": "LW",
-                        "0110010011": "SLTIU",
-                        "1000010011": "XORI",
-                        "1000000011": "LBU",
-                        "1010000011": "LHU",
-                        "1100010011": "ORI",
-                        "1110010011": "ANDI",
+                        "0000010011": "addi",
+                        "0001100111": "jalr",
+                        "0000000011": "lb",
+                        "0010010011": "slli",
+                        "0010000011": "lh",
+                        "0100010011": "slti",
+                        "0100000011": "lw",
+                        "0110010011": "sltiu",
+                        "1000010011": "xori",
+                        "1000000011": "lbu",
+                        "1010000011": "lhu",
+                        "1100010011": "ori",
+                        "1110010011": "andi",
                         // funct3 + high-order immediate bits
-                        "1010000000": "SRLI",
-                        "1010100000": "SRAI"
+                        "1010000000": "srli",
+                        "1010100000": "srai"
         };
 
         var funct = funct3 + this.opcode;
@@ -189,7 +189,7 @@ export class Decoder {
         }
 
         // Check if operation is a shift
-        var shiftOperations = ["SRLI", "SRAI", "SLLI"];
+        var shiftOperations = ["srli", "srai", "slli"];
         if (shiftOperations.includes(operation)) {
             shift = true;
         }
@@ -255,9 +255,9 @@ export class Decoder {
      */
     decodeSType() {
         // Define funct3 bits
-        let sfunct3 = { "000": "SB",
-                        "001": "SH",
-                        "010": "SW"
+        let sfunct3 = { "000": "sb",
+                        "001": "sh",
+                        "010": "sw"
         };
 
         // Get bits for each field
@@ -308,12 +308,12 @@ export class Decoder {
      */
     decodeBType() {
         // Define funct3 bits
-        let bfunct3 = { "000": "BEQ",
-                        "001": "BNE",
-                        "100": "BLT",
-                        "101": "BGE",
-                        "110": "BLTU",
-                        "111": "BGEU"
+        let bfunct3 = { "000": "beq",
+                        "001": "bne",
+                        "100": "blt",
+                        "101": "bge",
+                        "110": "bltu",
+                        "111": "bgeu"
         };
 
         // Get bits for each field
@@ -384,9 +384,9 @@ export class Decoder {
         var immediate = parseImm(imm);
 
         // Check for operation using opcode
-        var operation = "LUI";
+        var operation = "lui";
         if (this.opcode == OPCODE.AUIPC) {
-            operation = "AUIPC";
+            operation = "auipc";
         }
 
         // Create fragments for each field
@@ -405,7 +405,7 @@ export class Decoder {
      * Decodes J-type instruction
      */
     decodeJType() {
-        var operation = "JAL";
+        var operation = "jal";
 
         // Get bits for each field
         var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
@@ -474,9 +474,9 @@ export class Decoder {
 
         // Check funct12 bits
         if (funct12 == '000000000000') {
-            this.assembly = "ECALL";
+            this.assembly = "ecall";
         } else if (funct12 == '000000000001') {
-            this.assembly = "EBREAK";
+            this.assembly = "ebreak";
         } else {
             throw "Invalid funct12";
         }
@@ -526,7 +526,7 @@ export class Decoder {
             throw "Invalid fm";
         }
 
-        var operation = "FENCE";
+        var operation = "fence";
 
         // Check predecessor bits
         var predecessor = getAccessString(pred);
@@ -610,7 +610,7 @@ function getAccessString(bits) {
     var output = "";
 
     // I: Device input, O: device output, R: memory reads, W: memory writes
-    var access = ['I', 'O', 'R', 'W'];
+    var access = ['i', 'o', 'r', 'w'];
 
     // Loop through the access array and binary string
     for (let i = 0; i < access.length; i++) {
