@@ -1,7 +1,7 @@
 import { BASE, FIELD_COMMON, XLEN, OPCODE,
         FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
         FIELD_BTYPE, FIELD_UTYPE, FIELD_JTYPE,
-        FIELD_SYSTEM, FIELD_FENCE } from './Constants.js'
+        FIELD_SYSTEM, FIELD_FENCE, OPERATIONS } from './Constants.js'
 
 import { Fragment } from './Instruction.js'
 
@@ -87,19 +87,6 @@ export class Decoder {
      * Decodes R-type instruction
      */
     decodeRType() {
-        // Define funct3 and funct7 bits
-        let rfunct = {  "0000000000": "add",
-                        "0000100000": "sub",
-                        "0010000000": "sll",
-                        "0100000000": "slt",
-                        "0110000000": "sltu",
-                        "1000000000": "xor",
-                        "1010000000": "srl",
-                        "1010100000": "sra",
-                        "1100000000": "or",
-                        "1110000000": "and"
-        };
-
         // Get bits for each field
         var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
         var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
@@ -115,10 +102,15 @@ export class Decoder {
         var destReg = convertBinRegister(rd);
 
         // Check for operation in rfunct dictionary
-        var funct = funct3 + funct7;
-        if (funct in rfunct) {
-            var operation = rfunct[funct];
-        } else {
+        var operation;
+        for (var op in OPERATIONS) {
+            if (OPERATIONS[op].FUNCT3 == funct3 &&
+                OPERATIONS[op].FUNCT7 == funct7) {
+                    operation = op;
+            }
+        }
+
+        if (typeof operation === 'undefined') {
             throw "Invalid funct3 or funct7";
         }
 
