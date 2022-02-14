@@ -89,6 +89,15 @@ function convertBinToHex(bin) {
     return '0x' + hex;
 }
 
+// Check if operation is a shift
+export function isShift(operation) {
+    var shiftOperations = ["srli", "srai", "slli"];
+    if (shiftOperations.includes(operation)) {
+        return true;
+    }
+    return false;
+}
+
 export class Fragment {
     /**
      * Represents a fragment of the instruction

@@ -153,19 +153,6 @@ export const FIELD_FENCE = {
     }
 }
 
-export const OPERATIONS = {
-    add:    { TYPE: "RTYPE", FUNCT3: "000", FUNCT7: "0000000" },
-    sub:    { TYPE: "RTYPE", FUNCT3: "000", FUNCT7: "0100000" },
-    sll:    { TYPE: "RTYPE", FUNCT3: "001", FUNCT7: "0000000" },
-    slt:    { TYPE: "RTYPE", FUNCT3: "010", FUNCT7: "0000000" },
-    sltu:   { TYPE: "RTYPE", FUNCT3: "011", FUNCT7: "0000000" },
-    xor:    { TYPE: "RTYPE", FUNCT3: "100", FUNCT7: "0000000" },
-    srl:    { TYPE: "RTYPE", FUNCT3: "101", FUNCT7: "0000000" },
-    sra:    { TYPE: "RTYPE", FUNCT3: "101", FUNCT7: "0100000" },
-    or:     { TYPE: "RTYPE", FUNCT3: "110", FUNCT7: "0000000" },
-    and:    { TYPE: "RTYPE", FUNCT3: "111", FUNCT7: "0000000" }
-}
-
 export const OPCODE = {
     RTYPE:  '0110011',
     ITYPE:  '0010011',
@@ -178,4 +165,32 @@ export const OPCODE = {
     JTYPE:  '1101111',
     SYSTEM: '1110011',
     FENCE:  '0001111'
+}
+
+export const OPERATIONS = {
+    add:    { TYPE: "RTYPE", FUNCT3: "000", FUNCT7: "0000000" },
+    sub:    { TYPE: "RTYPE", FUNCT3: "000", FUNCT7: "0100000" },
+    sll:    { TYPE: "RTYPE", FUNCT3: "001", FUNCT7: "0000000" },
+    slt:    { TYPE: "RTYPE", FUNCT3: "010", FUNCT7: "0000000" },
+    sltu:   { TYPE: "RTYPE", FUNCT3: "011", FUNCT7: "0000000" },
+    xor:    { TYPE: "RTYPE", FUNCT3: "100", FUNCT7: "0000000" },
+    srl:    { TYPE: "RTYPE", FUNCT3: "101", FUNCT7: "0000000" },
+    sra:    { TYPE: "RTYPE", FUNCT3: "101", FUNCT7: "0100000" },
+    or:     { TYPE: "RTYPE", FUNCT3: "110", FUNCT7: "0000000" },
+    and:    { TYPE: "RTYPE", FUNCT3: "111", FUNCT7: "0000000" },
+    addi:   { TYPE: 'ITYPE', FUNCT3: "000", OPCODE: OPCODE.ITYPE },
+    jalr:   { TYPE: 'ITYPE', FUNCT3: "000", OPCODE: OPCODE.JALR },
+    lb:     { TYPE: 'ITYPE', FUNCT3: "000", OPCODE: OPCODE.LOAD },
+    slli:   { TYPE: 'ITYPE', FUNCT3: "001", OPCODE: OPCODE.ITYPE },
+    lh:     { TYPE: 'ITYPE', FUNCT3: "001", OPCODE: OPCODE.LOAD },
+    slti:   { TYPE: 'ITYPE', FUNCT3: "010", OPCODE: OPCODE.ITYPE },
+    lw:     { TYPE: 'ITYPE', FUNCT3: "010", OPCODE: OPCODE.LOAD },
+    sltiu:  { TYPE: 'ITYPE', FUNCT3: "011", OPCODE: OPCODE.ITYPE },
+    xori:   { TYPE: 'ITYPE', FUNCT3: "100", OPCODE: OPCODE.ITYPE },
+    lbu:    { TYPE: 'ITYPE', FUNCT3: "100", OPCODE: OPCODE.LOAD },
+    lhu:    { TYPE: 'ITYPE', FUNCT3: "101", OPCODE: OPCODE.LOAD },
+    ori:    { TYPE: 'ITYPE', FUNCT3: "110", OPCODE: OPCODE.ITYPE },
+    andi:   { TYPE: 'ITYPE', FUNCT3: "111", OPCODE: OPCODE.ITYPE },
+    srli:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0000000" },
+    srai:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0100000" }
 }
