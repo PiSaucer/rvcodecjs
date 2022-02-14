@@ -153,6 +153,19 @@ export const FIELD_FENCE = {
     }
 }
 
+export const OPERATIONS = {
+    add:    { TYPE: "RTYPE", FUNCT3: "000", FUNCT7: "0000000" },
+    sub:    { TYPE: "RTYPE", FUNCT3: "000", FUNCT7: "0100000" },
+    sll:    { TYPE: "RTYPE", FUNCT3: "001", FUNCT7: "0000000" },
+    slt:    { TYPE: "RTYPE", FUNCT3: "010", FUNCT7: "0000000" },
+    sltu:   { TYPE: "RTYPE", FUNCT3: "011", FUNCT7: "0000000" },
+    xor:    { TYPE: "RTYPE", FUNCT3: "100", FUNCT7: "0000000" },
+    srl:    { TYPE: "RTYPE", FUNCT3: "101", FUNCT7: "0000000" },
+    sra:    { TYPE: "RTYPE", FUNCT3: "101", FUNCT7: "0100000" },
+    or:     { TYPE: "RTYPE", FUNCT3: "110", FUNCT7: "0000000" },
+    and:    { TYPE: "RTYPE", FUNCT3: "111", FUNCT7: "0000000" }
+}
+
 export const OPCODE = {
     RTYPE:  '0110011',
     ITYPE:  '0010011',
