@@ -58,6 +58,7 @@ export class Instruction {
         // Get assembly and fragments from Decoder
         this.assembly = decoder.assembly;
         this.fragments = decoder.fragments;
+        this.format = decoder.format;
     }
 
     // Convert instruction to binary
@@ -68,6 +69,7 @@ export class Instruction {
         // Get binary and fragments from Encoder
         this.binary = encoder.binary;
         this.fragments = encoder.fragments;
+        this.format = encoder.format;
     }
 }
 
