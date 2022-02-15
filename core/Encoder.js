@@ -1,6 +1,6 @@
-import { Fragment } from './Instruction.js'
+import { Fragment, isShift } from './Instruction.js'
 import { BASE, OPERATIONS, OPCODE, FIELD_COMMON,
-        FIELD_RTYPE } from './Constants.js'
+        FIELD_RTYPE, FIELD_ITYPE } from './Constants.js'
 
 export class Encoder {
     /**
@@ -30,6 +30,10 @@ export class Encoder {
                 this.encodeRtype();
                 this.format = "RTYPE";
                 break;
+            case "ITYPE":
+                this.encodeItype();
+                this.format = "ITYPE";
+                break;
             default:
                 throw "invalid operation";
         }
@@ -38,6 +42,11 @@ export class Encoder {
     // Parse instruction into tokens
     parseInstruction() {
         this.tokens = this.assembly.split(/[ ,]+/);
+    }
+
+    // Parse load or store instruction into tokens
+    parseLoadStoreInstruction() {
+        this.tokens = this.assembly.split(/[ ,()]+/);
     }
 
     /**
@@ -85,10 +94,96 @@ export class Encoder {
         // Construct binary instruction
         this.binary = funct7 + rs2 + rs1 + funct3 + rd + this.opcode;
     }
+
+    /**
+     * Encodes I-type instruction
+     */
+     encodeItype() {
+        // Get funct3 and opcode / high-order imm bits
+
+        var funct3 = OPERATIONS[this.operation].FUNCT3;
+        // SRAI/SRLI have the same opcode (use high-order immediate instead)
+        if (this.operation in ["srli", "srai"]) {
+            this.opcode = OPCODE.ITYPE;
+            highImm = OPERATIONS[this.operation].HIGHIMM;
+        } else {
+            this.opcode = OPERATIONS[this.operation].OPCODE;
+        }
+
+        // Check if operation is a shift
+        var shift = isShift(this.operation);
+
+        var reg1;
+        var destReg;
+        var immediate;
+
+        // Get tokens for instruction
+        if (this.opcode == OPCODE.LOAD) {
+            this.parseLoadStoreInstruction();
+            reg1 = this.tokens[3];
+            immediate = this.tokens[2];
+        } else {
+            this.parseInstruction();
+            reg1 = this.tokens[2];
+            immediate = this.tokens[3];
+        }
+
+        // Get rs1 bits
+        var rs1 = convertDecRegister(reg1);
+
+        // Get rd bits
+        var destReg = this.tokens[1];
+        var rd = convertDecRegister(destReg);
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(this.operation, this.opcode,
+                                        FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(this.operation, funct3,
+                                        FIELD_COMMON.FUNCT3.START, "funct3"));
+        this.fragments.push(new Fragment(reg1, rs1,
+                                        FIELD_COMMON.RS1.START, "rs1"));
+        this.fragments.push(new Fragment(destReg, rd,
+                                        FIELD_COMMON.RD.START, "rd"));
+
+        if (shift) {
+            // Get bits for shift amount
+            var shamt = parseDec(immediate).padStart(5, '0');
+
+            // Create higher-order immediate fragment
+            this.fragments.push(new Fragment(operation, highImm,
+                        FIELD_ITYPE.HIGHIMM.START, "higher-order immediate"));
+            // Create shamt fragment
+            this.fragments.push(new Fragment(shiftAmt, shamt,
+                        FIELD_ITYPE.SHAMT.START, "shamt"));
+
+            // Construct binary instruction
+            this.binary = highImm + shamt + rs1 + funct3 + rd + this.opcode;
+
+        } else {
+            var immLen = (FIELD_ITYPE.IMM11.END + 1) - FIELD_ITYPE.IMM11.START;
+            // Get bits for immediate
+            var imm = parseDec(immediate).padStart(immLen, '0');
+            // Truncate the beginning of the imm if oversized
+            if (imm.length > immLen) {
+                imm = imm.substring(imm.length - immLen, imm.length);
+            }
+
+            // Create immediate fragment
+            this.fragments.push(new Fragment(immediate, imm,
+                                FIELD_ITYPE.IMM11.START, "imm[11:0]"));
+
+            // Construct binary instruction
+            this.binary = imm + rs1 + funct3 + rd + this.opcode;
+        }
+    }
 }
 
 // Parse given decimal to binary
 function parseDec(decimal) {
+    // Check if decimal is a negative number
+    if (decimal[0] == '-') {
+        return (Number(decimal) >>> 0).toString(BASE.BINARY);
+    }
     return Number(decimal).toString(BASE.BINARY);
 }
 

@@ -58,6 +58,7 @@ export class Instruction {
         // Get assembly and fragments from Decoder
         this.assembly = decoder.assembly;
         this.fragments = decoder.fragments;
+        this.format = decoder.format;
     }
 
     // Convert instruction to binary
@@ -68,6 +69,7 @@ export class Instruction {
         // Get binary and fragments from Encoder
         this.binary = encoder.binary;
         this.fragments = encoder.fragments;
+        this.format = encoder.format;
     }
 }
 
@@ -85,6 +87,15 @@ function convertBinToHex(bin) {
     hex = hex.padStart(8, '0');
     // Add 0x prefix
     return '0x' + hex;
+}
+
+// Check if operation is a shift
+export function isShift(operation) {
+    var shiftOperations = ["srli", "srai", "slli"];
+    if (shiftOperations.includes(operation)) {
+        return true;
+    }
+    return false;
 }
 
 export class Fragment {

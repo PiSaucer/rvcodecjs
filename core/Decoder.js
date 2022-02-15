@@ -3,7 +3,7 @@ import { BASE, FIELD_COMMON, XLEN, OPCODE,
         FIELD_BTYPE, FIELD_UTYPE, FIELD_JTYPE,
         FIELD_SYSTEM, FIELD_FENCE, OPERATIONS } from './Constants.js'
 
-import { Fragment } from './Instruction.js'
+import { Fragment, isShift } from './Instruction.js'
 
 export class Decoder {
     /**
@@ -144,47 +144,23 @@ export class Decoder {
         var highImm = this.getBits(FIELD_ITYPE.HIGHIMM.START,
                                     FIELD_ITYPE.HIGHIMM.END);
 
-        // Set to true if operation is a shift (slli, srai, srli)
-        var shift = false;
-
-        // Define funct3 + opcode / high-order immediate bits
-        var ifunct = {  // funct3 + opcode bits
-                        "0000010011": "addi",
-                        "0001100111": "jalr",
-                        "0000000011": "lb",
-                        "0010010011": "slli",
-                        "0010000011": "lh",
-                        "0100010011": "slti",
-                        "0100000011": "lw",
-                        "0110010011": "sltiu",
-                        "1000010011": "xori",
-                        "1000000011": "lbu",
-                        "1010000011": "lhu",
-                        "1100010011": "ori",
-                        "1110010011": "andi",
-                        // funct3 + high-order immediate bits
-                        "1010000000": "srli",
-                        "1010100000": "srai"
-        };
-
-        var funct = funct3 + this.opcode;
-        // SRAI/SRLI have the same opcode (use high-order immediate instead)
-        if (funct3 == "101") {
-            funct = funct3 + highImm;
-        }
-
         // Check for operation using funct3 and opcode / high-order immediate
-        if (funct in ifunct) {
-            var operation = ifunct[funct];
-        } else {
-            throw "Invalid funct3";
+        var operation;
+
+        for (var op in OPERATIONS) {
+            if (OPERATIONS[op].FUNCT3 == funct3 && 
+                (OPERATIONS[op].OPCODE == this.opcode ||
+                 OPERATIONS[op].HIGHIMM == highImm)) {
+                    operation = op;
+            }
         }
 
-        // Check if operation is a shift
-        var shiftOperations = ["srli", "srai", "slli"];
-        if (shiftOperations.includes(operation)) {
-            shift = true;
+        if (typeof operation === 'undefined') {
+            throw "Invalid funct3 or funct7";
         }
+
+        // Set shift to true if operation is a shift (slli, srai, srli)
+        var shift = isShift(operation);
 
         // Convert register numbers from binary to decimal
         var reg1 = convertBinRegister(rs1);
