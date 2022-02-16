@@ -12,11 +12,12 @@ export class Instruction {
         this.isa = "RV32I";
 
         // Determine format of instruction and decode
-        this.decodeInstruction(instruction);
+        this.instruction = instruction;
+        this.decodeInstruction();
     }
 
     // Check format of instruction and decode accordingly
-    decodeInstruction(instruction) {
+    decodeInstruction() {
         // Regular expression for 32 bit binary instruction
         var binaryRegEx = /^[01]{1,32}$/;
         // Regular expression for 8 digit hexadecimal instruction
@@ -25,6 +26,7 @@ export class Instruction {
         var alphaRegEx = /^[a-zA-Z]$/;
 
         // If instruction is in binary format
+        var instruction = this.instruction.replace(/\s/g,'')
         if (binaryRegEx.test(instruction)) {
             this.binary = instruction.padStart(32, '0');
             // Convert to hex
@@ -32,15 +34,15 @@ export class Instruction {
             // Convert to assembly
             this.convertToAsm();
         // If instruction is in hex format
-        } else if (hexRegEx.test(instruction)) {
-            this.hex = instruction.padStart(8, '0');
+        } else if (hexRegEx.test(this.instruction)) {
+            this.hex = this.instruction.padStart(8, '0');
             // Convert to binary
-            this.binary = convertHexToBin(instruction);
+            this.binary = convertHexToBin(this.instruction);
             // Convert to assembly
             this.convertToAsm();
         // If instruction starts with a letter, send to encoder for parsing
-        } else if (alphaRegEx.test(instruction[0])) {
-            this.assembly = instruction;
+        } else if (alphaRegEx.test(this.instruction[0])) {
+            this.assembly = this.instruction;
             // Convert to binary
             this.convertToBin();
             // Convert to hex
