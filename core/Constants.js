@@ -192,5 +192,8 @@ export const OPERATIONS = {
     ori:    { TYPE: 'ITYPE', FUNCT3: "110", OPCODE: OPCODE.ITYPE },
     andi:   { TYPE: 'ITYPE', FUNCT3: "111", OPCODE: OPCODE.ITYPE },
     srli:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0000000" },
-    srai:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0100000" }
+    srai:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0100000" },
+    sb:     { TYPE: 'STYPE', FUNCT3: "000" },
+    sh:     { TYPE: 'STYPE', FUNCT3: "001" },
+    sw:     { TYPE: 'STYPE', FUNCT3: "010" }
 }
