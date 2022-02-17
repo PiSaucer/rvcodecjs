@@ -6,10 +6,14 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node ./tests/decoderTest.js"
+    "test": "node ./tests/decoderTest.js",
+    "open": "http-server -a localhost -p 1234 -o ./web-ui/index.html"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@gitlab.com/luplab/rvcodecjs.git"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.0"
   }
 }
