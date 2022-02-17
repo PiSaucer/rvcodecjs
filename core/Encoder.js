@@ -1,6 +1,6 @@
 import { Fragment, isShift } from './Instruction.js'
 import { BASE, OPERATIONS, OPCODE, FIELD_COMMON,
-        FIELD_RTYPE, FIELD_ITYPE } from './Constants.js'
+        FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE } from './Constants.js'
 
 export class Encoder {
     /**
@@ -33,6 +33,10 @@ export class Encoder {
             case "ITYPE":
                 this.encodeItype();
                 this.format = "ITYPE";
+                break;
+            case "STYPE":
+                this.encodeStype();
+                this.format = "STYPE";
                 break;
             default:
                 throw "invalid operation";
@@ -175,6 +179,51 @@ export class Encoder {
             // Construct binary instruction
             this.binary = imm + rs1 + funct3 + rd + this.opcode;
         }
+    }
+    
+    /**
+     * Encodes S-type instruction
+     */
+    encodeStype() {
+        this.opcode = OPCODE.STYPE;
+
+        // Get funct3 bits
+        var funct3 = OPERATIONS[this.operation].FUNCT3;
+
+        // Get tokens for instruction
+        this.parseLoadStoreInstruction();
+        var reg1 = this.tokens[3];
+        var reg2 = this.tokens[1];
+        var immediate = this.tokens[2];
+
+        // Get rs1 bits
+        var rs1 = convertDecRegister(reg1);
+        // Get rs2 bits
+        var rs2 = convertDecRegister(reg2);
+
+        // Get bits for immediate
+        var imm11Len = (FIELD_STYPE.IMM11.END + 1) - FIELD_STYPE.IMM11.START;
+        var imm4Len = (FIELD_STYPE.IMM4.END + 1) - FIELD_STYPE.IMM4.START;
+        var imm = parseDec(immediate).padStart(imm11Len + imm4Len, '0');
+        var imm11_5 = imm.substring(0, imm11Len);
+        var imm4_0 = imm.substring(imm11Len, imm11Len + imm4Len);
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(this.operation, this.opcode,
+            FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(this.operation, funct3,
+            FIELD_COMMON.FUNCT3.START, "funct3"));
+        this.fragments.push(new Fragment(reg1, rs1,
+            FIELD_COMMON.RS1.START, "rs1"));
+        this.fragments.push(new Fragment(reg2, rs2,
+            FIELD_COMMON.RS2.END, "rs2"));
+        this.fragments.push(new Fragment(immediate, imm4_0,
+            FIELD_STYPE.IMM4.START, "imm[4:0]"));
+        this.fragments.push(new Fragment(immediate, imm11_5,
+            FIELD_STYPE.IMM11.START, "imm[11:5]"));
+
+        // Constuct binary instruction
+        this.binary = imm11_5 + rs2 + rs1 + funct3 + imm4_0 + this.opcode;
     }
 }
 
