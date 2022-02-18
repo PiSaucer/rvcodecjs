@@ -222,12 +222,6 @@ export class Decoder {
      * Decodes S-type instruction
      */
     decodeSType() {
-        // Define funct3 bits
-        let sfunct3 = { "000": "sb",
-                        "001": "sh",
-                        "010": "sw"
-        };
-
         // Get bits for each field
         var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
                                     FIELD_COMMON.FUNCT3.END);
@@ -246,9 +240,15 @@ export class Decoder {
         var reg2 = convertBinRegister(rs2);
 
         // Check for operation using funct3
-        if (funct3 in sfunct3) {
-            var operation = sfunct3[funct3];
-        } else {
+        var operation;
+
+        for (var op in OPERATIONS) {
+            if (OPERATIONS[op].FUNCT3 == funct3) {
+                    operation = op;
+            }
+        }
+
+        if (typeof operation === 'undefined') {
             throw "Invalid funct3";
         }
 
