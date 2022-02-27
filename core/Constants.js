@@ -195,5 +195,11 @@ export const OPERATIONS = {
     srai:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0100000" },
     sb:     { TYPE: 'STYPE', FUNCT3: "000" },
     sh:     { TYPE: 'STYPE', FUNCT3: "001" },
-    sw:     { TYPE: 'STYPE', FUNCT3: "010" }
+    sw:     { TYPE: 'STYPE', FUNCT3: "010" },
+    beq:    { TYPE: 'BTYPE', FUNCT3: "000" },
+    bne:    { TYPE: 'BTYPE', FUNCT3: "001" },
+    blt:    { TYPE: 'BTYPE', FUNCT3: "100" },
+    bge:    { TYPE: 'BTYPE', FUNCT3: "101" },
+    bltu:   { TYPE: 'BTYPE', FUNCT3: "110" },
+    bgeu:   { TYPE: 'BTYPE', FUNCT3: "111" }
 }
