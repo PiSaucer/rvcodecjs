@@ -1,6 +1,7 @@
 import { Fragment, isShift } from './Instruction.js'
 import { BASE, OPERATIONS, OPCODE, FIELD_COMMON,
-        FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE } from './Constants.js'
+        FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
+        FIELD_BTYPE } from './Constants.js'
 
 export class Encoder {
     /**
@@ -37,6 +38,10 @@ export class Encoder {
             case "STYPE":
                 this.encodeStype();
                 this.format = "STYPE";
+                break;
+            case "BTYPE":
+                this.encodeBtype();
+                this.format = "BTYPE";
                 break;
             default:
                 throw "invalid operation";
@@ -224,6 +229,67 @@ export class Encoder {
 
         // Constuct binary instruction
         this.binary = imm11_5 + rs2 + rs1 + funct3 + imm4_0 + this.opcode;
+    }
+
+    /**
+     * Encodes B-type instruction
+     */
+    encodeBtype() {
+        this.opcode = OPCODE.BTYPE;
+
+        // Get funct3 bits
+        var funct3 = OPERATIONS[this.operation].FUNCT3;
+
+        // Get tokens for instruction
+        this.parseInstruction();
+        var reg1 = this.tokens[1];
+        var reg2 = this.tokens[2];
+        var immediate = this.tokens[3];
+
+        // Get rs1 bits
+        var rs1 = convertDecRegister(reg1);
+        // Get rs2 bits
+        var rs2 = convertDecRegister(reg2);
+
+        // Get lengths for each immediate fragment
+        var imm12Len = (FIELD_BTYPE.IMM12.END - FIELD_BTYPE.IMM12.START) + 1;
+        var imm11Len = (FIELD_BTYPE.IMM11.END - FIELD_BTYPE.IMM11.START) + 1;
+        var imm10Len = (FIELD_BTYPE.IMM10.END - FIELD_BTYPE.IMM10.START) + 1;
+        var imm4Len = (FIELD_BTYPE.IMM4.END - FIELD_BTYPE.IMM4.START) + 1;
+        var totalLen = imm12Len + imm11Len + imm10Len + imm4Len; 
+
+        // Parse immediate to binary
+        var imm = parseDec(immediate).padStart(totalLen + 1, '0');
+
+        // Get bits for each immediate fragment
+        var imm12 = imm.substring(0, imm12Len);
+        var currInd = imm12Len;
+        var imm11 = imm.substring(currInd, currInd + imm11Len);
+        currInd += imm11Len;
+        var imm10_5 = imm.substring(currInd, currInd + imm10Len);
+        currInd += imm10Len;
+        var imm4_1 = imm.substring(currInd, currInd + imm4Len);
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(this.operation, this.opcode,
+            FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(this.operation, funct3,
+            FIELD_COMMON.FUNCT3.START, "funct3"));
+        this.fragments.push(new Fragment(reg1, rs1,
+            FIELD_COMMON.RS1.START, "rs1"));
+        this.fragments.push(new Fragment(reg2, rs2,
+            FIELD_COMMON.RS2.START, "rs2"));
+        this.fragments.push(new Fragment(immediate, imm12,
+            FIELD_BTYPE.IMM12.START, "imm[12]"));
+        this.fragments.push(new Fragment(immediate, imm10_5,
+            FIELD_BTYPE.IMM10.START, "imm[10:5]"));
+        this.fragments.push(new Fragment(immediate, imm4_1,
+            FIELD_BTYPE.IMM4.START, "imm[4:1]"));
+        this.fragments.push(new Fragment(immediate, imm11,
+            FIELD_BTYPE.IMM11.START, "imm[11]"));
+
+        this.binary = imm12 + imm10_5 + rs2 + rs1 + funct3 + imm4_1 + imm11 +
+            this.opcode;
     }
 }
 

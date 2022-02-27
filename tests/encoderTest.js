@@ -24,3 +24,9 @@ test('decode - sb', function () {
     let inst = new Instruction("sb x14, 8(x2)");
     assert(inst.binary == "00000000111000010000010000100011");
 })
+
+// B-TYPE
+test('decode - bne', function () {
+    let inst = new Instruction("bne x19, x11, 16");
+    assert(inst.binary == "00000000101110011001100001100011");
+})
