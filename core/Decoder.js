@@ -275,15 +275,6 @@ export class Decoder {
      * Decodes B-type instruction
      */
     decodeBType() {
-        // Define funct3 bits
-        let bfunct3 = { "000": "beq",
-                        "001": "bne",
-                        "100": "blt",
-                        "101": "bge",
-                        "110": "bltu",
-                        "111": "bgeu"
-        };
-
         // Get bits for each field
         var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
                                 FIELD_COMMON.FUNCT3.END);
@@ -302,9 +293,15 @@ export class Decoder {
         var imm0 = '0';
 
         // Check for operation using funct3
-        if (funct3 in bfunct3) {
-            var operation = bfunct3[funct3];
-        } else {
+        var operation;
+
+        for (var op in OPERATIONS) {
+            if (OPERATIONS[op].FUNCT3 == funct3) {
+                    operation = op;
+            }
+        }
+
+        if (typeof operation === 'undefined') {
             throw "Invalid funct3";
         }
 
