@@ -201,5 +201,7 @@ export const OPERATIONS = {
     blt:    { TYPE: 'BTYPE', FUNCT3: "100" },
     bge:    { TYPE: 'BTYPE', FUNCT3: "101" },
     bltu:   { TYPE: 'BTYPE', FUNCT3: "110" },
-    bgeu:   { TYPE: 'BTYPE', FUNCT3: "111" }
+    bgeu:   { TYPE: 'BTYPE', FUNCT3: "111" },
+    lui:    { TYPE: 'UTYPE', OPCODE: OPCODE.LUI },
+    auipc:  { TYPE: 'UTYPE', OPCODE: OPCODE.AUIPC }
 }

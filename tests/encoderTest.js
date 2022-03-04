@@ -30,3 +30,9 @@ test('decode - bne', function () {
     let inst = new Instruction("bne x19, x11, 16");
     assert(inst.binary == "00000000101110011001100001100011");
 })
+
+// U-TYPE
+test('decode - auipc', function () {
+    let inst = new Instruction("auipc x3, 30");
+    assert(inst.binary == "00000000000000011110000110010111");
+})
