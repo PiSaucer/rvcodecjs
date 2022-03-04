@@ -1,7 +1,7 @@
 import { Fragment, isShift } from './Instruction.js'
 import { BASE, OPERATIONS, OPCODE, FIELD_COMMON,
         FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
-        FIELD_BTYPE } from './Constants.js'
+        FIELD_BTYPE, FIELD_UTYPE } from './Constants.js'
 
 export class Encoder {
     /**
@@ -42,6 +42,10 @@ export class Encoder {
             case "BTYPE":
                 this.encodeBtype();
                 this.format = "BTYPE";
+                break;
+            case "UTYPE":
+                this.encodeUtype();
+                this.format = "UTYPE";
                 break;
             default:
                 throw "invalid operation";
@@ -290,6 +294,34 @@ export class Encoder {
 
         this.binary = imm12 + imm10_5 + rs2 + rs1 + funct3 + imm4_1 + imm11 +
             this.opcode;
+    }
+
+    /**
+     * Encodes U-type instruction
+     */
+    encodeUtype() {
+        this.opcode = OPERATIONS[this.operation].OPCODE;
+
+        // Get tokens for instruction
+        this.parseInstruction();
+        var destReg = this.tokens[1];
+        var immediate = this.tokens[2];
+
+        // Get rd bits
+        var rd = convertDecRegister(destReg);
+
+        // Get imm bits
+        var immLen = (FIELD_UTYPE.IMM31.END - FIELD_UTYPE.IMM31.START) + 1;
+        var imm = parseDec(immediate).padStart(immLen, '0');
+
+        // Create fragments for each field
+        this.fragments.push(new Fragment(this.operation, this.opcode,
+                                        FIELD_COMMON.OPCODE.START, "opcode"));
+        this.fragments.push(new Fragment(destReg, rd,
+                                        FIELD_COMMON.RD.START, "rd"));
+        this.fragments.push(new Fragment(immediate, imm,
+                                        FIELD_UTYPE.IMM31, "imm[31:12]"));
+        this.binary = imm + rd + this.opcode;
     }
 }
 
