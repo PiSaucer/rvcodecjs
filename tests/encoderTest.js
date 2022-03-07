@@ -36,3 +36,9 @@ test('encode - auipc', function () {
     let inst = new Instruction("auipc x3, 30");
     assert(inst.binary == "00000000000000011110000110010111");
 })
+
+// J-TYPE
+test('encode - jal', function () {
+    let inst = new Instruction("jal x3, 132");
+    assert(inst.binary == "00001000010000000000000111101111");
+})
