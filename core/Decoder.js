@@ -1,7 +1,8 @@
 import { BASE, FIELD_COMMON, XLEN, OPCODE,
         FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
         FIELD_BTYPE, FIELD_UTYPE, FIELD_JTYPE,
-        FIELD_SYSTEM, FIELD_FENCE, OPERATIONS } from './Constants.js'
+        FIELD_SYSTEM, FIELD_FENCE, RTYPE, ITYPE,
+        STYPE, BTYPE } from './Constants.js'
 
 import { Fragment, isShift } from './Instruction.js'
 
@@ -103,9 +104,9 @@ export class Decoder {
 
         // Check for operation in rfunct dictionary
         var operation;
-        for (var op in OPERATIONS) {
-            if (OPERATIONS[op].FUNCT3 == funct3 &&
-                OPERATIONS[op].FUNCT7 == funct7) {
+        for (var op in RTYPE) {
+            if (RTYPE[op].FUNCT3 == funct3 &&
+                RTYPE[op].FUNCT7 == funct7) {
                     operation = op;
             }
         }
@@ -147,10 +148,10 @@ export class Decoder {
         // Check for operation using funct3 and opcode / high-order immediate
         var operation;
 
-        for (var op in OPERATIONS) {
-            if (OPERATIONS[op].FUNCT3 == funct3 && 
-                (OPERATIONS[op].OPCODE == this.opcode ||
-                 OPERATIONS[op].HIGHIMM == highImm)) {
+        for (var op in ITYPE) {
+            if (ITYPE[op].FUNCT3 == funct3 && 
+                (ITYPE[op].OPCODE == this.opcode ||
+                 ITYPE[op].HIGHIMM == highImm)) {
                     operation = op;
             }
         }
@@ -242,8 +243,8 @@ export class Decoder {
         // Check for operation using funct3
         var operation;
 
-        for (var op in OPERATIONS) {
-            if (OPERATIONS[op].FUNCT3 == funct3) {
+        for (var op in STYPE) {
+            if (STYPE[op].FUNCT3 == funct3) {
                     operation = op;
             }
         }
@@ -295,8 +296,8 @@ export class Decoder {
         // Check for operation using funct3
         var operation;
 
-        for (var op in OPERATIONS) {
-            if (OPERATIONS[op].FUNCT3 == funct3) {
+        for (var op in BTYPE) {
+            if (BTYPE[op].FUNCT3 == funct3) {
                     operation = op;
             }
         }
