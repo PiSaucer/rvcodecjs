@@ -144,11 +144,6 @@ body {
     place-content: center start;
 }
 
-.subtitle {
-    margin-bottom: -100%; /* Pulls subtitle down by it's height so its aligned with label.*/
-    font-size: 0.875rem;
-}
-
 .offset-label{
     font-size: 0.875rem;
     position: absolute;

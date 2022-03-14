@@ -90,7 +90,6 @@ function renderInstructionData(instruction) {
     document.getElementById('hex-data').innerText = instruction.hex;
     document.getElementById('format-data').innerText = instruction.format;
     document.getElementById('set-data').innerText = instruction.isa;
-    document.getElementById('set-subtitle-data').innerText = instruction.setSubtitle;
 
     let asmElmString = instruction.assembly;
 
