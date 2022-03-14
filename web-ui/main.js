@@ -8,13 +8,23 @@ const colors = [
     '--color-other-blue',
 ]
 
+//note: all imm values are colored red dynamically
 const fieldColorMap = {
-    'opcode': colors[0],
-    'funct3': colors[0],
-    'funct7': colors[0],
-    'rs1': colors[2],
-    'rs2': colors[4],
-    'rd': colors[3]
+    'opcode': '--color-other-yellow',
+    'funct3': '--color-other-yellow',
+    'funct7': '--color-other-yellow',
+    'funct12': '--color-other-yellow',
+
+    'rs1': '--color-other-pink',
+    'rs2': '--color-other-blue',
+    'rd': '--color-other-cyan',
+
+    'shamt': '--color-other-red',
+    'higher-order immediate': '--color-other-red',
+
+    'fm': '--color-other-pink',
+    'pred': '--color-other-blue',
+    'succ': '--color-other-purple'
 }
 
 const resultsContainerElm = document.getElementsByClassName('rows-container')[0];
@@ -100,12 +110,15 @@ function renderInstructionData(instruction) {
     let handledAsmInstructions = [];
     for (let frag of frags) {
         console.log(frag);
-
+        let color = fieldColorMap[frag.field];
+        if(!color && frag.field.includes('imm')) {
+            color = '--color-other-red'
+        }
         //set binary bits
         for (let bit of Array.from(frag.bits).reverse()) {
             let bitElm = document.getElementsByClassName('binary-bit')[head];
             bitElm.innerText = bit;
-            bitElm.style.color = `var(${fieldColorMap[frag.field]})`;
+            bitElm.style.color = `var(${color})`;
             head--;
         }
 
@@ -113,7 +126,7 @@ function renderInstructionData(instruction) {
         if (!handledAsmInstructions.includes(frag.assembly)) {
             handledAsmInstructions.push(frag.assembly)
             asmElmString = asmElmString.replace(frag.assembly, 
-                `<span style='color:var(${fieldColorMap[frag.field]})'>${
+                `<span style='color:var(${color})'>${
                     frag.assembly
                 }<span/>`)
         }
