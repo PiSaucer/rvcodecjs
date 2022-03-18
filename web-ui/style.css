@@ -4,9 +4,10 @@
     
     --color-other-yellow: #D0C245;
     --color-other-red: #BC5252;
-    --color-other-pink: #C140D6;
+    --color-other-pink: #d4a4dc;
     --color-other-cyan: #35BABA;
-    --color-other-blue: #7D6FFF;
+    --color-other-blue: #4d9fe6;
+    --color-other-purple: #a600ff;
 
     --selection-color: #2b634a;
 }
@@ -69,7 +70,6 @@ body {
 #search-container{
     border: 1px solid var(--color-main);
     height: 100%;
-    width: 43ch;
     height: 3.5ch;
 }
 
@@ -120,6 +120,7 @@ body {
     display: grid;
     align-items: stretch;
     column-gap: 5ch;
+    row-gap: 1ch;
 
     /* Labels (on left) will shrink when data needs more space */
     grid-template-columns: minmax(0, 2fr) 5fr;
@@ -144,11 +145,6 @@ body {
     place-content: center start;
 }
 
-.subtitle {
-    margin-bottom: -100%; /* Pulls subtitle down by it's height so its aligned with label.*/
-    font-size: 0.875rem;
-}
-
 .offset-label{
     font-size: 0.875rem;
     position: absolute;
@@ -157,14 +153,35 @@ body {
     padding: 0% 0.25%;
     background-color: var(--color-background) ;
 }
+.copied-text-popup {
+    font-size: 0.875rem;
+    position: absolute;
+    transform: translate(-50%, -120%);
+    width: fit-content;
+    background-color: var(--color-background) ;
+}
 
 #binary-data {
     height: fit-content;
     width: max-content;
-    margin: 1ch 0ch;
+
+    /* Increased padding to give users a wider area to select */
+    padding: 1ch 1ch;
+
+    /* Move left to compensate for left padding */
+    margin-left: -1ch;
+
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 1rem;
+
+    transition: background-color 400ms linear;
+}
+
+/* Used to pulse background color when element is copied
+   to clipboard. */
+.copied {
+    background-color: var(--color-main);
 }
 
 @media (max-width: 700px) {
