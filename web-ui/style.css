@@ -1,9 +1,11 @@
+/* Fonts importing */
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap");
 
+/* Colors */
 :root {
     --color-main: #53D19A;
     --color-background: #3E3E3E;
-    
+
     --color-other-yellow: #D0C245;
     --color-other-red: #BC5252;
     --color-other-pink: #d4a4dc;
@@ -13,11 +15,12 @@
 
     --selection-color: #2b634a;
 }
+
 @media (prefers-color-scheme: light) {
     :root {
         --color-main: #3E3E3E;
         --color-background: #fdf6e3;
-        
+
         --color-other-yellow: #ecad00;
         --color-other-red: #BC5252;
         --color-other-pink: #C140D6;
@@ -27,22 +30,26 @@
         --selection-color: #bcffe1;
     }
 }
+
 ::placeholder{
     color: #53D19AAA;
 }
+
 ::selection {
     background-color: var(--selection-color);
 }
+
 ::-moz-selection {
     background-color: var(--selection-color);
 }
 
+/* Body */
 body {
     font-family: 'IBM Plex Mono', monospace;
 
     height: 100vh;
     margin: 0px;
-    
+
     display: grid;
     grid-template-rows: 0.5fr minmax(4ch, 12vh) minmax(30ch, 10fr);
     gap:1ch;
@@ -51,6 +58,7 @@ body {
     background-color: var(--color-background);
 }
 
+/* Page title */
 #title-container{
     margin: 1ch 1ch 0ch 1ch;
     display: grid;
@@ -60,12 +68,22 @@ body {
     width:max-content;
 }
 
+/* Boxes */
+.offset-label{
+    font-size: 0.875rem;
+    position: absolute;
+    transform: translate(20%, -60%);
+
+    padding: 0% 0.25%;
+    background-color: var(--color-background) ;
+}
+
+/* Search bar */
 #searchbar-outer-container{
     display: grid;
 
-    /*  end: vertically bottomed
-        center: horizontally centered   */
-    place-content: end center; 
+    /* end: vertically bottomed, center: horizontally centered  */
+    place-content: end center;
     grid-template-columns: minmax(30ch, 40ch);
 }
 
@@ -88,10 +106,12 @@ body {
     color:var(--color-main);
     font-family: inherit;
 }
-#search-input:focus-visible { 
+
+#search-input:focus-visible {
     outline:none;
 }
 
+/* Result area */
 #results-outer-container{
     display: grid;
     place-content: center;
@@ -136,33 +156,18 @@ body {
 }
 
 
-/* label - left */
 .result-row:nth-child(odd){
+    /* label - left */
     display: grid;
     place-content: center end;
 }
 
-/* data - right */
 .result-row:nth-child(even){
+    /* data - right */
     place-content: center start;
 }
 
-.offset-label{
-    font-size: 0.875rem;
-    position: absolute;
-    transform: translate(20%, -60%);
-
-    padding: 0% 0.25%;
-    background-color: var(--color-background) ;
-}
-.copied-text-popup {
-    font-size: 0.875rem;
-    position: absolute;
-    transform: translate(-50%, -120%);
-    width: fit-content;
-    background-color: var(--color-background) ;
-}
-
+/* Binary representation */
 #binary-data {
     height: fit-content;
     width: max-content;
@@ -178,12 +183,6 @@ body {
     gap: 1rem;
 
     transition: background-color 400ms linear;
-}
-
-/* Used to pulse background color when element is copied
-   to clipboard. */
-.copied {
-    background-color: var(--color-main);
 }
 
 @media (max-width: 700px) {
@@ -218,7 +217,22 @@ body {
 
     /* --bit-color defined dynamically by script */
     color:var(--bit-color);
-    
+
     display: grid;
-    place-content: center;    
+    place-content: center;
 }
+
+/* Copying */
+/* Used to pulse background color when element is copied to clipboard. */
+.copied {
+    background-color: var(--color-main);
+}
+
+.copied-text-popup {
+    font-size: 0.875rem;
+    position: absolute;
+    transform: translate(-50%, -120%);
+    width: fit-content;
+    background-color: var(--color-background) ;
+}
+
