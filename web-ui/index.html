@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RISC-V Instruction Encoder/Decoder</title>
@@ -13,106 +13,106 @@
 
     <!-- Style -->
     <link rel="stylesheet" href="./style.css">
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="title-container">
-        <div id="title-box">[ LupLab RISC-V Encoder/Decoder ]</div>
+      <div id="title-box">[ LupLab RISC-V Encoder/Decoder ]</div>
     </div>
 
     <div id="searchbar-outer-container">
-        <div id="search-container">
-            <span class='offset-label'>[ Instruction ]</span>
-            <input type="text" name="input" id="search-input" placeholder="addi x5, x6, 7" autofocus>
-        </div>
+      <div id="search-container">
+        <span class='offset-label'>[ Instruction ]</span>
+        <input type="text" name="input" id="search-input" placeholder="addi x5, x6, 7" autofocus>
+      </div>
     </div>
 
     <div id="results-outer-container">
-        <div id="results-container-box">
-            <span id='results-label' class='offset-label'>[ Conversion ]</span>
-            <div id="results-inner-container">
-                <div class="results-container-spacing"></div>
-                <div class="rows-container">
+      <div id="results-container-box">
+        <span id='results-label' class='offset-label'>[ Conversion ]</span>
+        <div id="results-inner-container">
+          <div class="results-container-spacing"></div>
+          <div class="rows-container">
 
-                    <div class="result-row result-row-title">Assembly = </div>
-                    <div id="asm-data" class="result-row result-row-data"></div>
+            <div class="result-row result-row-title">Assembly = </div>
+            <div id="asm-data" class="result-row result-row-data"></div>
 
-                    <div class="result-row">Binary = </div>
-                    <div id="binary-data" class="result-row">
-                        <span class="binary-byte">
-                            <span class="binary-nibble">
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                            </span>
-                            <span class="binary-nibble">
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                            </span>
-                        </span>
-                        <span class="binary-byte">
-                            <span class="binary-nibble">
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                            </span>
-                            <span class="binary-nibble">
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                            </span>
-                        </span>
-                        <span class="binary-byte">
-                            <span class="binary-nibble">
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                            </span>
-                            <span class="binary-nibble">
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                            </span>
-                        </span>
-                        <span class="binary-byte">
-                            <span class="binary-nibble">
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                            </span>
-                            <span class="binary-nibble">
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                                <span class="binary-bit"></span>
-                            </span>
-                        </span>
-                    </div>
-
-                    <div class="result-row"> Hexadecimal = </div>
-                    <div id="hex-data" class="result-row"></div>
-
-
-                    <div class="result-row"> Format = </div>
-                    <div id="format-data" class="result-row"> </div>
-
-                    <div class="result-row">Instruction set = </div>
-                    <div class="result-row" id="set-data"></div>
-                </div>
-                <div class="results-container-spacing"></div>
+            <div class="result-row">Binary = </div>
+            <div id="binary-data" class="result-row">
+              <span class="binary-byte">
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+              </span>
+              <span class="binary-byte">
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+              </span>
+              <span class="binary-byte">
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+              </span>
+              <span class="binary-byte">
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+              </span>
             </div>
+
+            <div class="result-row"> Hexadecimal = </div>
+            <div id="hex-data" class="result-row"></div>
+
+
+            <div class="result-row"> Format = </div>
+            <div id="format-data" class="result-row"> </div>
+
+            <div class="result-row">Instruction set = </div>
+            <div class="result-row" id="set-data"></div>
+          </div>
+          <div class="results-container-spacing"></div>
         </div>
+      </div>
     </div>
 
     <script type="module" src="main.js"></script>
-</body>
+  </body>
 
 </html>
