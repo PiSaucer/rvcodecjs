@@ -1,3 +1,1 @@
-# rv5codec
-
-RISC-V instruction encoding/decoding
+**rvcodec.js** is a RISC-V instruction encoder/decoder.
