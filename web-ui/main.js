@@ -45,9 +45,8 @@ window.onload = function () {
     // no instruction
     return;
   }
-
-  // set input value to data encoded in url
-  input.value = decodeURIComponent(window.location.hash.replace('#', ''));
+  // set input value to URL's hash (minus '#')
+  input.value = decodeURIComponent(window.location.hash.substr(1));
 
   // send input event to trigger on-input handler
   let event = new Event('keydown');
