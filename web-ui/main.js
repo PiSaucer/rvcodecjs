@@ -80,15 +80,24 @@ document.getElementById('search-input').onkeydown = function (event) {
     return;
   }
 
-  document.getElementById('results-container-box').style.display = 'initial';
-
   let value = event.currentTarget.value.trim();
+  window.location.hash = value;
+
+  if (value === "") {
+    /* Reset UI if value is empty */
+    document.getElementById('results-container-box').style.display = 'none';
+    return;
+  }
+
+  /* Convert instruction */
   try {
     const instructionData = new Instruction(value);
     previousInstruction = instructionData;
     renderInstructionData(instructionData);
-  } catch (error) { renderError(error); }
-  window.location.hash = value;
+  } catch (error) {
+    renderError(error);
+  }
+  document.getElementById('results-container-box').style.display = 'initial';
 }
 
 function renderInstructionData(instruction) {
