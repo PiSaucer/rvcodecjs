@@ -37,9 +37,10 @@ let ResultState = {
   resultInnerHtml: resultsContainerElm.innerHTML
 }
 
-
+// Upon page loading
 window.onload = function () {
   const input = document.getElementById('search-input');
+
   if (!window.location.hash) {
     // no instruction
     return;
@@ -74,6 +75,7 @@ document.getElementById("binary-data").ondblclick = event => {
   });
 };
 
+// Input from search box
 document.getElementById('search-input').onkeydown = function (event) {
   if (event.key != 'Enter') {
     return;
