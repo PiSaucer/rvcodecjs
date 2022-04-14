@@ -167,7 +167,7 @@ export const OPCODE = {
     FENCE:  '0001111'
 }
 
-export const OPERATIONS = {
+export const RTYPE = {
     add:    { TYPE: "RTYPE", FUNCT3: "000", FUNCT7: "0000000" },
     sub:    { TYPE: "RTYPE", FUNCT3: "000", FUNCT7: "0100000" },
     sll:    { TYPE: "RTYPE", FUNCT3: "001", FUNCT7: "0000000" },
@@ -177,7 +177,10 @@ export const OPERATIONS = {
     srl:    { TYPE: "RTYPE", FUNCT3: "101", FUNCT7: "0000000" },
     sra:    { TYPE: "RTYPE", FUNCT3: "101", FUNCT7: "0100000" },
     or:     { TYPE: "RTYPE", FUNCT3: "110", FUNCT7: "0000000" },
-    and:    { TYPE: "RTYPE", FUNCT3: "111", FUNCT7: "0000000" },
+    and:    { TYPE: "RTYPE", FUNCT3: "111", FUNCT7: "0000000" }
+}
+
+export const ITYPE = {
     addi:   { TYPE: 'ITYPE', FUNCT3: "000", OPCODE: OPCODE.ITYPE },
     jalr:   { TYPE: 'ITYPE', FUNCT3: "000", OPCODE: OPCODE.JALR },
     lb:     { TYPE: 'ITYPE', FUNCT3: "000", OPCODE: OPCODE.LOAD },
@@ -192,17 +195,32 @@ export const OPERATIONS = {
     ori:    { TYPE: 'ITYPE', FUNCT3: "110", OPCODE: OPCODE.ITYPE },
     andi:   { TYPE: 'ITYPE', FUNCT3: "111", OPCODE: OPCODE.ITYPE },
     srli:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0000000" },
-    srai:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0100000" },
+    srai:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0100000" }
+}
+
+export const STYPE = {
     sb:     { TYPE: 'STYPE', FUNCT3: "000" },
     sh:     { TYPE: 'STYPE', FUNCT3: "001" },
-    sw:     { TYPE: 'STYPE', FUNCT3: "010" },
+    sw:     { TYPE: 'STYPE', FUNCT3: "010" }
+}
+
+export const BTYPE = {
     beq:    { TYPE: 'BTYPE', FUNCT3: "000" },
     bne:    { TYPE: 'BTYPE', FUNCT3: "001" },
     blt:    { TYPE: 'BTYPE', FUNCT3: "100" },
     bge:    { TYPE: 'BTYPE', FUNCT3: "101" },
     bltu:   { TYPE: 'BTYPE', FUNCT3: "110" },
-    bgeu:   { TYPE: 'BTYPE', FUNCT3: "111" },
+    bgeu:   { TYPE: 'BTYPE', FUNCT3: "111" }
+}
+
+export const UTYPE = {
     lui:    { TYPE: 'UTYPE', OPCODE: OPCODE.LUI },
-    auipc:  { TYPE: 'UTYPE', OPCODE: OPCODE.AUIPC },
+    auipc:  { TYPE: 'UTYPE', OPCODE: OPCODE.AUIPC }
+}
+
+export const JTYPE = {
     jal:    { TYPE: 'JTYPE' }
 }
+
+export const OPERATIONS = Object.assign({}, RTYPE, ITYPE, STYPE, BTYPE, UTYPE,
+                                            JTYPE);
