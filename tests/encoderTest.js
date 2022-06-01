@@ -31,6 +31,11 @@ test('enc - MISC-MEM - fence', function () {
     assertEq(inst.hex, '0f30000f');
 })
 
+test('enc - MISC-MEM - fence.i', function () {
+    let inst = new Instruction('fence.i');
+    assertEq(inst.hex, '0000100f');
+})
+
 // SYSTEM
 test('enc - SYSTEM - ecall', function () {
     let inst = new Instruction('ecall');

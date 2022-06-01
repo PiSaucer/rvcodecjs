@@ -360,8 +360,20 @@ export class Decoder {
 
       // Construct assembly instruction
       this.asm = renderAsm([this.#mne, predecessor, successor]);
+    } else  {
+      // FENCE.I case
+
+      f['imm'] = new Frag(this.#mne, imm, FIELDS.i_imm_11_0);
+
+      // Assembly fragments in order of instruction
+      this.asmFrags.push(f['opcode']);
+
+      // Binary fragments from MSB to LSB
+      this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
+
+      // Construct assembly instruction
+      this.asm = renderAsm([this.#mne]);
     }
-    // TODO: FENCE.I case
   }
 
   /**

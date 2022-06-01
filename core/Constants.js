@@ -143,7 +143,8 @@ export const ISA_RV32I = {
   or:     { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '110', opcode: OPCODE.OP },
   and:    { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '111', opcode: OPCODE.OP },
 
-  fence:  { isa: 'RV32I', fmt: 'I-type', funct3: '000', opcode: OPCODE.MISC_MEM },
+  fence:    { isa: 'RV32I', fmt: 'I-type', funct3: '000', opcode: OPCODE.MISC_MEM },
+  'fence.i':  { isa: 'Zifencei', fmt: 'I-type', funct3: '001', opcode: OPCODE.MISC_MEM },
 
   ecall:  { isa: 'RV32I', fmt: 'I-type', funct12: '000000000000', funct3: '000', opcode: OPCODE.SYSTEM },
   ebreak: { isa: 'RV32I', fmt: 'I-type', funct12: '000000000001', funct3: '000', opcode: OPCODE.SYSTEM },
@@ -203,6 +204,7 @@ export const ISA_BRANCH = {
 
 export const ISA_MISC_MEM = {
   [ISA_RV32I['fence'].funct3]: 'fence',
+  [ISA_RV32I['fence.i'].funct3]: 'fence.i',
 }
 
 export const ISA_SYSTEM = {

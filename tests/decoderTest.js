@@ -42,6 +42,12 @@ test('dec - MISC-MEM - fence', function () {
     assertEq(inst.asm, 'fence rw, rw');
 })
 
+test('dec - MISC-MEM - fence.i', function () {
+    let inst = new Instruction('00000000000000000001000000001111');
+    assertEq(inst.hex, '0000100f');
+    assertEq(inst.asm, 'fence.i');
+})
+
 // SYSTEM
 test('dec - SYSTEM - ebreak', function () {
     let inst = new Instruction('0000000000100000000000001110011');
