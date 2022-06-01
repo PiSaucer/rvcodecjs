@@ -1,14 +1,15 @@
 pages:
   stage: deploy
   script:
-  # public dir to serve as web root 
-  - mkdir public
-  - cp -r core public
-  - cp -r web-ui/* public
-  # change js file path according to changed folder structure
-  - sed -i -e 's/\.\.\/core\/Instruction\.js/\.\/core\/Instruction\.js/g' ./public/main.js
+    # public directory to serve as web root
+    - mkdir public
+    - cp -r core public
+    # web-ui files at root of directory
+    - cp -r web-ui/* public
+    # change js file path according to changed folder structure
+    - sed -i -e 's/\.\.\/core\/Instruction\.js/\.\/core\/Instruction\.js/g' ./public/main.js
   artifacts:
     paths:
-    - public
+      - public
   only:
-  - main
+    - main
