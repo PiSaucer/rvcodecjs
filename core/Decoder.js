@@ -8,7 +8,8 @@
 
 import { BASE,
   FIELDS, OPCODE,
-  ISA_OP, ISA_LOAD, ISA_STORE, ISA_OP_IMM, ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA,
+  ISA_OP, ISA_LOAD, ISA_STORE, ISA_OP_IMM, ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM,
+  ISA,
 } from './Constants.js'
 
 import { Frag } from './Instruction.js'

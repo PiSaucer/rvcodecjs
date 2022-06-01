@@ -45,7 +45,6 @@ const fieldColorMap = {
 
 /* Fast access to selected document elements */
 const input = document.getElementById('search-input');
-const resultsContainerElm = document.getElementsByClassName('rows-container')[0];
 
 /**
  * Upon loading page, trigger conversion if hash params exist
@@ -161,6 +160,8 @@ function renderConversion(inst) {
  * @param {String} error
  */
 function renderError(error) {
+  const resultsContainerElm = document.getElementsByClassName('rows-container')[0];
+
   // Reset result container
   resultsContainerElm.innerHTML = '';
 
