@@ -364,7 +364,7 @@ export class Decoder {
     } else  {
       // FENCE.I case
 
-      f['imm'] = new Frag(this.#mne, imm, FIELDS.i_imm_11_0);
+      f['imm'] = new Frag(this.#mne, imm, FIELDS.i_imm_11_0.name);
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode']);
