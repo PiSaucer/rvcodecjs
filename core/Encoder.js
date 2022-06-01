@@ -1,395 +1,344 @@
-import { Fragment, isShift } from './Instruction.js'
-import { BASE, OPERATIONS, OPCODE, FIELD_COMMON,
-        FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
-        FIELD_BTYPE, FIELD_UTYPE, FIELD_JTYPE } from './Constants.js'
+import { BASE,
+  FIELDS, OPCODE,
+  ISA,
+} from './Constants.js'
+
+import { convertBase } from './Instruction.js'
 
 export class Encoder {
-    /**
-     * Creates an Encoder to convert an assembly instruction to binary
-     * @param {String} assembly
-     */
-    constructor(assembly) {
-        this.assembly = assembly;
+  /**
+   * Binary representation of instruction
+   * @type String
+   */
+  bin;
 
-        // Create an array of fragments
-        /** @type {Fragment[]} */
-        this.fragments = [];
+  /* Private members */
+  #inst;
+  #mne;
+  #opr;
 
-        // Convert assembly instruction to binary
-        this.convertAsmToBin();
-    }
+  /**
+   * Creates an Encoder to convert an assembly instruction to binary
+   * @param {String} assembly
+   */
+  constructor(asm) {
+    // Tokenize assembly instruction
+    const tokens = asm.toLowerCase().split(/[ ,()]+/);
 
     // Convert assembly instruction to binary
-    convertAsmToBin() {
-        // Set all characters to lower case
-        this.assembly = this.assembly.toLowerCase();
-        // The first word of the assembly instruction is the opcode
-        this.operation = this.assembly.split(" ")[0];
+    this.#convertAsmToBin(tokens);
+  }
 
-        switch(OPERATIONS[this.operation].TYPE) {
-            case "RTYPE":
-                this.encodeRtype();
-                this.format = "RTYPE";
-                break;
-            case "ITYPE":
-                this.encodeItype();
-                this.format = "ITYPE";
-                break;
-            case "STYPE":
-                this.encodeStype();
-                this.format = "STYPE";
-                break;
-            case "BTYPE":
-                this.encodeBtype();
-                this.format = "BTYPE";
-                break;
-            case "UTYPE":
-                this.encodeUtype();
-                this.format = "UTYPE";
-                break;
-            case "JTYPE":
-                this.encodeJtype();
-                this.format = "JTYPE";
-                break;
-            default:
-                throw "invalid operation";
-        }
+  /**
+   * Convert assembly instruction to binary
+   * @param {Array.String} tokens
+   */
+  #convertAsmToBin(tokens) {
+    // The first token is necessarily the instruction's mnemonic
+    this.#mne = tokens[0];
+    // The following tokens are its operands
+    this.#opr = tokens.splice(1);
+
+    // Find instruction based on given mnemonic
+    this.#inst = ISA[this.#mne];
+    if (this.#inst === undefined) {
+      throw "Invalid mnemonic: " + this.#mne;
     }
 
-    // Parse instruction into tokens
-    parseInstruction() {
-        this.tokens = this.assembly.split(/[ ,]+/);
+    // Encode according to opcode
+    switch(this.#inst.opcode) {
+        // R-type
+      case OPCODE.OP:
+        this.#encodeOP();
+        break;
+
+        // I-type
+      case OPCODE.JALR:
+        this.#encodeJALR();
+        break;
+      case OPCODE.LOAD:
+        this.#encodeLOAD();
+        break;
+      case OPCODE.OP_IMM:
+        this.#encodeOP_IMM();
+        break;
+      case OPCODE.MISC_MEM:
+        this.#encodeMISC_MEM();
+        break;
+      case OPCODE.SYSTEM:
+        this.#encodeSYSTEM();
+        break;
+
+        // S-type
+      case OPCODE.STORE:
+        this.#encodeSTORE();
+        break;
+
+        // B-type
+      case OPCODE.BRANCH:
+        this.#encodeBRANCH();
+        break;
+
+        // U-type:
+      case OPCODE.LUI:
+      case OPCODE.AUIPC:
+        this.#encodeUType();
+        break;
+
+        // J-type:
+      case OPCODE.JAL:
+        this.#encodeJAL();
+        break;
+
+        // Invalid opcode
+      default:
+        throw "Unsupported opcode: " + this.#inst.opcode;
+    }
+  }
+
+  /**
+   * Encodes OP instruction
+   */
+  #encodeOP() {
+    // Get operands
+    const dest = this.#opr[0], src1 = this.#opr[1], src2 = this.#opr[2];
+
+    // Convert to binary representation
+    const rd = encReg(dest), rs1 = encReg(src1), rs2 = encReg(src2);
+
+    // Construct binary instruction
+    this.bin = this.#inst.funct7 + rs2 + rs1 + this.#inst.funct3 + rd +
+      this.#inst.opcode;
+  }
+
+  /**
+   * Encodes JALR instruction
+   */
+  #encodeJALR() {
+    // Get operands
+    const dest = this.#opr[0], base = this.#opr[1], offset = this.#opr[2];
+
+    // Convert to binary representation
+    const rd = encReg(dest), rs1 = encReg(base),
+      imm = encImm(offset, FIELDS.i_imm_11_0.pos[1]);
+
+    // Construct binary instruction
+    this.bin = imm + rs1 + this.#inst.funct3 + rd + this.#inst.opcode;
+  }
+
+  /**
+   * Encodes LOAD instruction
+   */
+  #encodeLOAD() {
+
+    // Get operands
+    const dest = this.#opr[0], offset = this.#opr[1], base = this.#opr[2];
+
+    // Convert to binary representation
+    const rd = encReg(dest), rs1 = encReg(base),
+      imm = encImm(offset, FIELDS.i_imm_11_0.pos[1]);
+
+    // Construct binary instruction
+    this.bin = imm + rs1 + this.#inst.funct3 + rd + this.#inst.opcode;
+  }
+
+  /**
+   * Encodes OP_IMM instruction
+   */
+  #encodeOP_IMM() {
+    // Get fields
+    const dest = this.#opr[0], src = this.#opr[1], immediate = this.#opr[2];
+
+    // Convert to binary representation
+    const rd = encReg(dest), rs1 = encReg(src);
+
+    let imm = ''.padStart('0', FIELDS.i_imm_11_0.pos[1]);
+
+    if (/^s[lr][al]i$/.test(this.#mne)) {
+      // Shift instruction
+      if (immediate < 0 || immediate >= (1 << FIELDS.i_shamt.pos[1])) {
+        throw 'Incorrect shamt field: "' + immediate + '"';
+      }
+      const imm_11_5 = '0' + this.#inst.shtyp + '00000';
+      const imm_4_0 = encImm(immediate, FIELDS.i_shamt.pos[1]);
+
+      imm = imm_11_5 + imm_4_0;
+
+    } else {
+      imm = encImm(immediate, FIELDS.i_imm_11_0.pos[1]);
     }
 
-    // Parse load or store instruction into tokens
-    parseLoadStoreInstruction() {
-        this.tokens = this.assembly.split(/[ ,()]+/);
+    // Construct binary instruction
+    this.bin = imm + rs1 + this.#inst.funct3 + rd + this.#inst.opcode;
+  }
+
+  /**
+   * Encodes MISC_MEM instruction
+   */
+  #encodeMISC_MEM() {
+    // Default values
+    let rs1 = ''.padStart(FIELDS.rs1.pos[1], '0'),
+      rd = ''.padStart(FIELDS.rd.pos[1], '0'),
+      imm = ''.padStart(FIELDS.i_imm_11_0.pos[1], '0');
+
+    if (this.#mne === 'fence') {
+      // Get operands
+      const predecessor = this.#opr[0], successor = this.#opr[1];
+
+      // Convert to binary representation
+      const pred = encMem(predecessor), succ = encMem(successor);
+
+      imm = '0000' + pred + succ;
     }
 
-    /**
-     * Encodes R-type instruction
-     */
-    encodeRtype() {
-        // Get opcode for RTYPE
-        this.opcode = OPCODE.RTYPE;
+    // Construct binary instruction
+    this.bin = imm + rs1 + this.#inst.funct3 + rd + this.#inst.opcode;
+  }
 
-        // Get tokens for instruction
-        this.parseInstruction();
+  /**
+   * Encodes SYSTEM instruction
+   */
+  #encodeSYSTEM() {
+    // Default values
+    let rs1 = ''.padStart(FIELDS.rs1.pos[1], '0'),
+      rd = ''.padStart(FIELDS.rd.pos[1], '0'),
+      imm = ''.padStart(FIELDS.i_imm_11_0.pos[1], '0');
 
-        // Get funct3 bits
-        var funct3 = OPERATIONS[this.operation].FUNCT3;
-
-        // Get funct7 bits
-        var funct7 = OPERATIONS[this.operation].FUNCT7;
-
-        // Get rs1 bits
-        var reg1 = this.tokens[2];
-        var rs1 = convertDecRegister(reg1);
-
-        // Get rs2 bits
-        var reg2 = this.tokens[3];
-        var rs2 = convertDecRegister(reg2);
-
-        // Get rd bits
-        var destReg = this.tokens[1];
-        var rd = convertDecRegister(destReg);
-
-        // Create fragments for each field
-        this.fragments.push(new Fragment(this.operation, this.opcode,
-                    FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(this.operation, funct3,
-                    FIELD_COMMON.FUNCT3.START, "funct3"));
-        this.fragments.push(new Fragment(this.operation, funct7,
-                    FIELD_RTYPE.FUNCT7.START, "funct7"));
-        this.fragments.push(new Fragment(reg1, rs1,
-                    FIELD_COMMON.RS1.START, "rs1"));
-        this.fragments.push(new Fragment(reg2, rs2,
-                    FIELD_COMMON.RS2.START, "rs2"));
-        this.fragments.push(new Fragment(destReg, rd,
-                    FIELD_COMMON.RD.START, "rd"));
-
-        // Construct binary instruction
-        this.binary = funct7 + rs2 + rs1 + funct3 + rd + this.opcode;
+    // Trap instructions
+    if (this.#mne === 'ecall' || this.#mne === 'ebreak') {
+      imm = this.#inst.funct12;
     }
 
-    /**
-     * Encodes I-type instruction
-     */
-     encodeItype() {
-        // Get funct3 and opcode / high-order imm bits
+    // Construct binary instruction
+    this.bin = imm + rs1 + this.#inst.funct3 + rd + this.#inst.opcode;
+  }
 
-        var funct3 = OPERATIONS[this.operation].FUNCT3;
-        // SRAI/SRLI have the same opcode (use high-order immediate instead)
-        if (this.operation in ["srli", "srai"]) {
-            this.opcode = OPCODE.ITYPE;
-            highImm = OPERATIONS[this.operation].HIGHIMM;
-        } else {
-            this.opcode = OPERATIONS[this.operation].OPCODE;
-        }
+  /**
+   * Encodes STORE instruction
+   */
+  #encodeSTORE() {
+    // Get operands
+    const src = this.#opr[0], offset = this.#opr[1], base = this.#opr[2];
 
-        // Check if operation is a shift
-        var shift = isShift(this.operation);
+    // Immediate len
+    const len_11_5 = FIELDS.s_imm_11_5.pos[1],
+      len_4_0 = FIELDS.s_imm_4_0.pos[1];
 
-        var reg1;
-        var destReg;
-        var immediate;
+    // Convert to binary representation
+    const rs2 = encReg(src),
+      rs1 = encReg(base),
+      imm = encImm(offset, len_11_5 + len_4_0),
+      imm_11_5 = imm.substring(0, len_11_5),
+      imm_4_0 = imm.substring(len_11_5, len_11_5 + len_4_0);
 
-        // Get tokens for instruction
-        if (this.opcode == OPCODE.LOAD) {
-            this.parseLoadStoreInstruction();
-            reg1 = this.tokens[3];
-            immediate = this.tokens[2];
-        } else {
-            this.parseInstruction();
-            reg1 = this.tokens[2];
-            immediate = this.tokens[3];
-        }
+    // Construct binary instruction
+    this.bin = imm_11_5 + rs2 + rs1 + this.#inst.funct3 + imm_4_0 +
+      this.#inst.opcode;
+  }
 
-        // Get rs1 bits
-        var rs1 = convertDecRegister(reg1);
+  /**
+   * Encodes BRANCH instruction
+   */
+  #encodeBRANCH() {
+    // Get operands
+    const src1 = this.#opr[0], src2 = this.#opr[1], offset = this.#opr[2];
 
-        // Get rd bits
-        var destReg = this.tokens[1];
-        var rd = convertDecRegister(destReg);
+    // Immediate len
+    const len_12 = FIELDS.b_imm_12.pos[1],
+      len_11 = FIELDS.b_imm_11.pos[1],
+      len_10_5 = FIELDS.b_imm_10_5.pos[1],
+      len_4_1 = FIELDS.b_imm_4_1.pos[1];
 
-        // Create fragments for each field
-        this.fragments.push(new Fragment(this.operation, this.opcode,
-                                        FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(this.operation, funct3,
-                                        FIELD_COMMON.FUNCT3.START, "funct3"));
-        this.fragments.push(new Fragment(reg1, rs1,
-                                        FIELD_COMMON.RS1.START, "rs1"));
-        this.fragments.push(new Fragment(destReg, rd,
-                                        FIELD_COMMON.RD.START, "rd"));
+    // Convert to binary representation
+    const rs1 = encReg(src1), rs2 = encReg(src2),
+      imm = encImm(offset, len_12 + len_11 + len_10_5 + len_4_1 + 1);
 
-        if (shift) {
-            // Get bits for shift amount
-            var shamt = parseDec(immediate).padStart(5, '0');
+    const imm_12 = imm.substring(0, len_12),
+      imm_11 = imm.substring(len_12, len_12 + len_11),
+      imm_10_5 = imm.substring(len_12 + len_11, len_12 + len_11 + len_10_5),
+      imm_4_1 = imm.substring(len_12 + len_11 + len_10_5,
+        len_12 + len_11 + len_10_5 + len_4_1);
 
-            // Create higher-order immediate fragment
-            this.fragments.push(new Fragment(operation, highImm,
-                        FIELD_ITYPE.HIGHIMM.START, "higher-order immediate"));
-            // Create shamt fragment
-            this.fragments.push(new Fragment(shiftAmt, shamt,
-                        FIELD_ITYPE.SHAMT.START, "shamt"));
+    // Construct binary instruction
+    this.bin = imm_12 + imm_10_5 + rs2 + rs1 + this.#inst.funct3 +
+      imm_4_1 + imm_11 + this.#inst.opcode;
+  }
 
-            // Construct binary instruction
-            this.binary = highImm + shamt + rs1 + funct3 + rd + this.opcode;
+  /**
+   * Encodes U-type instruction
+   */
+  #encodeUType() {
+    // Get operands
+    const dest = this.#opr[0], immediate = this.#opr[1];
 
-        } else {
-            var immLen = (FIELD_ITYPE.IMM11.END + 1) - FIELD_ITYPE.IMM11.START;
-            // Get bits for immediate
-            var imm = parseDec(immediate).padStart(immLen, '0');
-            // Truncate the beginning of the imm if oversized
-            if (imm.length > immLen) {
-                imm = imm.substring(imm.length - immLen, imm.length);
-            }
+    // Convert to binary representation
+    const rd = encReg(dest),
+      imm = encImm(immediate, FIELDS.u_imm_31_12.pos[1]);
 
-            // Create immediate fragment
-            this.fragments.push(new Fragment(immediate, imm,
-                                FIELD_ITYPE.IMM11.START, "imm[11:0]"));
+    // Construct binary instruction
+    this.bin = imm + rd + this.#inst.opcode;
+  }
 
-            // Construct binary instruction
-            this.binary = imm + rs1 + funct3 + rd + this.opcode;
-        }
-    }
-    
-    /**
-     * Encodes S-type instruction
-     */
-    encodeStype() {
-        this.opcode = OPCODE.STYPE;
+  /**
+   * Encodes J-type instruction
+   */
+  #encodeJAL() {
+    // Get operands
+    const dest = this.#opr[0],
+      offset = this.#opr[1];
 
-        // Get funct3 bits
-        var funct3 = OPERATIONS[this.operation].FUNCT3;
+    // Immediate len
+    const len_20 = FIELDS.j_imm_20.pos[1],
+      len_10_1 = FIELDS.j_imm_10_1.pos[1],
+      len_11 = FIELDS.j_imm_11.pos[1],
+      len_19_12 = FIELDS.j_imm_19_12.pos[1];
 
-        // Get tokens for instruction
-        this.parseLoadStoreInstruction();
-        var reg1 = this.tokens[3];
-        var reg2 = this.tokens[1];
-        var immediate = this.tokens[2];
+    // Convert to binary representation
+    const rd = encReg(dest),
+      imm = encImm(offset, len_20 + len_19_12 + len_11 + len_10_1 + 1);
 
-        // Get rs1 bits
-        var rs1 = convertDecRegister(reg1);
-        // Get rs2 bits
-        var rs2 = convertDecRegister(reg2);
+    const imm_20 = imm.substring(0, len_20),
+      imm_19_12 = imm.substring(len_20, len_20 + len_19_12),
+      imm_11 = imm.substring(len_20 + len_19_12, len_20 + len_19_12 + len_11),
+      imm_10_1 = imm.substring(len_20 + len_19_12 + len_11,
+        len_20 + len_19_12 + len_11 + len_10_1);
 
-        // Get bits for immediate
-        var imm11Len = (FIELD_STYPE.IMM11.END + 1) - FIELD_STYPE.IMM11.START;
-        var imm4Len = (FIELD_STYPE.IMM4.END + 1) - FIELD_STYPE.IMM4.START;
-        var imm = parseDec(immediate).padStart(imm11Len + imm4Len, '0');
-        var imm11_5 = imm.substring(0, imm11Len);
-        var imm4_0 = imm.substring(imm11Len, imm11Len + imm4Len);
-
-        // Create fragments for each field
-        this.fragments.push(new Fragment(this.operation, this.opcode,
-            FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(this.operation, funct3,
-            FIELD_COMMON.FUNCT3.START, "funct3"));
-        this.fragments.push(new Fragment(reg1, rs1,
-            FIELD_COMMON.RS1.START, "rs1"));
-        this.fragments.push(new Fragment(reg2, rs2,
-            FIELD_COMMON.RS2.END, "rs2"));
-        this.fragments.push(new Fragment(immediate, imm4_0,
-            FIELD_STYPE.IMM4.START, "imm[4:0]"));
-        this.fragments.push(new Fragment(immediate, imm11_5,
-            FIELD_STYPE.IMM11.START, "imm[11:5]"));
-
-        // Constuct binary instruction
-        this.binary = imm11_5 + rs2 + rs1 + funct3 + imm4_0 + this.opcode;
-    }
-
-    /**
-     * Encodes B-type instruction
-     */
-    encodeBtype() {
-        this.opcode = OPCODE.BTYPE;
-
-        // Get funct3 bits
-        var funct3 = OPERATIONS[this.operation].FUNCT3;
-
-        // Get tokens for instruction
-        this.parseInstruction();
-        var reg1 = this.tokens[1];
-        var reg2 = this.tokens[2];
-        var immediate = this.tokens[3];
-
-        // Get rs1 bits
-        var rs1 = convertDecRegister(reg1);
-        // Get rs2 bits
-        var rs2 = convertDecRegister(reg2);
-
-        // Get lengths for each immediate fragment
-        var imm12Len = (FIELD_BTYPE.IMM12.END - FIELD_BTYPE.IMM12.START) + 1;
-        var imm11Len = (FIELD_BTYPE.IMM11.END - FIELD_BTYPE.IMM11.START) + 1;
-        var imm10Len = (FIELD_BTYPE.IMM10.END - FIELD_BTYPE.IMM10.START) + 1;
-        var imm4Len = (FIELD_BTYPE.IMM4.END - FIELD_BTYPE.IMM4.START) + 1;
-        var totalLen = imm12Len + imm11Len + imm10Len + imm4Len; 
-
-        // Parse immediate to binary
-        var imm = parseDec(immediate).padStart(totalLen + 1, '0');
-
-        // Get bits for each immediate fragment
-        var imm12 = imm.substring(0, imm12Len);
-        var currInd = imm12Len;
-        var imm11 = imm.substring(currInd, currInd + imm11Len);
-        currInd += imm11Len;
-        var imm10_5 = imm.substring(currInd, currInd + imm10Len);
-        currInd += imm10Len;
-        var imm4_1 = imm.substring(currInd, currInd + imm4Len);
-
-        // Create fragments for each field
-        this.fragments.push(new Fragment(this.operation, this.opcode,
-            FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(this.operation, funct3,
-            FIELD_COMMON.FUNCT3.START, "funct3"));
-        this.fragments.push(new Fragment(reg1, rs1,
-            FIELD_COMMON.RS1.START, "rs1"));
-        this.fragments.push(new Fragment(reg2, rs2,
-            FIELD_COMMON.RS2.START, "rs2"));
-        this.fragments.push(new Fragment(immediate, imm12,
-            FIELD_BTYPE.IMM12.START, "imm[12]"));
-        this.fragments.push(new Fragment(immediate, imm10_5,
-            FIELD_BTYPE.IMM10.START, "imm[10:5]"));
-        this.fragments.push(new Fragment(immediate, imm4_1,
-            FIELD_BTYPE.IMM4.START, "imm[4:1]"));
-        this.fragments.push(new Fragment(immediate, imm11,
-            FIELD_BTYPE.IMM11.START, "imm[11]"));
-
-        this.binary = imm12 + imm10_5 + rs2 + rs1 + funct3 + imm4_1 + imm11 +
-            this.opcode;
-    }
-
-    /**
-     * Encodes U-type instruction
-     */
-    encodeUtype() {
-        this.opcode = OPERATIONS[this.operation].OPCODE;
-
-        // Get tokens for instruction
-        this.parseInstruction();
-        var destReg = this.tokens[1];
-        var immediate = this.tokens[2];
-
-        // Get rd bits
-        var rd = convertDecRegister(destReg);
-
-        // Get imm bits
-        var immLen = (FIELD_UTYPE.IMM31.END - FIELD_UTYPE.IMM31.START) + 1;
-        var imm = parseDec(immediate).padStart(immLen, '0');
-
-        // Create fragments for each field
-        this.fragments.push(new Fragment(this.operation, this.opcode,
-                                        FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(destReg, rd,
-                                        FIELD_COMMON.RD.START, "rd"));
-        this.fragments.push(new Fragment(immediate, imm,
-                                        FIELD_UTYPE.IMM31, "imm[31:12]"));
-        this.binary = imm + rd + this.opcode;
-    }
-
-    /**
-     * Encodes J-type instruction
-     */
-    encodeJtype() {
-        this.opcode = OPCODE.JTYPE;
-
-        // Get tokens for instruction
-        this.parseInstruction();
-        var destReg = this.tokens[1];
-        var immediate = this.tokens[2];
-
-        // Get rd bits
-        var rd = convertDecRegister(destReg);
-
-        // Get lengths for each immediate fragment
-        var imm20Len = (FIELD_JTYPE.IMM20.END - FIELD_JTYPE.IMM20.START) + 1;
-        var imm19Len = (FIELD_JTYPE.IMM19.END - FIELD_JTYPE.IMM19.START) + 1;
-        var imm11Len = (FIELD_JTYPE.IMM11.END - FIELD_JTYPE.IMM11.START) + 1;
-        var imm10Len = (FIELD_JTYPE.IMM10.END - FIELD_JTYPE.IMM10.START) + 1;
-        var totalLen = imm20Len + imm19Len + imm11Len + imm10Len; 
-
-        // Parse immediate to binary
-        var imm = parseDec(immediate).padStart(totalLen + 1, '0');
-
-        // Get bits for each immediate fragment
-        var imm20 = imm.substring(0, imm20Len);
-        var currInd = imm20Len;
-        var imm19_12 = imm.substring(currInd, currInd + imm19Len);
-        currInd += imm19Len;
-        var imm11 = imm.substring(currInd, currInd + imm11Len);
-        currInd += imm11Len;
-        var imm10_1 = imm.substring(currInd, totalLen);
-
-        // Create fragments for each field
-        this.fragments.push(new Fragment(this.operation, this.opcode,
-                                        FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(destReg, rd,
-                                        FIELD_COMMON.RD.START, "rd"));
-        this.fragments.push(new Fragment(immediate, imm20,
-                                        FIELD_JTYPE.IMM20.START, "imm[20]"));
-        this.fragments.push(new Fragment(immediate, imm19_12,
-                                        FIELD_JTYPE.IMM19.START, "imm[19:12]"));
-        this.fragments.push(new Fragment(immediate, imm11,
-                                        FIELD_JTYPE.IMM11.START, "imm[11]"));
-        this.fragments.push(new Fragment(immediate, imm10_1,
-                                        FIELD_JTYPE.IMM10.START, "imm[10:1]"));
-
-        // Construct binary instruction
-        this.binary = imm20 + imm10_1 + imm11 + imm19_12 + rd + this.opcode;
-    }
+    // Construct binary instruction
+    this.bin = imm_20 + imm_10_1 + imm_11 + imm_19_12 + rd + this.#inst.opcode;
+  }
 }
 
-// Parse given decimal to binary
-function parseDec(decimal) {
-    // Check if decimal is a negative number
-    if (decimal[0] == '-') {
-        return (Number(decimal) >>> 0).toString(BASE.BINARY);
-    }
-    return Number(decimal).toString(BASE.BINARY);
+// Parse given immediate to binary
+function encImm(immediate, len) {
+  let bin = (Number(immediate) >>> 0).toString(BASE.bin);
+  // Extend or reduce binary representation to `len` bits
+  return bin.padStart(len, '0').slice(-len);
 }
 
-function convertDecRegister(reg) {
-    // Remove the 'x' character and convert decimal to binary
-    return parseDec(reg.substring(1)).padStart(5,'0');
+// Convert register numbers to binary
+function encReg(reg) {
+  let dec = reg.substring(1);
+  if (reg[0] !== 'x' || dec < 0 || dec > 31) {
+    throw 'Incorrect register format: "' + reg + '"';
+  }
+  return convertBase(dec, BASE.dec, BASE.bin, 5);
 }
+
+// Convert memory ordering to binary
+function encMem(input) {
+  let bits = '';
+
+  // I: Device input, O: device output, R: memory reads, W: memory writes
+  const access = ['i', 'o', 'r', 'w'];
+
+  for (let i = 0; i < access.length; i++) {
+    if (input.includes(access[i])) {
+      bits += '1';
+    } else {
+      bits += '0';
+    }
+  }
+
+  return bits;
+}
+

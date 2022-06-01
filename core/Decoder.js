@@ -1,589 +1,708 @@
-import { BASE, FIELD_COMMON, XLEN, OPCODE,
-        FIELD_RTYPE, FIELD_ITYPE, FIELD_STYPE,
-        FIELD_BTYPE, FIELD_UTYPE, FIELD_JTYPE,
-        FIELD_SYSTEM, FIELD_FENCE, RTYPE, ITYPE,
-        STYPE, BTYPE } from './Constants.js'
+import { BASE,
+  FIELDS, OPCODE,
+  ISA_OP, ISA_LOAD, ISA_STORE, ISA_OP_IMM, ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA,
+} from './Constants.js'
 
-import { Fragment, isShift } from './Instruction.js'
+import { Frag } from './Instruction.js'
 
 export class Decoder {
-    /**
-     * Creates an Decoder to convert a binary instruction to assembly
-     * @param {String} binary
-     */
-    constructor(binary) {
-        this.binary = binary;
+  /**
+   * Assembly representation of instruction
+   * @type String
+   */
+  asm;
+  /**
+   * ISA of instruction: 'RV32I', 'RV64I', 'EXT_M', 'EXT_A', etc.
+   * @type String
+   */
+  isa;
+  /**
+   * Format of instruction: 'R-type', 'I-type', etc.
+   * @type String
+   */
+  fmt;
+  /**
+   * Fragments for binary instruction rendering
+   * @type {Frag[]}
+   */
+  binFrags;
+  /**
+   * Fragments for assembly instruction rendering
+   * @type {Frag[]}
+   */
+  asmfrags;
 
-        // Create an array of fragments
-        /** @type {Fragment[]} */
-        this.fragments = [];
+  /* Private members */
+  #bin;
+  #mne;
+  #opcode;
 
-        // Convert instruction to assembly
-        this.convertBinToAsm();
+
+  /**
+   * Creates an Decoder to convert a binary instruction to assembly
+   * @param {String} bin
+   */
+  constructor(bin) {
+    this.#bin = bin;
+
+    // Create an array of assembly fragments
+    this.binFrags = [];
+    this.asmFrags = [];
+
+    // Convert instruction to assembly
+    this.#convertBinToAsm();
+  }
+
+  // Convert binary instruction to assembly
+  #convertBinToAsm() {
+    // Use opcode to determine instruction type
+    this.#opcode = getBits(this.#bin, FIELDS.opcode.pos);
+
+    switch (this.#opcode) {
+        // R-type
+      case OPCODE.OP:
+        this.#decodeOP();
+        break;
+
+        // I-type
+      case OPCODE.JALR:
+        this.#decodeJALR();
+        break;
+      case OPCODE.LOAD:
+        this.#decodeLOAD();
+        break;
+      case OPCODE.OP_IMM:
+        this.#decodeOP_IMM();
+        break;
+      case OPCODE.MISC_MEM:
+        this.#decodeMISC_MEM();
+        break;
+      case OPCODE.SYSTEM:
+        this.#decodeSYSTEM();
+        break;
+
+        // S-type
+      case OPCODE.STORE:
+        this.#decodeSTORE();
+        break;
+
+        // B-type
+      case OPCODE.BRANCH:
+        this.#decodeBRANCH();
+        break;
+
+        // U-type:
+      case OPCODE.LUI:
+      case OPCODE.AUIPC:
+        this.#decodeUType();
+        break;
+
+        // J-type:
+      case OPCODE.JAL:
+        this.#decodeJAL();
+        break;
+
+        // Invalid opcode
+      default:
+        throw "Invalid opcode: " + this.#opcode;
     }
 
-    // Convert binary instruction to assembly
-    convertBinToAsm() {
-        // Use opcode to determine instruction type
-        this.opcode = this.getBits(FIELD_COMMON.OPCODE.START,
-                                    FIELD_COMMON.OPCODE.END);
-
-        switch (this.opcode) {
-            // R-TYPE
-            case OPCODE.RTYPE:
-                this.decodeRType();
-                this.format = "R-TYPE";
-                break;
-            // I-TYPE
-            case OPCODE.ITYPE:
-            case OPCODE.JALR:
-            case OPCODE.LOAD:
-                this.decodeIType();
-                this.format = "I-TYPE";
-                break;
-            // S-TYPE
-            case OPCODE.STYPE:
-                this.decodeSType();
-                this.format = "S-TYPE";
-                break;
-            // B-TYPE
-            case OPCODE.BTYPE:
-                this.decodeBType();
-                this.format = "B-TYPE";
-                break;
-            // U-TYPE:
-            case OPCODE.LUI:
-            case OPCODE.AUIPC:
-                this.decodeUType();
-                this.format = "U-TYPE";
-                break;
-            // J-TYPE:
-            case OPCODE.JTYPE:
-                this.decodeJType();
-                this.format = "J-TYPE";
-                break;
-            // SYSTEM:
-            case OPCODE.SYSTEM:
-                this.decodeSystem();
-                this.format = "SYSTEM";
-                break;
-            // FENCE:
-            case OPCODE.FENCE:
-                this.decodeFence();
-                this.format = "FENCE";
-                break;
-            // Invalid opcode
-            default:
-                throw "Invalid opcode";
-        }
+    if (typeof this.#mne === undefined) {
+        throw "Decoder internal error";
     }
 
-    // Given start and end index, return corresponding bits
-    getBits(indStart, indEnd) {
-        return this.binary.substring(XLEN.RV32 - (indEnd + 1),
-                                    XLEN.RV32 - indStart);
+    // Set instruction's format and ISA
+    this.fmt = ISA[this.#mne].fmt;
+    this.isa = ISA[this.#mne].isa;
+  }
+
+  /**
+   * Decodes OP instructions
+   */
+  #decodeOP() {
+    // Get each field
+    const fields = extractRFields(this.#bin);
+    const funct7 = fields['funct7'],
+      funct3 = fields['funct3'],
+      rs2 = fields['rs2'],
+      rs1 = fields['rs1'],
+      rd = fields['rd'];
+
+    // Find instruction
+    this.#mne = ISA_OP[funct7 + funct3];
+    if (this.#mne === undefined) {
+      throw "Detected OP instruction but invalid funct3/funct7 combination";
     }
 
-    /**
-     * Decodes R-type instruction
-     */
-    decodeRType() {
-        // Get bits for each field
-        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
-        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
-                                    FIELD_COMMON.FUNCT3.END);
-        var rs1 = this.getBits(FIELD_COMMON.RS1.START, FIELD_COMMON.RS1.END);
-        var rs2 = this.getBits(FIELD_COMMON.RS2.START, FIELD_COMMON.RS2.END);
-        var funct7 = this.getBits(FIELD_RTYPE.FUNCT7.START,
-                                    FIELD_RTYPE.FUNCT7.END);
+    // Convert fields to string representations
+    const src1 = decReg(rs1), src2 = decReg(rs2), dest = decReg(rd);
 
-        // Convert register numbers from binary to decimal
-        var reg1 = convertBinRegister(rs1);
-        var reg2 = convertBinRegister(rs2);
-        var destReg = convertBinRegister(rd);
+    // Create fragments
+    const f = {
+      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      funct7: new Frag(this.#mne, funct7, FIELDS.r_funct7.name),
+      rd:     new Frag(dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(src1, rs1, FIELDS.rs1.name),
+      rs2:    new Frag(src2, rs2, FIELDS.rs2.name),
+    };
 
-        // Check for operation in rfunct dictionary
-        var operation;
-        for (var op in RTYPE) {
-            if (RTYPE[op].FUNCT3 == funct3 &&
-                RTYPE[op].FUNCT7 == funct7) {
-                    operation = op;
-            }
-        }
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rd'], f['rs1'], f['rs2']);
 
-        if (typeof operation === 'undefined') {
-            throw "Invalid funct3 or funct7";
-        }
+    // Binary fragments from MSB to LSB
+    this.binFrags.push(f['funct7'], f['rs2'], f['rs1'], f['funct3'], f['rd'],
+      f['opcode']);
 
-        // Create fragments for each field
-        this.fragments.push(new Fragment(operation, this.opcode,
-                            FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(operation, funct3,
-                            FIELD_COMMON.FUNCT3.START, "funct3"));
-        this.fragments.push(new Fragment(operation, funct7,
-                            FIELD_RTYPE.FUNCT7.START, "funct7"));
-        this.fragments.push(new Fragment(reg1, rs1,
-                            FIELD_COMMON.RS1.START, "rs1"));
-        this.fragments.push(new Fragment(reg2, rs2,
-                            FIELD_COMMON.RS2.START, "rs2"));
-        this.fragments.push(new Fragment(destReg, rd,
-                            FIELD_COMMON.RD.START, "rd"));
+    // Construct assembly instruction
+    this.asm = renderAsm([this.#mne, dest, src1, src2]);
+  }
 
-        // Construct assembly instruction
-        this.assembly = renderAsmInstruction([operation, destReg, reg1, reg2]);
+  /**
+   * Decodes JALR instructions
+   */
+  #decodeJALR() {
+    // Get fields
+    const fields = extractIFields(this.#bin);
+    const imm = fields['imm'],
+      rs1 = fields['rs1'],
+      funct3 = fields['funct3'],
+      rd = fields['rd'];
+
+    this.#mne = 'jalr';
+
+    // Convert fields to string representations
+    const base = decReg(rs1), dest = decReg(rd), offset = decImm(imm);
+
+    // Create fragments
+    const f = {
+      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      rd:     new Frag(dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(base, rs1, FIELDS.rs1.name),
+      imm:    new Frag(offset, imm, FIELDS.i_imm_11_0.name),
+    };
+
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rd'], f['rs1'], f['imm']);
+
+    // Binary fragments from MSB to LSB
+    this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
+
+    // Construct assembly instruction
+    this.asm = renderAsm([this.#mne, dest, base, offset]);
+  }
+
+  /**
+   * Decodes LOAD instructions
+   */
+  #decodeLOAD() {
+    // Get fields
+    const fields = extractIFields(this.#bin);
+    const imm = fields['imm'],
+      rs1 = fields['rs1'],
+      funct3 = fields['funct3'],
+      rd = fields['rd'];
+
+    // Find instruction
+    this.#mne = ISA_LOAD[funct3];
+    if (this.#mne === undefined) {
+      throw "Detected LOAD instruction but invalid funct3 field";
     }
 
-    /**
-     * Decodes I-type instruction
-     */
-    decodeIType() {
-        // Get bits for each field
-        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
-        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
-                                    FIELD_COMMON.FUNCT3.END);
-        var rs1 = this.getBits(FIELD_COMMON.RS1.START, FIELD_COMMON.RS1.END);
-        var highImm = this.getBits(FIELD_ITYPE.HIGHIMM.START,
-                                    FIELD_ITYPE.HIGHIMM.END);
+    // Convert fields to string representations
+    const base = decReg(rs1), dest = decReg(rd), offset = decImm(imm);
 
-        // Check for operation using funct3 and opcode / high-order immediate
-        var operation;
+    // Create fragments
+    const f = {
+      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      rd:     new Frag(dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(base, rs1, FIELDS.rs1.name),
+      imm:    new Frag(offset, imm, FIELDS.i_imm_11_0.name),
+    };
 
-        for (var op in ITYPE) {
-            if (ITYPE[op].FUNCT3 == funct3 && 
-                (ITYPE[op].OPCODE == this.opcode ||
-                 ITYPE[op].HIGHIMM == highImm)) {
-                    operation = op;
-            }
-        }
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rd'], f['imm'], f['rs1']);
 
-        if (typeof operation === 'undefined') {
-            throw "Invalid funct3 or funct7";
-        }
+    // Binary fragments from MSB to LSB
+    this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
 
-        // Set shift to true if operation is a shift (slli, srai, srli)
-        var shift = isShift(operation);
+    // Construct assembly instruction
+    this.asm = renderAsm([this.#mne, dest, offset, base], true);
+  }
 
-        // Convert register numbers from binary to decimal
-        var reg1 = convertBinRegister(rs1);
-        var destReg = convertBinRegister(rd);
+  /**
+   * Decodes OP_IMM instructions
+   */
+  #decodeOP_IMM() {
+    // Get fields
+    const fields = extractIFields(this.#bin);
+    const imm = fields['imm'],
+      rs1 = fields['rs1'],
+      funct3 = fields['funct3'],
+      rd = fields['rd'];
 
-        // Create fragments for each field
-        this.fragments.push(new Fragment(operation, this.opcode,
-                                        FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(operation, funct3,
-                                        FIELD_COMMON.FUNCT3.START, "funct3"));
-        this.fragments.push(new Fragment(reg1, rs1,
-                                        FIELD_COMMON.RS1.START, "rs1"));
-        this.fragments.push(new Fragment(destReg, rd,
-                                        FIELD_COMMON.RD.START, "rd"));
-
-        // For shift operations: can only use lower 5 bits of imm for shift
-        if (shift) {
-            // Get bits for shamt field
-            var shamt = this.getBits(ITYPE.SHAMT.START, ITYPE.SHAMT.END);
-
-            // Parse shamt bits to decimal
-            var shiftAmt = parseInt(shamt, BASE.BINARY);
-
-            // Create higher-order immediate fragment
-            this.fragments.push(new Fragment(operation, highImm,
-                        FIELD_ITYPE.HIGHIMM.START, "higher-order immediate"));
-            // Create shamt fragment
-            this.fragments.push(new Fragment(shiftAmt, shamt,
-                        FIELD_ITYPE.SHAMT.START, "shamt"));
-
-            // Construct assembly instruction
-            this.assembly = renderAsmInstruction([operation, destReg, reg1,
-                                                shamt]);
-
-        } else {
-            // Get bits for imm[11:0] field
-            var imm = this.getBits(FIELD_ITYPE.IMM11.START,
-                                    FIELD_ITYPE.IMM11.END);
-
-            // Convert immediate from binary to decimal
-            var immediate = parseImm(imm);
-
-            // Create immediate fragment
-            this.fragments.push(new Fragment(immediate, imm,
-                                FIELD_ITYPE.IMM11.START, "imm[11:0]"));
-
-            // Construct assembly instruction
-            if (this.opcode == OPCODE.LOAD) {
-                this.assembly = renderLoadStoreInstruction([operation, destReg,
-                                                        immediate, reg1]);
-            } else {
-                this.assembly = renderAsmInstruction([operation, destReg, reg1,
-                                                    immediate]);
-            }
-        }
+    // Find instruction
+    this.#mne = ISA_OP_IMM[funct3]
+    if (this.#mne === undefined) {
+      throw "Detected OP-IMM instruction but invalid funct3 field";
     }
 
-    /**
-     * Decodes S-type instruction
-     */
-    decodeSType() {
-        // Get bits for each field
-        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
-                                    FIELD_COMMON.FUNCT3.END);
-        var rs1 = this.getBits(FIELD_COMMON.RS1.START, FIELD_COMMON.RS1.END);
-        var rs2 = this.getBits(FIELD_COMMON.RS2.START, FIELD_COMMON.RS2.END);
-        var imm4_0 = this.getBits(FIELD_STYPE.IMM4.START, FIELD_STYPE.IMM4.END);
-        var imm11_5 = this.getBits(FIELD_STYPE.IMM11.START,
-                                    FIELD_STYPE.IMM11.END);
-
-        // Parse binary immediate to decimal
-        var imm = imm11_5 + imm4_0;
-        var immediate = parseImm(imm);
-
-        // Convert binary register numbers to assembly format
-        var reg1 = convertBinRegister(rs1);
-        var reg2 = convertBinRegister(rs2);
-
-        // Check for operation using funct3
-        var operation;
-
-        for (var op in STYPE) {
-            if (STYPE[op].FUNCT3 == funct3) {
-                    operation = op;
-            }
-        }
-
-        if (typeof operation === 'undefined') {
-            throw "Invalid funct3";
-        }
-
-        // Create fragments for each field
-        this.fragments.push(new Fragment(operation, this.opcode,
-                                        FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(operation, funct3,
-                                        FIELD_COMMON.FUNCT3.START, "funct3"));
-        this.fragments.push(new Fragment(reg1, rs1,
-                                        FIELD_COMMON.RS1.START, "rs1"));
-        this.fragments.push(new Fragment(reg2, rs2,
-                                        FIELD_COMMON.RS2.END, "rs2"));
-        this.fragments.push(new Fragment(immediate, imm4_0,
-                                        FIELD_STYPE.IMM4.START, "imm[4:0]"));
-        this.fragments.push(new Fragment(immediate, imm11_5,
-                                        FIELD_STYPE.IMM11.START, "imm[11:5]"));
-
-        // Construct assembly instruction
-        this.assembly = renderLoadStoreInstruction([operation, reg2,
-                                                immediate, reg1]);
+    // Shift instructions
+    let shift = (this.#mne === 'slli' || typeof this.#mne === 'object');
+    if (typeof this.#mne !== 'string') {
+      // Right shift instructions
+      this.#mne = this.#mne[fields['shtyp']];
     }
 
-    /**
-     * Decodes B-type instruction
-     */
-    decodeBType() {
-        // Get bits for each field
-        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
-                                FIELD_COMMON.FUNCT3.END);
-        var rs1 = this.getBits(FIELD_COMMON.RS1.START,
-                                FIELD_COMMON.RS1.END);
-        var rs2 = this.getBits(FIELD_COMMON.RS2.START, FIELD_COMMON.RS2.END);
-        var imm4_1 = this.getBits(FIELD_BTYPE.IMM4.START, FIELD_BTYPE.IMM4.END);
-        var imm11 = this.getBits(FIELD_BTYPE.IMM11.START,
-                                FIELD_BTYPE.IMM11.END);
-        var imm10_5 = this.getBits(FIELD_BTYPE.IMM10.START,
-                                FIELD_BTYPE.IMM10.END);
-        var imm12 = this.getBits(FIELD_BTYPE.IMM12.START,
-                                FIELD_BTYPE.IMM12.END);
+    // Convert fields to string representations
+    const src = decReg(rs1), dest = decReg(rd);
 
-        // imm[0] is always zero for B-type instructions
-        var imm0 = '0';
+    // Create fragments
+    const f = {
+      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      rd:     new Frag(dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(src, rs1, FIELDS.rs1.name),
+    };
 
-        // Check for operation using funct3
-        var operation;
+    if (shift) {
+      const shtyp = fields['shtyp'];
+      const imm = fields['shamt'];
 
-        for (var op in BTYPE) {
-            if (BTYPE[op].FUNCT3 == funct3) {
-                    operation = op;
-            }
-        }
+      const imm_11_5 = '0' + shtyp + '00000';
+      const shamt = decImm(imm, false);
 
-        if (typeof operation === 'undefined') {
-            throw "Invalid funct3";
-        }
+      f['imm'] = new Frag(shamt, imm, FIELDS.i_shamt.name);
+      // Upper-immediate is fixed for shift instructions
+      f['shift'] = new Frag(this.#mne, imm_11_5, { pos: [31, 7], name: 'shift' });
 
-        // Concatenate binary bits imm[12|10:5], imm[4:1|11], and imm[0]
-        var imm = imm12 + imm11 + imm10_5 + imm4_1 + imm0;
+      // Binary fragments from MSB to LSB
+      this.binFrags.push(f['shift'], f['imm'], f['rs1'],
+        f['funct3'], f['rd'], f['opcode']);
 
-        // Parse binary registers / immediate to decimal
-        var reg1 = convertBinRegister(rs1);
-        var reg2 = convertBinRegister(rs2);
-        var immediate = parseImm(imm);
+      // Construct assembly instruction
+      this.asm = renderAsm([this.#mne, dest, src, shamt]);
 
-        // Create fragments for each field
-        this.fragments.push(new Fragment(operation, this.opcode,
-                                        FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(operation, funct3,
-                                        FIELD_COMMON.FUNCT3.START, "funct3"));
-        this.fragments.push(new Fragment(reg1, rs1,
-                                        FIELD_COMMON.RS1.START, "rs1"));
-        this.fragments.push(new Fragment(reg2, rs2,
-                                        FIELD_COMMON.RS2.START, "rs2"));
-        this.fragments.push(new Fragment(immediate, imm12,
-                                        FIELD_BTYPE.IMM12.START, "imm[12]"));
-        this.fragments.push(new Fragment(immediate, imm10_5,
-                                        FIELD_BTYPE.IMM10.START, "imm[10:5]"));
-        this.fragments.push(new Fragment(immediate, imm4_1,
-                                        FIELD_BTYPE.IMM4.START, "imm[4:1]"));
-        this.fragments.push(new Fragment(immediate, imm11,
-                                        FIELD_BTYPE.IMM11.START, "imm[11]"));
+    } else {
+      const imm = fields['imm'];
+      const immediate = decImm(imm);
 
-        // Construct assembly instruction
-        this.assembly = renderAsmInstruction([operation, reg1, reg2,
-                                            immediate]);
+      f['imm'] = new Frag(immediate, imm, FIELDS.i_imm_11_0.name);
+
+      // Binary fragments from MSB to LSB
+      this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
+
+      // Construct assembly instruction
+      this.asm = renderAsm([this.#mne, dest, src, immediate]);
     }
 
-    /**
-     * Decodes U-type instruction
-     */
-    decodeUType() {
-        // Get bits for each field
-        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
-        var imm = this.getBits(FIELD_UTYPE.IMM31.START, FIELD_UTYPE.IMM31.END);
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rd'], f['rs1'], f['imm']);
+  }
 
-        // Convert binary register / immediate to decimal
-        var destReg = convertBinRegister(rd);
-        var immediate = parseImm(imm);
+  /**
+   * Decode MISC_MEM instructions
+   */
+  #decodeMISC_MEM() {
+    // Get fields
+    const fields = extractIFields(this.#bin);
+    const imm = fields['imm'],
+      fm = fields['fm'],
+      pred = fields['pred'],
+      succ = fields['succ'],
+      rs1 = fields['rs1'],
+      funct3 = fields['funct3'],
+      rd = fields['rd'];
 
-        // Check for operation using opcode
-        var operation = "lui";
-        if (this.opcode == OPCODE.AUIPC) {
-            operation = "auipc";
-        }
-
-        // Create fragments for each field
-        this.fragments.push(new Fragment(operation, this.opcode,
-                                        FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(destReg, rd,
-                                        FIELD_COMMON.RD.START, "rd"));
-        this.fragments.push(new Fragment(immediate, imm,
-                                        FIELD_UTYPE.IMM31, "imm[31:12]"));
-
-        // Construct assembly instruction
-        this.assembly = renderAsmInstruction([operation, destReg, immediate]);
+    // Find instruction
+    this.#mne = ISA_MISC_MEM[funct3];
+    if (this.#mne === undefined) {
+      throw "Detected LOAD instruction but invalid funct3 field";
     }
 
-    /**
-     * Decodes J-type instruction
-     */
-    decodeJType() {
-        var operation = "jal";
-
-        // Get bits for each field
-        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
-        var imm20 = this.getBits(FIELD_JTYPE.IMM20.START,
-                                FIELD_JTYPE.IMM20.END);
-        var imm10_1 = this.getBits(FIELD_JTYPE.IMM10.START,
-                                FIELD_JTYPE.IMM10.END);
-        var imm11 = this.getBits(FIELD_JTYPE.IMM11.START,
-                                FIELD_JTYPE.IMM11.END);
-        var imm19_12 = this.getBits(FIELD_JTYPE.IMM19.START,
-                                FIELD_JTYPE.IMM19.END);
-
-        // imm[0] = 0
-        var imm0 = '0';
-
-        // Concatenate binary bits for immediate
-        var imm = imm20 + imm19_12 + imm11 + imm10_1 + imm0;
-
-        // Convert binary register / immediate to decimal
-        var destReg = convertBinRegister(rd);
-        var immediate = parseImm(imm);
-
-        // Create fragments for each field
-        this.fragments.push(new Fragment(operation, this.opcode,
-                                        FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(destReg, rd,
-                                        FIELD_COMMON.RD.START, "rd"));
-        this.fragments.push(new Fragment(immediate, imm20,
-                                        FIELD_JTYPE.IMM20.START, "imm[20]"));
-        this.fragments.push(new Fragment(immediate, imm19_12,
-                                        FIELD_JTYPE.IMM19.START, "imm[19:12]"));
-        this.fragments.push(new Fragment(immediate, imm11,
-                                        FIELD_JTYPE.IMM11.START, "imm[11]"));
-        this.fragments.push(new Fragment(immediate, imm10_1,
-                                        FIELD_JTYPE.IMM10.START, "imm[10:1]"));
-
-        // Construct assembly instruction
-        this.assembly = renderAsmInstruction([operation, destReg, immediate]);
+    // Check registers
+    if (rd != '00000' || rs1 != '00000') {
+      throw "Registers rd and rs1 should be 0";
     }
 
-    /**
-     * Decode System instructions
-     */
-    decodeSystem() {
-        // Get bits for each field
-        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
-        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
-                                    FIELD_COMMON.FUNCT3.END);
-        var rs1 = this.getBits(FIELD_COMMON.RS1.START, FIELD_COMMON.RS1.END);
-        var funct12 = this.getBits(FIELD_SYSTEM.FUNCT12.START,
-                                    FIELD_SYSTEM.FUNCT12.END);
-        // Check funct3 bits
-        if (funct3 != '000') {
-            throw "Invalid funct3";
-        }
+    // Create fragments
+    const f = {
+      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      rd:     new Frag(this.#mne, rd, FIELDS.rd.name),
+      rs1:    new Frag(this.#mne, rs1, FIELDS.rs1.name),
+    };
 
-        // Check rd bits
-        if (rd != '00000') {
-            throw "Invalid rd";
-        }
+    if (this.#mne === 'fence') {
+      let predecessor = decMem(pred);
+      let successor = decMem(succ);
 
-        // Check rs1 bits
-        if (rs1 != '00000') {
-            throw "Invalid rs1";
-        }
+      f['fm'] = new Frag(this.#mne, fm, FIELDS.i_fm.name);
+      f['pred'] =  new Frag(predecessor, pred, FIELDS.i_pred.name);
+      f['succ'] = new Frag(successor, succ, FIELDS.i_succ.name);
 
-        // Check funct12 bits
-        if (funct12 == '000000000000') {
-            this.assembly = "ecall";
-        } else if (funct12 == '000000000001') {
-            this.assembly = "ebreak";
-        } else {
-            throw "Invalid funct12";
-        }
+      // Assembly fragments in order of instruction
+      this.asmFrags.push(f['opcode'], f['pred'], f['succ']);
 
-        // Create fragments for each field
-        this.fragments.push(new Fragment(this.assembly, this.opcode,
-            FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(this.assembly, rd,
-            FIELD_COMMON.RD.START, "rd"));
-        this.fragments.push(new Fragment(this.assembly, funct3,
-            FIELD_COMMON.FUNCT3.START, "funct3"));
-        this.fragments.push(new Fragment(this.assembly, rs1,
-            FIELD_COMMON.RS1.START, "rs1"));
-        this.fragments.push(new Fragment(this.assembly, funct12,
-            FIELD_SYSTEM.FUNCT12.START, "funct12"));
+      // Binary fragments from MSB to LSB
+      this.binFrags.push(f['fm'], f['pred'], f['succ'], f['rs1'], f['funct3'],
+        f['rd'], f['opcode']);
+
+      // Construct assembly instruction
+      this.asm = renderAsm([this.#mne, predecessor, successor]);
+    }
+    // TODO: FENCE.I case
+  }
+
+  /**
+   * Decode SYSTEM instructions
+   */
+  #decodeSYSTEM() {
+    // Get fields
+    const fields = extractIFields(this.#bin);
+    const funct12 = fields['imm'],
+      rs1 = fields['rs1'],
+      funct3 = fields['funct3'],
+      rd = fields['rd'];
+
+    // Find instruction
+    this.#mne = ISA_SYSTEM[funct3];
+    if (this.#mne === undefined) {
+      throw "Detected SYSTEM instruction but invalid funct3 field";
     }
 
-    /**
-     * Decode FENCE instruction
-     */
-    decodeFence() {
-        // Get bits for each field
-        var rd = this.getBits(FIELD_COMMON.RD.START, FIELD_COMMON.RD.END);
-        var funct3 = this.getBits(FIELD_COMMON.FUNCT3.START,
-                                FIELD_COMMON.FUNCT3.END);
-        var rs1 = this.getBits(FIELD_COMMON.RS1.START, FIELD_COMMON.RS1.END);
-        var pred = this.getBits(FIELD_FENCE.PRED.START, FIELD_FENCE.PRED.END);
-        var succ = this.getBits(FIELD_FENCE.SUCC.START, FIELD_FENCE.SUCC.END);
-        var fm = this.getBits(FIELD_FENCE.FM.START, FIELD_FENCE.FM.END);
-
-        // Check funct3 bits
-        if (funct3 != '000') {
-            throw "Invalid funct3";
-        }
-
-        // Check rd bits
-        if (rd != '00000') {
-            throw "Invalid rd";
-        }
-
-        // Check rs1 bits
-        if (rs1 != '00000') {
-            throw "Invalid rs1";
-        }
-
-        if (fm != '0000') {
-            throw "Invalid fm";
-        }
-
-        var operation = "fence";
-
-        // Check predecessor bits
-        var predecessor = getAccessString(pred);
-
-        // Check successor bits
-        var successor = getAccessString(succ);
-
-        // Create fragments for each field
-        this.fragments.push(new Fragment(operation, this.opcode,
-            FIELD_COMMON.OPCODE.START, "opcode"));
-        this.fragments.push(new Fragment(operation, rd,
-            FIELD_COMMON.RD.START, "rd"));
-        this.fragments.push(new Fragment(operation, funct3,
-            FIELD_COMMON.FUNCT3.START, "funct3"));
-        this.fragments.push(new Fragment(operation, rs1,
-            FIELD_COMMON.RS1.START, "rs1"));
-        this.fragments.push(new Fragment(predecessor, pred,
-            FIELD_FENCE.PRED.START, "pred"));
-        this.fragments.push(new Fragment(successor, succ,
-            FIELD_FENCE.SUCC.START, "succ"));
-        this.fragments.push(new Fragment(operation, fm,
-            FIELD_FENCE.FM.START, "fm"));
-
-        // Construct assembly instruction
-        this.assembly = renderAsmInstruction([operation, predecessor,
-                                            successor]);
+    // Trap instructions
+    if (typeof this.#mne !== 'string') {
+      this.#mne = this.#mne[funct12];
+      if (this.#mne === undefined) {
+        throw "Detected SYSTEM instruction but invalid funct12 field";
+      }
+      // Check registers
+      if (rd != '00000' || rs1 != '00000') {
+        throw "Registers rd and rs1 should be 0 for mne " + this.#mne;
+      }
     }
+
+    // Create fragments
+    const f = {
+      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      rd:     new Frag(this.#mne, rd, FIELDS.rd.name),
+    };
+
+    // Trap instructions
+    if (this.#mne === 'ecall' || this.#mne === 'ebreak') {
+      f['rs1'] = new Frag(this.#mne, rs1, FIELDS.rs1.name);
+      f['funct12'] = new Frag(this.#mne, funct12, FIELDS.i_funct12.name);
+
+      // Assembly fragments in order of instruction
+      this.asmFrags.push(f['opcode']);
+
+      // Binary fragments from MSB to LSB
+      this.binFrags.push(f['funct12'], f['rs1'], f['funct3'], f['rd'],
+        f['opcode']);
+
+      // Construct assembly instruction
+      this.asm = renderAsm([this.#mne]);
+    }
+  }
+  /**
+   * Decodes STORE instruction
+   */
+  #decodeSTORE() {
+    // Get fields
+    const fields = extractSFields(this.#bin);
+    const imm_11_5 = fields['imm_11_5'],
+      rs2 = fields['rs2'],
+      rs1 = fields['rs1'],
+      funct3 = fields['funct3'],
+      imm_4_0 = fields['imm_4_0'],
+      imm = imm_11_5 + imm_4_0;
+
+    // Find instruction
+    this.#mne = ISA_STORE[funct3];
+    if (this.#mne === undefined) {
+      throw "Detected STORE instruction but invalid funct3 field";
+    }
+
+    // Convert fields to string representations
+    const offset = decImm(imm);
+    const base = decReg(rs1);
+    const src = decReg(rs2);
+
+    // Create fragments
+    const f = {
+      opcode:   new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3:   new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      rs1:      new Frag(base, rs1, FIELDS.rs1.name),
+      rs2:      new Frag(src, rs2, FIELDS.rs2.name),
+      imm_4_0:  new Frag(offset, imm_4_0, FIELDS.s_imm_4_0.name),
+      imm_11_5: new Frag(offset, imm_11_5, FIELDS.s_imm_11_5.name),
+      imm:      new Frag(offset, imm, 'imm'),
+    };
+
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rs2'], f['imm'], f['rs1']);
+
+    // Binary fragments from MSB to LSB
+    this.binFrags.push(f['imm_11_5'], f['rs2'], f['rs1'], f['funct3'],
+      f['imm_4_0'], f['opcode']);
+
+    // Construct assembly instruction
+    this.asm = renderAsm([this.#mne, src, offset, base], true);
+  }
+
+  /**
+   * Decodes BRANCH instruction
+   */
+  #decodeBRANCH() {
+    // Get fields
+    const fields = extractBFields(this.#bin);
+    const imm_12 = fields['imm_12'],
+      imm_10_5 = fields['imm_10_5'],
+      rs2 = fields['rs2'],
+      rs1 = fields['rs1'],
+      funct3 = fields['funct3'],
+      imm_4_1 = fields['imm_4_1'],
+      imm_11 = fields['imm_11'];
+
+    // Reconstitute immediate
+    const imm = imm_12 + imm_11 + imm_10_5 + imm_4_1 + '0';
+
+    // Find instruction
+    this.#mne = ISA_BRANCH[funct3];
+    if (this.#mne === undefined) {
+      throw "Detected BRANCH instruction but invalid funct3 field";
+    }
+
+    // Convert fields to string representations
+    const offset = decImm(imm), src2 = decReg(rs2), src1 = decReg(rs1);
+
+    // Create fragments
+    const f = {
+      opcode:   new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3:   new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      rs1:      new Frag(src1, rs1, FIELDS.rs1.name),
+      rs2:      new Frag(src2, rs2, FIELDS.rs2.name),
+      imm_12:   new Frag(offset, imm_12, FIELDS.b_imm_12.name),
+      imm_11:   new Frag(offset, imm_11, FIELDS.b_imm_11.name),
+      imm_10_5: new Frag(offset, imm_10_5, FIELDS.b_imm_10_5.name),
+      imm_4_1:  new Frag(offset, imm_4_1, FIELDS.b_imm_4_1.name),
+      imm:      new Frag(offset, imm, 'imm'),
+    };
+
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rs1'], f['rs2'], f['imm']);
+
+    // Binary fragments from MSB to LSB
+    this.binFrags.push(f['imm_11_5'], f['rs2'], f['rs1'], f['funct3'],
+      f['imm_4_0'], f['opcode']);
+
+    // Construct assembly instruction
+    this.asm = renderAsm([this.#mne, src1, src2, offset]);
+
+    return this.#mne;
+  }
+
+  /**
+   * Decodes U-type instruction
+   */
+  #decodeUType() {
+    // Get fields
+    const imm = getBits(this.#bin, FIELDS.u_imm_31_12.pos);
+    const rd = getBits(this.#bin, FIELDS.rd.pos);
+
+    // Convert fields to string representations
+    const immediate = decImm(imm), dest = decReg(rd);
+
+    // Determine operation
+    this.#mne = (this.#opcode == OPCODE.AUIPC) ? 'auipc' : 'lui';
+
+    // Create fragments
+    const f = {
+      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      imm:    new Frag(immediate, imm, FIELDS.u_imm_31_12.name),
+      rd:     new Frag(dest, rd, FIELDS.rd.name),
+    };
+
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rd'], f['imm']);
+
+    // Binary fragments from MSB to LSB
+    this.binFrags.push(f['imm'], f['rd'], f['opcode']);
+
+    // Construct assembly instruction
+    this.asm = renderAsm([this.#mne, dest, immediate]);
+
+    return this.#mne;
+  }
+
+  /**
+   * Decodes JAL instruction
+   */
+  #decodeJAL() {
+    // Get fields
+    const imm_20 = getBits(this.#bin, FIELDS.j_imm_20.pos);
+    const imm_10_1 = getBits(this.#bin, FIELDS.j_imm_10_1.pos);
+    const imm_11 = getBits(this.#bin, FIELDS.j_imm_11.pos);
+    const imm_19_12 = getBits(this.#bin, FIELDS.j_imm_19_12.pos);
+    const rd = getBits(this.#bin, FIELDS.rd.pos);
+
+    // Reconstitute immediate
+    const imm = imm_20 + imm_19_12 + imm_11 + imm_10_1 + '0';
+
+    this.#mne = 'jal';
+
+    // Convert fields to string representations
+    const offset = decImm(imm);
+    const dest = decReg(rd);
+
+    // Create fragments
+    const f = {
+      opcode:     new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      rd:         new Frag(dest, rd, FIELDS.rd.name),
+      imm_20:     new Frag(offset, imm_20, FIELDS.j_imm_20.name),
+      imm_10_1:   new Frag(offset, imm_10_1, FIELDS.j_imm_10_1.name),
+      imm_11:     new Frag(offset, imm_11, FIELDS.j_imm_11.name),
+      imm_19_12:  new Frag(offset, imm_19_12, FIELDS.j_imm_19_12.name),
+      imm:        new Frag(offset, imm, 'imm'),
+    };
+
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rd'], f['imm']);
+
+    // Binary fragments from MSB to LSB
+    this.binFrags.push(f['imm_20'], f['imm_10_1'], f['imm_11'], f['imm_19_12'],
+      f['rd'], f['opcode']);
+
+    // Construct assembly instruction
+    this.asm = renderAsm([this.#mne, dest, offset]);
+
+    return this.#mne;
+  }
+
+}
+
+// Extract R-types fields from instruction
+function extractRFields(binary) {
+  return {
+    'rs2': getBits(binary, FIELDS.rs2.pos),
+    'rs1': getBits(binary, FIELDS.rs1.pos),
+    'funct3': getBits(binary, FIELDS.funct3.pos),
+    'rd': getBits(binary, FIELDS.rd.pos),
+    'funct7': getBits(binary, FIELDS.r_funct7.pos),
+  };
+}
+
+// Extract I-types fields from instruction
+function extractIFields(binary) {
+  return {
+    'imm': getBits(binary, FIELDS.i_imm_11_0.pos),
+    'rs1': getBits(binary, FIELDS.rs1.pos),
+    'funct3': getBits(binary, FIELDS.funct3.pos),
+    'rd': getBits(binary, FIELDS.rd.pos),
+
+    /* Shift instructions */
+    'shtyp': getBits(binary, FIELDS.i_shtyp.pos),
+    'shamt': getBits(binary, FIELDS.i_shamt.pos),
+    /* System instructions */
+    'funct12': getBits(binary, FIELDS.i_funct12.pos),
+    /* Fence insructions */
+    'fm': getBits(binary, FIELDS.i_fm.pos),
+    'pred': getBits(binary, FIELDS.i_pred.pos),
+    'succ': getBits(binary, FIELDS.i_succ.pos),
+  };
+}
+
+// Extract S-types fields from instruction
+function extractSFields(binary) {
+  return {
+    'imm_11_5': getBits(binary, FIELDS.s_imm_11_5.pos),
+    'rs2': getBits(binary, FIELDS.rs2.pos),
+    'rs1': getBits(binary, FIELDS.rs1.pos),
+    'funct3': getBits(binary, FIELDS.funct3.pos),
+    'imm_4_0': getBits(binary, FIELDS.s_imm_4_0.pos),
+  };
+}
+
+// Extract B-types fields from instruction
+function extractBFields(binary) {
+  return {
+    'imm_12': getBits(binary, FIELDS.b_imm_12.pos),
+    'imm_10_5': getBits(binary, FIELDS.b_imm_10_5.pos),
+    'rs2': getBits(binary, FIELDS.rs2.pos),
+    'rs1': getBits(binary, FIELDS.rs1.pos),
+    'funct3': getBits(binary, FIELDS.funct3.pos),
+    'imm_4_1': getBits(binary, FIELDS.b_imm_4_1.pos),
+    'imm_11': getBits(binary, FIELDS.b_imm_11.pos),
+  };
+}
+
+// Get bits out of binary instruction
+function getBits(binary, pos) {
+  if (!Array.isArray(pos)) {
+    throw getBits.name + ": position should be an array";
+  }
+
+  let end = pos[0] + 1;
+  let start = end - pos[1];
+
+  if (start > end || binary.length < end) {
+    throw getBits.name + ": position error";
+  }
+
+  return binary.substring(binary.length - end, binary.length - start);
 }
 
 // Parse given immediate to decimal
-function parseImm(immediate) {
-    // If first bit is 1, binary string represents a negative number
-    if (immediate[0] == '1') {
-        // Pad binary with 1s and convert number to 32 bit integer
-        return parseInt(immediate.padStart(32,'1'), BASE.BINARY) >> 0;
-    }
-    // Else, binary string represents 0 or positive number
-    return parseInt(immediate, BASE.BINARY);
+function decImm(immediate, signExtend = true) {
+  // Sign extension requested and sign bit set
+  if (signExtend && immediate[0] == '1') {
+    return parseInt(immediate, BASE.bin) - parseInt('1' << immediate.length);
+  }
+  return parseInt(immediate, BASE.bin);
 }
 
-// Convert register numbers from binary to decimal
-function convertBinRegister(reg) {
-    return "x" + parseInt(reg, BASE.BINARY);
-}
-
-// Combine list of items into assembly instruction
-function renderAsmInstruction(list) {
-    // If list is empty, throw error
-    if (list.length < 1) {
-        throw "Empty list";
-    }
-
-    // Add first item
-    var output = list[0];
-
-    // If list has more than one item
-    if (list.length > 1) {
-        // Create sublist of following items
-        var items = list.splice(1);
-        // Add space before second item and separate next items with commas
-        output = output + " " + items.join(", ");
-    }
-    return output;
-}
-
-// Combine list of items into load/store assembly instruction
-function renderLoadStoreInstruction(list) {
-    // If list is empty, throw error
-    if (list.length < 1) {
-        throw "Empty List";
-    // If less than 4 items in list, throw error
-    } else if (list.length < 4) {
-        throw "Not enough items to render load/store instruction";
-    }
-    // Example of format: lw x2, 0(x8)
-    return list[0] + " " + list[1] + ", " + list[2] + "(" + list[3] + ")";
+// Convert register numbers from binary to string
+function decReg(reg) {
+  return "x" + parseInt(reg, BASE.bin);
 }
 
 // Get device I/O and memory accesses corresponding to given bits
-function getAccessString(bits) {
-    var output = "";
+function decMem(bits) {
+  let output = "";
 
-    // I: Device input, O: device output, R: memory reads, W: memory writes
-    var access = ['i', 'o', 'r', 'w'];
+  // I: Device input, O: device output, R: memory reads, W: memory writes
+  const access = ['i', 'o', 'r', 'w'];
 
-    // Loop through the access array and binary string
-    for (let i = 0; i < access.length; i++) {
-        if (bits[i] == 1) {
-            output += access[i];
-        }
+  // Loop through the access array and binary string
+  for (let i = 0; i < bits.length; i++) {
+    if (bits[i] == 1) {
+      output += access[i];
     }
+  }
 
-    return output;
+  return output;
 }
+
+// Render assembly instruction
+function renderAsm(tokens, lsFmt = false) {
+  let inst;
+
+  if ((!lsFmt && tokens.length < 1) || (lsFmt && tokens.length !== 4)) {
+      throw 'Invalid number of arguments';
+  }
+
+  if (!lsFmt) {
+    // Regular instruction
+    inst = `${tokens[0]} ` + tokens.splice(1).join(', ');
+  } else {
+    // Load store instruction
+    inst = `${tokens[0]} ${tokens[1]}, ${tokens[2]}(${tokens[3]})`
+  }
+
+  return inst.trim();
+}
+

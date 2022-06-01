@@ -1,117 +1,144 @@
 import { BASE } from './Constants.js';
+
 import { Decoder } from './Decoder.js';
 import { Encoder } from './Encoder.js';
 
+/**
+ * Represents an instruction
+ * @class
+ */
 export class Instruction {
-    /**
-     * Creates an Instruction represented in multiple formats
-     * @param {String} instruction
+  /**
+   * ISA of instruction: 'RV32I', 'RV64I', 'EXT_M', 'EXT_A', etc.
+   * @type String
+   */
+  isa;
+  /**
+   * Format of instruction: 'R-type', 'I-type', etc.
+   * @type String
+   */
+  fmt;
+  /**
+   * Length of instruction: 16 or 32 bits
+   * @type Number
+   */
+  len;
+  /**
+   * Assembly representation of instruction
+   * @type String
+   */
+  asm;
+  /**
+   * Binary representation of instruction
+   * @type String
+   */
+  bin;
+  /**
+   * Hexadecimal representation of instruction
+   * @type String
+   */
+  hex;
+  /**
+   * Fragments for assembly instruction rendering, ordered by token position
+   * @type Array
+   */
+  asmFrags;
+  /**
+   * Fragments for binary instruction rendering, ordered by bit position
+   * @type Array
+   */
+  binFrags;
+
+  /**
+   * Creates an instruction represented in multiple formats
+   * @param {String} instruction
+   */
+  constructor(instruction) {
+    this.#convertInstruction(instruction.trim());
+  }
+
+  #convertInstruction(instruction) {
+    // Regular expression for up to 32 binary bits
+    const binRegEx = /^(0b)?[01]{1,32}$/;
+
+    // Regular expression for up to 8 hexadecimal digits
+    const hexRegEx = /^(0x)?[0-9a-fA-F]{1,8}$/;
+
+    // Regular expression for alphabetic character (first letter of opcode)
+    const asmRegEx = /^[a-zA-Z]$/;
+
+    // Binary instruction
+    if (binRegEx.test(instruction)) {
+      this.bin = convertBase(instruction, BASE.bin, BASE.bin, 32);
+    }
+    // Hexadecimal instruction
+    else if (hexRegEx.test(instruction)) {
+      this.bin = convertBase(instruction, BASE.hex, BASE.bin, 32);
+    }
+    // Assembly instruction (first character is a letter)
+    else if (asmRegEx.test(instruction[0])) {
+      this.#encodeBin(instruction);
+    }
+
+    else {
+      throw 'Invalid instruction (not in binary, hexadecimal, nor assembly)';
+    }
+
+    this.#decodeAsm();
+    this.hex = convertBase(this.bin, BASE.bin, BASE.hex, 8);
+    // TODO: reduce bin and hex representations for compressed instructions
+  }
+
+  // Decode instruction from binary to assembly
+  #decodeAsm() {
+    // Create a Decoder for the instruction
+    let decoder = new Decoder(this.bin);
+
+    // Get assembly representation
+    this.asm = decoder.asm;
+
+    // Get fragments
+    this.asmFrags = decoder.asmFrags;
+    this.binFrags = decoder.binFrags;
+
+    // Get instruction characteristics
+    this.fmt = decoder.fmt;
+    this.isa = decoder.isa;
+  }
+
+  // Encode instruction from assembly to binary
+  #encodeBin(instruction) {
+    // Create an Encoder for the instruction
+    let encoder = new Encoder(instruction);
+
+    // Get binary representation
+    this.bin = encoder.bin;
+  }
+
+}
+
+// Convert between bases and pads
+export function convertBase(val, baseSrc, baseDst, Pad) {
+  return parseInt(val, baseSrc).toString(baseDst).padStart(Pad, '0');
+}
+
+/**
+ * Represents a fragment of the instruction
+ * @class
+ */
+export class Frag {
+  constructor(asm, bits, field) {
+    /** Assembly fragment (e.g., 'addi', 'x5', etc.)
+     * @type {String}
      */
-    constructor(instruction) {
-        // Hard coded for now
-        this.isa = "RV32I";
-
-        // Determine format of instruction and decode
-        this.instruction = instruction;
-        this.decodeInstruction();
-    }
-
-    // Check format of instruction and decode accordingly
-    decodeInstruction() {
-        // Regular expression for 32 bit binary instruction
-        var binaryRegEx = /^[01]{1,32}$/;
-        // Regular expression for 8 digit hexadecimal instruction
-        var hexRegEx = /^(0x)?[0-9a-fA-F]{1,8}$/;
-        // Regular expression for alphabetic character
-        var alphaRegEx = /^[a-zA-Z]$/;
-
-        // If instruction is in binary format
-        var instruction = this.instruction.replace(/\s/g,'')
-        if (binaryRegEx.test(instruction)) {
-            this.binary = instruction.padStart(32, '0');
-            // Convert to hex
-            this.hex = convertBinToHex(instruction);
-            // Convert to assembly
-            this.convertToAsm();
-        // If instruction is in hex format
-        } else if (hexRegEx.test(this.instruction)) {
-            this.hex = this.instruction.padStart(8, '0');
-            // Convert to binary
-            this.binary = convertHexToBin(this.instruction);
-            // Convert to assembly
-            this.convertToAsm();
-        // If instruction starts with a letter, send to encoder for parsing
-        } else if (alphaRegEx.test(this.instruction[0])) {
-            this.assembly = this.instruction;
-            // Convert to binary
-            this.convertToBin();
-            // Convert to hex
-            this.hex = convertBinToHex(this.binary);
-        } else {
-            throw "Invalid instruction";
-        }
-    }
-
-    // Convert instruction to assembly
-    convertToAsm() {
-        // Create a Decoder for the instruction
-        var decoder = new Decoder(this.binary);
-
-        // Get assembly and fragments from Decoder
-        this.assembly = decoder.assembly;
-        this.fragments = decoder.fragments;
-        this.format = decoder.format;
-    }
-
-    // Convert instruction to binary
-    convertToBin() {
-        // Create an Encoder for the instruction
-        var encoder = new Encoder(this.assembly);
-
-        // Get binary and fragments from Encoder
-        this.binary = encoder.binary;
-        this.fragments = encoder.fragments;
-        this.format = encoder.format;
-    }
-}
-
-// Convert hexadecimal to 32 bit binary string
-function convertHexToBin(hex) {
-    var bin = parseInt(hex, BASE.HEX).toString(BASE.BINARY);
-    // Pad binary string with zeros while length < 32
-    return bin.padStart(32, '0');
-}
-
-// Convert binary to 8 digit hexadecimal
-function convertBinToHex(bin) {
-    var hex = parseInt(bin, BASE.BINARY).toString(BASE.HEX);
-    // Pad hex string with zeros while length < 8
-    hex = hex.padStart(8, '0');
-    // Add 0x prefix
-    return '0x' + hex;
-}
-
-// Check if operation is a shift
-export function isShift(operation) {
-    var shiftOperations = ["srli", "srai", "slli"];
-    if (shiftOperations.includes(operation)) {
-        return true;
-    }
-    return false;
-}
-
-export class Fragment {
-    /**
-     * Represents a fragment of the instruction
-     * @param {String} assembly (ex. "x5")
-     * @param {String} bits (ex. "01101")
-     * @param {Number} index - start index of bits (ex. 7)
-     * @param {String} field (ex. "rd")
+    this.asm = asm;
+    /** Bits fragment (e.g., '00101')
+     * @type {String}
      */
-    constructor(assembly, bits, index, field) {
-        this.assembly = assembly;
-        this.bits = bits;
-        this.index = index;
-        this.field = field;
-    }
+    this.bits = bits;
+    /** Name of field (e.g., 'opcode', 'rs1', etc.)
+     * @type {String}
+     */
+    this.field = field;
+  }
 }
