@@ -6,7 +6,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node ./tests/decoderTest.js",
+    "test": "node ./tests/decoderTest.js && node ./tests/encoderTest.js",
     "open": "http-server -a localhost -p 1234 -o ./web-ui/index.html"
   },
   "repository": {
