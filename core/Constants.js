@@ -1,226 +1,218 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+/*
+ * RISC-V Instruction Encoder/Decoder
+ *
+ * Copyright (c) 2021-2022 LupLab @ UC Davis
+ */
+
+// Bases for parsing
 export const BASE = {
-    BINARY: 2,
-    HEX: 16
+  bin: 2,
+  dec: 10,
+  hex: 16
 }
 
-// XLEN: width of an integer register in bits
+// Width of an integer register
 export const XLEN = {
-    RV32: 32
+  rv32: 32
 }
 
-// Start and end indices of shared fields
-export const FIELD_COMMON = {
-    OPCODE: {
-        START: 0,
-        END: 6
-    },
 
-    RD: {
-        START: 7,
-        END: 11
-    },
+/*
+ * Instruction fields
+ */
 
-    FUNCT3: {
-        START: 12,
-        END: 14
-    },
+// Definition of fields shared by most instruction types
+export const FIELDS = {
+  // Fields common to multiple instruction types
+  opcode: { pos: [6, 7], name: 'opcode' },
+  rd:     { pos: [11, 5], name: 'rd' },
+  funct3: { pos: [14, 3], name: 'funct3' },
+  rs1:    { pos: [19, 5], name: 'rs1' },
+  rs2:    { pos: [24, 5], name: 'rs2' },
 
-    RS1: {
-        START: 15,
-        END: 19
-    },
+  // R-type
+  r_funct7: { pos: [31, 7], name: 'funct7' },
 
-    RS2: {
-        START: 20,
-        END: 24
-    }
+  // I-type
+  i_imm_11_0: { pos: [31, 12], name: 'imm[11:0]' },
+
+  // I-type: shift instructions
+  i_shtyp:  { pos: [30, 1], name: 'shtyp' },
+  i_shamt:  { pos: [24, 5] , name: 'shamt[4:0]' },
+
+  // I-type: system instructions
+  i_funct12: { pos: [31, 12], name: 'funct12' },
+
+  // I-type: fence instructions
+  i_fm:   { pos: [31, 4], name: 'fm' },
+  i_pred: { pos: [27, 4], name: 'pred' },
+  i_succ: { pos: [23, 4], name: 'succ' },
+
+  // S-type
+  s_imm_4_0:  { pos: [11, 5], name: 'imm[4:0]' },
+  s_imm_11_5: { pos: [31, 7], name: 'imm[11:5]' },
+
+  // B-type
+  b_imm_4_1:  { pos: [11, 4], name: 'imm[4:1]' },
+  b_imm_11:   { pos: [7, 1], name: 'imm[11]' },
+  b_imm_10_5: { pos: [30, 6], name: 'imm[10:5]' },
+  b_imm_12:   { pos: [31, 1], name: 'imm[12]' },
+
+  // U-type
+  u_imm_31_12 : { pos: [31, 20], name: 'imm[31:12]' },
+
+  // J-type
+  j_imm_20:     { pos: [31, 1], name: 'imm[20]' },
+  j_imm_10_1:   { pos: [30, 10], name: 'imm[10:1]' },
+  j_imm_11:     { pos: [20, 1], name: 'imm[11]' },
+  j_imm_19_12:  { pos: [19, 8], name: 'imm[19:12]' },
 }
 
-// Start and end indices of R-TYPE fields
-export const FIELD_RTYPE = {
-    FUNCT7: {
-        START: 25,
-        END: 31
-    }
-}
 
-// Start and end indices of I-TYPE fields
-export const FIELD_ITYPE = {
-    HIGHIMM: {
-        START: 25,
-        END: 31
-    },
+/*
+ * Instruction opcodes
+ */
 
-    SHAMT: {
-        START: 20,
-        END: 24
-    },
-
-    IMM11: {
-        START: 20,
-        END: 31
-    }
-}
-
-// Start and end indices of S-TYPE fields
-export const FIELD_STYPE = {
-    IMM4: {
-        START: 7,
-        END: 11
-    },
-
-    IMM11: {
-        START: 25,
-        END: 31
-    }
-}
-
-// Start and end indices of B-TYPE fields
-export const FIELD_BTYPE = {
-    IMM4: {
-        START: 8,
-        END: 11
-    },
-
-    IMM11: {
-        START: 7,
-        END: 7
-    },
-
-    IMM10: {
-        START: 25,
-        END: 30
-    },
-
-    IMM12: {
-        START: 31,
-        END: 31
-    }
-}
-
-// Start and end indices of U-TYPE fields
-export const FIELD_UTYPE = {
-    IMM31: {
-        START: 12,
-        END: 31
-    }
-}
-
-// Start and end indices of J-TYPE fields
-export const FIELD_JTYPE = {
-    IMM20: {
-        START: 31,
-        END: 31
-    },
-
-    IMM10: {
-        START: 21,
-        END: 30
-    },
-
-    IMM11: {
-        START: 20,
-        END: 20
-    },
-
-    IMM19: {
-        START: 12,
-        END: 19
-    }
-}
-
-export const FIELD_SYSTEM = {
-    FUNCT12: {
-        START: 20,
-        END: 31
-    }
-}
-
-export const FIELD_FENCE = {
-    PRED: {
-        START: 24,
-        END: 27
-    },
-
-    SUCC: {
-        START: 20,
-        END: 23
-    },
-
-    FM: {
-        START: 28,
-        END: 31
-    }
-}
-
+// RVG base opcode map (assuming inst[1:0] = '11')
 export const OPCODE = {
-    RTYPE:  '0110011',
-    ITYPE:  '0010011',
-    JALR:   '1100111',
-    LOAD:   '0000011',
-    STYPE:  '0100011',
-    BTYPE:  '1100011',
-    LUI:    '0110111',
-    AUIPC:  '0010111',
-    JTYPE:  '1101111',
-    SYSTEM: '1110011',
-    FENCE:  '0001111'
+  LOAD:     '0000011',
+  MISC_MEM: '0001111',
+  OP_IMM:   '0010011',
+  AUIPC:    '0010111',
+  STORE:    '0100011',
+  OP:       '0110011',
+  LUI:      '0110111',
+  BRANCH:   '1100011',
+  JALR:     '1100111',
+  JAL:      '1101111',
+  SYSTEM:   '1110011',
 }
 
-export const RTYPE = {
-    add:    { TYPE: "RTYPE", FUNCT3: "000", FUNCT7: "0000000" },
-    sub:    { TYPE: "RTYPE", FUNCT3: "000", FUNCT7: "0100000" },
-    sll:    { TYPE: "RTYPE", FUNCT3: "001", FUNCT7: "0000000" },
-    slt:    { TYPE: "RTYPE", FUNCT3: "010", FUNCT7: "0000000" },
-    sltu:   { TYPE: "RTYPE", FUNCT3: "011", FUNCT7: "0000000" },
-    xor:    { TYPE: "RTYPE", FUNCT3: "100", FUNCT7: "0000000" },
-    srl:    { TYPE: "RTYPE", FUNCT3: "101", FUNCT7: "0000000" },
-    sra:    { TYPE: "RTYPE", FUNCT3: "101", FUNCT7: "0100000" },
-    or:     { TYPE: "RTYPE", FUNCT3: "110", FUNCT7: "0000000" },
-    and:    { TYPE: "RTYPE", FUNCT3: "111", FUNCT7: "0000000" }
+
+/*
+ * ISA
+ */
+
+// RV32I instruction set
+export const ISA_RV32I = {
+  lui:    { isa: 'RV32I', fmt: 'U-type', opcode: OPCODE.LUI },
+  auipc:  { isa: 'RV32I', fmt: 'U-type', opcode: OPCODE.AUIPC },
+
+  jal:    { isa: 'RV32I', fmt: 'J-type', opcode: OPCODE.JAL },
+
+  jalr:   { isa: 'RV32I', fmt: 'I-type', funct3: '000', opcode: OPCODE.JALR },
+
+  beq:    { isa: 'RV32I', fmt: 'B-type', funct3: '000', opcode: OPCODE.BRANCH },
+  bne:    { isa: 'RV32I', fmt: 'B-type', funct3: '001', opcode: OPCODE.BRANCH },
+  blt:    { isa: 'RV32I', fmt: 'B-type', funct3: '100', opcode: OPCODE.BRANCH },
+  bge:    { isa: 'RV32I', fmt: 'B-type', funct3: '101', opcode: OPCODE.BRANCH },
+  bltu:   { isa: 'RV32I', fmt: 'B-type', funct3: '110', opcode: OPCODE.BRANCH },
+  bgeu:   { isa: 'RV32I', fmt: 'B-type', funct3: '111', opcode: OPCODE.BRANCH },
+
+  lb:     { isa: 'RV32I', fmt: 'I-type', funct3: '000', opcode: OPCODE.LOAD },
+  lh:     { isa: 'RV32I', fmt: 'I-type', funct3: '001', opcode: OPCODE.LOAD },
+  lw:     { isa: 'RV32I', fmt: 'I-type', funct3: '010', opcode: OPCODE.LOAD },
+  lbu:    { isa: 'RV32I', fmt: 'I-type', funct3: '100', opcode: OPCODE.LOAD },
+  lhu:    { isa: 'RV32I', fmt: 'I-type', funct3: '101', opcode: OPCODE.LOAD },
+
+  sb:     { isa: 'RV32I', fmt: 'S-type', funct3: '000', opcode: OPCODE.STORE },
+  sh:     { isa: 'RV32I', fmt: 'S-type', funct3: '001', opcode: OPCODE.STORE },
+  sw:     { isa: 'RV32I', fmt: 'S-type', funct3: '010', opcode: OPCODE.STORE },
+
+  addi:   { isa: 'RV32I', fmt: 'I-type', funct3: '000', opcode: OPCODE.OP_IMM },
+  slti:   { isa: 'RV32I', fmt: 'I-type', funct3: '010', opcode: OPCODE.OP_IMM },
+  sltiu:  { isa: 'RV32I', fmt: 'I-type', funct3: '011', opcode: OPCODE.OP_IMM },
+  xori:   { isa: 'RV32I', fmt: 'I-type', funct3: '100', opcode: OPCODE.OP_IMM },
+  ori:    { isa: 'RV32I', fmt: 'I-type', funct3: '110', opcode: OPCODE.OP_IMM },
+  andi:   { isa: 'RV32I', fmt: 'I-type', funct3: '111', opcode: OPCODE.OP_IMM },
+
+  slli:   { isa: 'RV32I', fmt: 'I-type', shtyp: '0', funct3: '001', opcode: OPCODE.OP_IMM },
+  srli:   { isa: 'RV32I', fmt: 'I-type', shtyp: '0', funct3: '101', opcode: OPCODE.OP_IMM },
+  srai:   { isa: 'RV32I', fmt: 'I-type', shtyp: '1', funct3: '101', opcode: OPCODE.OP_IMM },
+
+  add:    { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '000', opcode: OPCODE.OP },
+  sub:    { isa: 'RV32I', fmt: 'R-type', funct7: '0100000', funct3: '000', opcode: OPCODE.OP },
+  sll:    { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '001', opcode: OPCODE.OP },
+  slt:    { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '010', opcode: OPCODE.OP },
+  sltu:   { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '011', opcode: OPCODE.OP },
+  xor:    { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '100', opcode: OPCODE.OP },
+  srl:    { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '101', opcode: OPCODE.OP },
+  sra:    { isa: 'RV32I', fmt: 'R-type', funct7: '0100000', funct3: '101', opcode: OPCODE.OP },
+  or:     { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '110', opcode: OPCODE.OP },
+  and:    { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '111', opcode: OPCODE.OP },
+
+  fence:    { isa: 'RV32I', fmt: 'I-type', funct3: '000', opcode: OPCODE.MISC_MEM },
+  'fence.i':  { isa: 'Zifencei', fmt: 'I-type', funct3: '001', opcode: OPCODE.MISC_MEM },
+
+  ecall:  { isa: 'RV32I', fmt: 'I-type', funct12: '000000000000', funct3: '000', opcode: OPCODE.SYSTEM },
+  ebreak: { isa: 'RV32I', fmt: 'I-type', funct12: '000000000001', funct3: '000', opcode: OPCODE.SYSTEM },
 }
 
-export const ITYPE = {
-    addi:   { TYPE: 'ITYPE', FUNCT3: "000", OPCODE: OPCODE.ITYPE },
-    jalr:   { TYPE: 'ITYPE', FUNCT3: "000", OPCODE: OPCODE.JALR },
-    lb:     { TYPE: 'ITYPE', FUNCT3: "000", OPCODE: OPCODE.LOAD },
-    slli:   { TYPE: 'ITYPE', FUNCT3: "001", OPCODE: OPCODE.ITYPE },
-    lh:     { TYPE: 'ITYPE', FUNCT3: "001", OPCODE: OPCODE.LOAD },
-    slti:   { TYPE: 'ITYPE', FUNCT3: "010", OPCODE: OPCODE.ITYPE },
-    lw:     { TYPE: 'ITYPE', FUNCT3: "010", OPCODE: OPCODE.LOAD },
-    sltiu:  { TYPE: 'ITYPE', FUNCT3: "011", OPCODE: OPCODE.ITYPE },
-    xori:   { TYPE: 'ITYPE', FUNCT3: "100", OPCODE: OPCODE.ITYPE },
-    lbu:    { TYPE: 'ITYPE', FUNCT3: "100", OPCODE: OPCODE.LOAD },
-    lhu:    { TYPE: 'ITYPE', FUNCT3: "101", OPCODE: OPCODE.LOAD },
-    ori:    { TYPE: 'ITYPE', FUNCT3: "110", OPCODE: OPCODE.ITYPE },
-    andi:   { TYPE: 'ITYPE', FUNCT3: "111", OPCODE: OPCODE.ITYPE },
-    srli:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0000000" },
-    srai:   { TYPE: 'ITYPE', FUNCT3: "101", HIGHIMM: "0100000" }
+// ISA per opcode
+export const ISA_OP = {
+  [ISA_RV32I['add'].funct7 + ISA_RV32I['add'].funct3]: 'add',
+  [ISA_RV32I['sub'].funct7 + ISA_RV32I['sub'].funct3]: 'sub',
+  [ISA_RV32I['sll'].funct7 + ISA_RV32I['sll'].funct3]: 'sll',
+  [ISA_RV32I['slt'].funct7 + ISA_RV32I['slt'].funct3]: 'slt',
+  [ISA_RV32I['sltu'].funct7 + ISA_RV32I['sltu'].funct3]: 'sltu',
+  [ISA_RV32I['xor'].funct7 + ISA_RV32I['xor'].funct3]: 'xor',
+  [ISA_RV32I['srl'].funct7 + ISA_RV32I['srl'].funct3]: 'srl',
+  [ISA_RV32I['sra'].funct7 + ISA_RV32I['sra'].funct3]: 'sra',
+  [ISA_RV32I['or'].funct7 + ISA_RV32I['or'].funct3]: 'or',
+  [ISA_RV32I['and'].funct7 + ISA_RV32I['and'].funct3]: 'and',
 }
 
-export const STYPE = {
-    sb:     { TYPE: 'STYPE', FUNCT3: "000" },
-    sh:     { TYPE: 'STYPE', FUNCT3: "001" },
-    sw:     { TYPE: 'STYPE', FUNCT3: "010" }
+export const ISA_LOAD = {
+  [ISA_RV32I['lb'].funct3]: 'lb',
+  [ISA_RV32I['lh'].funct3]: 'lh',
+  [ISA_RV32I['lw'].funct3]: 'lw',
+  [ISA_RV32I['lbu'].funct3]: 'lbu',
+  [ISA_RV32I['lhu'].funct3]: 'lhu',
 }
 
-export const BTYPE = {
-    beq:    { TYPE: 'BTYPE', FUNCT3: "000" },
-    bne:    { TYPE: 'BTYPE', FUNCT3: "001" },
-    blt:    { TYPE: 'BTYPE', FUNCT3: "100" },
-    bge:    { TYPE: 'BTYPE', FUNCT3: "101" },
-    bltu:   { TYPE: 'BTYPE', FUNCT3: "110" },
-    bgeu:   { TYPE: 'BTYPE', FUNCT3: "111" }
+export const ISA_STORE = {
+  [ISA_RV32I['sb'].funct3]: 'sb',
+  [ISA_RV32I['sh'].funct3]: 'sh',
+  [ISA_RV32I['sw'].funct3]: 'sw',
 }
 
-export const UTYPE = {
-    lui:    { TYPE: 'UTYPE', OPCODE: OPCODE.LUI },
-    auipc:  { TYPE: 'UTYPE', OPCODE: OPCODE.AUIPC }
+export const ISA_OP_IMM = {
+  [ISA_RV32I['addi'].funct3]: 'addi',
+  [ISA_RV32I['slti'].funct3]: 'slti',
+  [ISA_RV32I['sltiu'].funct3]: 'stliu',
+  [ISA_RV32I['xori'].funct3]: 'xori',
+  [ISA_RV32I['ori'].funct3]: 'ori',
+  [ISA_RV32I['andi'].funct3]: 'andi',
+
+  [ISA_RV32I['slli'].funct3]: 'slli',
+  [ISA_RV32I['srli'].funct3]: {
+    [ISA_RV32I['srli'].shtyp]: 'srli',
+    [ISA_RV32I['srai'].shtyp]: 'srai',
+  }
 }
 
-export const JTYPE = {
-    jal:    { TYPE: 'JTYPE' }
+export const ISA_BRANCH = {
+  [ISA_RV32I['beq'].funct3]: 'beq',
+  [ISA_RV32I['bne'].funct3]: 'bne',
+  [ISA_RV32I['blt'].funct3]: 'blt',
+  [ISA_RV32I['bge'].funct3]: 'bge',
+  [ISA_RV32I['bltu'].funct3]: 'btlu',
+  [ISA_RV32I['bgeu'].funct3]: 'bgeu',
 }
 
-export const OPERATIONS = Object.assign({}, RTYPE, ITYPE, STYPE, BTYPE, UTYPE,
-                                            JTYPE);
+export const ISA_MISC_MEM = {
+  [ISA_RV32I['fence'].funct3]: 'fence',
+  [ISA_RV32I['fence.i'].funct3]: 'fence.i',
+}
+
+export const ISA_SYSTEM = {
+  [ISA_RV32I['ecall'].funct3]: {
+    [ISA_RV32I['ecall'].funct12]: 'ecall',
+    [ISA_RV32I['ebreak'].funct12]: 'ebreak',
+    }
+}
+
+// Entire ISA
+export const ISA = Object.assign({}, ISA_RV32I);

@@ -1,159 +1,181 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+/*
+ * RISC-V Instruction Encoder/Decoder
+ *
+ * Copyright (c) 2021-2022 LupLab @ UC Davis
+ */
+
 import { Instruction } from "../core/Instruction.js";
 
+/* Import colors from CSS */
 const colors = [
-    '--color-other-yellow',
-    '--color-other-red',
-    '--color-other-pink',
-    '--color-other-cyan',
-    '--color-other-blue',
+  '--color-yellow',
+  '--color-orange',
+  '--color-red',
+  '--color-magenta',
+  '--color-violet',
+  '--color-blue',
+  '--color-cyan',
+  '--color-green',
 ]
 
-//note: all imm values are colored red dynamically
+/* Define colors per field type */
 const fieldColorMap = {
-    'opcode': '--color-other-yellow',
-    'funct3': '--color-other-yellow',
-    'funct7': '--color-other-yellow',
-    'funct12': '--color-other-yellow',
+  /* Operation */
+  'opcode': '--color-orange',
+  'funct3': '--color-orange',
+  'funct7': '--color-orange',
+  'funct12': '--color-orange',
 
-    'rs1': '--color-other-pink',
-    'rs2': '--color-other-blue',
-    'rd': '--color-other-cyan',
+  /* Registers */
+  'rs1': '--color-cyan',
+  'rs2': '--color-violet',
+  'rd': '--color-yellow',
 
-    'shamt': '--color-other-red',
-    'higher-order immediate': '--color-other-red',
+  /* Immediate */
+  'shamt': '--color-blue',
+  'imm': '--color-blue',
 
-    'fm': '--color-other-pink',
-    'pred': '--color-other-blue',
-    'succ': '--color-other-purple'
+  /* Fence */
+  'fm': '--color-green',
+  'pred': '--color-blue',
+  'succ': '--color-cyan'
 }
 
-const resultsContainerElm = document.getElementsByClassName('rows-container')[0];
-const resultsLabelElm = document.getElementById('results-label');
+/* Fast access to selected document elements */
+const input = document.getElementById('search-input');
 
-/** @type {Instruction} instruction */
-let previousInstruction = null;
-
-let ResultState = {
-    isErrorShown:false,
-    resultInnerHtml: resultsContainerElm.innerHTML
-}
-
-
+/**
+ * Upon loading page, trigger conversion if hash params exist
+ */
 window.onload = function () {
-    const input = document.getElementById('search-input');
-    if (!window.location.hash) {
-        return; //no instruction
-    }
-    //set input value to data encoded in url
-    input.value = decodeURIComponent(window.location.hash.replace('#', ''));
+  // No hash params
+  if (!window.location.hash) {
+    return;
+  }
 
-    //send input event to trigger on-input handler
-    let event = new Event('keydown');
-    event.key = 'Enter'
-    input.dispatchEvent(event);
+  // Get hash parameters as a map
+  let hash = window.location.hash.substr(1);
+  let params = hash
+    .split('&')
+    .map(kv => kv.split('=', 2))
+    .reduce((res, [k, v]) =>
+      ({ ...res, [k]: v.replace(/\+/g, ' ') }),
+      {}
+    );
+
+  // Set input field
+  input.value = params.q;
+
+  // Trigger input event to run conversion
+  let event = new Event('keydown');
+  event.key = 'Enter';
+  input.dispatchEvent(event);
 }
 
-document.getElementById("binary-data").ondblclick = event => {
-    event.stopPropagation();
-    //copy binary-data to clipboard
-    navigator.clipboard.writeText(previousInstruction.binary).then(() => {
-        const binaryDataElm = document.getElementById("binary-data")
-        binaryDataElm.classList.add('copied')
-        setTimeout(() => {
-            binaryDataElm.classList.remove('copied')
-        }, 300);
+/**
+ * Conversion upon input event
+ */
+input.onkeydown = function (event) {
+  // Run conversion when getting 'Enter'
+  if (event.key != 'Enter') {
+    return;
+  }
 
-        let copiedText = document.createElement('div')
-        copiedText.classList.add('copied-text-popup')
-        copiedText.innerText = '[ copied to clipboard ]'
-        binaryDataElm.appendChild(copiedText);
-        setTimeout(() => {
-            copiedText.remove()
-        }, 2000);
+  // Get query
+  let q = event.currentTarget.value.trim();
+
+  // Reset UI if query is empty
+  if (q === "") {
+    document.getElementById('results-container-box').style.display = 'none';
+    history.pushState(null, null, ' ');
+    return;
+  }
+
+  // Set hash
+  window.location.hash = 'q=' + q.replace(/\s/g, '+');
+
+  // Convert instruction
+  try {
+    const inst = new Instruction(q);
+    renderConversion(inst);
+  } catch (error) {
+    renderError(error);
+  }
+
+  // Display conversion results
+  document.getElementById('results-container-box').style.display = 'initial';
+}
+
+/**
+ * Render successful conversion
+ * @param {Object} inst
+ */
+function renderConversion(inst) {
+
+  // Display hex instruction
+  document.getElementById('hex-data').innerText = '0x' + inst.hex;
+
+  // Display format and ISA
+  document.getElementById('fmt-data').innerText = inst.fmt;
+  document.getElementById('isa-data').innerText = inst.isa;
+
+  // Display assembly instruction
+  let asmInst;
+  let asmTokens = inst.asmFrags.map(frag => {
+    let asm = frag.asm;
+    let field = frag.field.match(/^[a-z0-9]+/);
+    let color = fieldColorMap[field];
+
+    return `<span style='color:var(${color})'>${asm}<span/>`;
+  });
+
+  if (inst.asmFrags.length === 4 && inst.asmFrags[2].field.startsWith('imm')) {
+    // Render load-store instruction
+    asmInst = `${asmTokens[0]} ${asmTokens[1]}, ${asmTokens[2]}(${asmTokens[3]})`;
+  } else {
+    // Render regular instruction
+    asmInst = `${asmTokens[0]} ` + asmTokens.splice(1).join(', ');
+  }
+  document.getElementById('asm-data').innerHTML = asmInst;
+
+  // Display binary instruction
+  let idx = 0;
+  inst.binFrags.forEach(frag => {
+    let field = frag.field.match(/^[a-z0-9]+/);
+    let color = fieldColorMap[field];
+
+    [...frag.bits].forEach(bit => {
+      let bitElm = document.getElementsByClassName('binary-bit')[idx];
+      bitElm.innerText = bit;
+      bitElm.style.color = `var(${color})`;
+      idx++;
     });
-};
-
-document.getElementById('search-input').onkeydown = function (event) {
-    if (event.key != 'Enter') {
-        return;
-    }
-
-    document.getElementById('results-container-box').style.display = 'initial';
-
-    let value = event.currentTarget.value.trim();
-    try {
-        const instructionData = new Instruction(value);
-        previousInstruction = instructionData;
-        renderInstructionData(instructionData);
-    } catch (error) { renderError(error); }
-    window.location.hash = value;
+  });
 }
 
-/** @param {Instruction} instruction */
-function renderInstructionData(instruction) {
-
-    if(instruction && ResultState.isErrorShown){
-        ResultState.isErrorShown = false;
-        resultsContainerElm.innerHTML = ResultState.resultInnerHtml;
-        resultsLabelElm.innerText = '[ Results ]'
-    }
-    document.getElementById('hex-data').innerText = instruction.hex;
-    document.getElementById('format-data').innerText = instruction.format;
-    document.getElementById('set-data').innerText = instruction.isa;
-
-    let asmElmString = instruction.assembly;
-
-    let frags = instruction.fragments;
-    frags.sort((a, b) => a.index - b.index); //sort by index
-
-    let head = document.getElementsByClassName('binary-bit').length-1;
-    let handledAsmInstructions = [];
-    for (let frag of frags) {
-        console.log(frag);
-        let color = fieldColorMap[frag.field];
-        if(!color && frag.field.includes('imm')) {
-            color = '--color-other-red'
-        }
-        //set binary bits
-        for (let bit of Array.from(frag.bits).reverse()) {
-            let bitElm = document.getElementsByClassName('binary-bit')[head];
-            bitElm.innerText = bit;
-            bitElm.style.color = `var(${color})`;
-            head--;
-        }
-
-        //create assembly data element
-        if (!handledAsmInstructions.includes(frag.assembly)) {
-            handledAsmInstructions.push(frag.assembly)
-            asmElmString = asmElmString.replace(frag.assembly, 
-                `<span style='color:var(${color})'>${
-                    frag.assembly
-                }<span/>`)
-        }
-    }
-    document.getElementById('asm-data').innerHTML = asmElmString;
-
-    ResultState.resultInnerHtml = resultsContainerElm.innerHTML;
-}
-
-/** @param {string} error */
+/**
+ * Render conversion error
+ * @param {String} error
+ */
 function renderError(error) {
-    if (!ResultState.isErrorShown) {
-        ResultState.resultInnerHtml = resultsContainerElm.innerHTML;
-        resultsLabelElm.innerText = '[ Error ]'
-        ResultState.isErrorShown = true;
-    }
+  const resultsContainerElm = document.getElementsByClassName('rows-container')[0];
 
-    resultsContainerElm.innerHTML = '';
+  // Reset result container
+  resultsContainerElm.innerHTML = '';
 
-    let errorTitle = document.createElement('div')
-    errorTitle.classList.add('result-row', 'result-row-title');
-    errorTitle.textContent = 'ERROR = '
+  // Create row title + data
+  let errorTitle = document.createElement('div')
+  errorTitle.classList.add('result-row', 'result-row-title');
+  errorTitle.textContent = 'Error = '
 
-    let errorData = document.createElement('div')
-    errorData.classList.add('result-row');
-    errorData.textContent = error;
+  let errorData = document.createElement('div')
+  errorData.classList.add('result-row');
+  errorData.style.color = 'var(--color-red)';
+  errorData.textContent = error;
 
-    resultsContainerElm.append(errorTitle);
-    resultsContainerElm.append(errorData);
+  // Display row
+  resultsContainerElm.append(errorTitle);
+  resultsContainerElm.append(errorData);
 }

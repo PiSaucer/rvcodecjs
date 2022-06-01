@@ -1,32 +1,25 @@
-const log = console.log;
-let TEST_FAILED = false;
-
 /**
  * @param {boolean} expression
  */
-export function assert(expression) {
-    if(!TEST_FAILED)
-    if (expression)
-        return;
-    else {
-        log('\n\n');
-        console.trace();
-        log(`--Test failed--`);
-        TEST_FAILED = true;
-
-    };
+export function assertEq(got, expected) {
+  if (got != expected) {
+    throw new Error('\n\tExpected: ' + expected + '\n\tGot: ' + got)
+  } else {
+    process.stdout.write('.');
+  }
 }
 
 /**
  * @param {string} statement
- * @param {Function} callback
- * @param {boolean} should_throw
+ * @param {Function} test case function
  */
-export function test(statement, callback, should_throw = false) {
-    if (!TEST_FAILED) {
-        callback();
-    }
-    if (!TEST_FAILED) {
-        log('✔️   ', statement);
-    }
+export function test(statement, testCase) {
+  process.stdout.write(statement + ': ');
+  try {
+    testCase();
+  } catch (e) {
+    console.log(e.message);
+    return;
+  }
+  console.log(' ✓');
 }

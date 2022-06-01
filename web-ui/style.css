@@ -1,74 +1,115 @@
+/* Fonts importing */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap");
+
 :root {
-    --color-main: #53D19A;
-    --color-background: #3E3E3E;
-    
-    --color-other-yellow: #D0C245;
-    --color-other-red: #BC5252;
-    --color-other-pink: #d4a4dc;
-    --color-other-cyan: #35BABA;
-    --color-other-blue: #4d9fe6;
-    --color-other-purple: #a600ff;
+    /* Solarized colors */
+    --color-base03:  #002b36;
+    --color-base02:  #073642;
+    --color-base01:  #586e75;
+    --color-base00:  #657b83;
+    --color-base0:   #839496;
+    --color-base1:   #93a1a1;
+    --color-base2:   #eee8d5;
+    --color-base3:   #fdf6e3;
 
-    --selection-color: #2b634a;
+    --color-yellow:  #b58900;
+    --color-orange:  #cb4b16;
+    --color-red:     #dc322f;
+    --color-magenta: #d33682;
+    --color-violet:  #6c71c4;
+    --color-blue:    #268bd2;
+    --color-cyan:    #2aa198;
+    --color-green:   #859900;
 }
-@media (prefers-color-scheme: light) {
-    :root {
-        --color-main: #3E3E3E;
-        --color-background: #fdf6e3;
-        
-        --color-other-yellow: #ecad00;
-        --color-other-red: #BC5252;
-        --color-other-pink: #C140D6;
-        --color-other-cyan: #35BABA;
-        --color-other-blue: #7D6FFF;
 
-        --selection-color: #bcffe1;
+/* Light colorscheme by default */
+:root {
+    --color-fg: var(--color-base00);
+    --color-bg: var(--color-base3);
+    --color-hl: var(--color-base2);
+    --color-em: var(--color-base01);
+    --color-co: var(--color-base1);
+}
+
+/* Dark colorscheme */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-fg: var(--color-base0);
+        --color-bg: var(--color-base03);
+        --color-hl: var(--color-base02);
+        --color-em: var(--color-base1);
+        --color-co: var(--color-base01);
     }
 }
+
 ::placeholder{
-    color: #53D19AAA;
-}
-::selection {
-    background-color: var(--selection-color);
-}
-::-moz-selection {
-    background-color: var(--selection-color);
+    color: var(--color-fg);
 }
 
+::selection {
+    background-color: var(--color-hl);
+}
+
+::-moz-selection {
+    background-color: var(--color-hl);
+}
+
+/* Body */
 body {
     font-family: 'IBM Plex Mono', monospace;
 
     height: 100vh;
     margin: 0px;
-    
+
     display: grid;
     grid-template-rows: 0.5fr minmax(4ch, 12vh) minmax(30ch, 10fr);
-    gap:1ch;
+    gap: 1ch;
 
-    color: var(--color-main);
-    background-color: var(--color-background);
+    color: var(--color-fg);
+    background-color: var(--color-bg);
 }
 
+/* Page title */
 #title-container{
     margin: 1ch 1ch 0ch 1ch;
     display: grid;
 }
 #title-box{
     font-size: 0.875rem;
-    width:max-content;
+    width: max-content;
 }
 
-#searchbar-outer-container{
+/* Page copyright */
+#copyright-container{
+    margin: 1ch 1ch 1ch 1ch;
+    display: grid;
+}
+#copyright-box{
+    font-size: 0.75rem;
+    color: var(--color-co);
+}
+
+/* Boxes */
+.offset-label{
+    font-size: 0.875rem;
+    position: absolute;
+    transform: translate(20%, -60%);
+
+    padding: 0% 0.25%;
+    background-color: var(--color-bg) ;
+}
+
+/* Search bar */
+#search-outer-container{
     display: grid;
 
-    /*  end: vertically bottomed
-        center: horizontally centered   */
-    place-content: end center; 
+    /* end: vertically bottomed, center: horizontally centered  */
+    place-content: end center;
     grid-template-columns: minmax(30ch, 40ch);
 }
 
 #search-container{
-    border: 1px solid var(--color-main);
+    border: 1px solid var(--color-fg);
     height: 100%;
     height: 3.5ch;
 }
@@ -83,13 +124,15 @@ body {
     padding:0% 4% 0% 4%;
 
     background-color: transparent;
-    color:var(--color-main);
+    color: var(--color-em);
     font-family: inherit;
 }
-#search-input:focus-visible { 
+
+#search-input:focus-visible {
     outline:none;
 }
 
+/* Result area */
 #results-outer-container{
     display: grid;
     place-content: center;
@@ -99,7 +142,7 @@ body {
 }
 
 #results-container-box{
-    border: 1px solid var(--color-main);
+    border: 1px solid var(--color-fg);
     margin: 0ch 1ch 1ch 1ch;
 
     /* Results are hidden by default and dynamically shown on search*/
@@ -112,7 +155,8 @@ body {
     display: grid;
     grid-auto-flow: row;
 
-    /* Adds 1fr spacing on top and bottom that shrinks to 0px on smaller viewports. */
+    /* Adds 1fr spacing on top and bottom that shrinks to 0px on smaller
+     * viewports. */
     grid-template-rows: minmax(0px, 2fr) 5fr minmax(0px, 2fr);
 }
 
@@ -133,34 +177,22 @@ body {
     place-content: center;
 }
 
+.result-row-title{
+    color: var(--color-co);
+}
 
-/* label - left */
 .result-row:nth-child(odd){
+    /* label - left */
     display: grid;
     place-content: center end;
 }
 
-/* data - right */
 .result-row:nth-child(even){
+    /* data - right */
     place-content: center start;
 }
 
-.offset-label{
-    font-size: 0.875rem;
-    position: absolute;
-    transform: translate(20%, -60%);
-
-    padding: 0% 0.25%;
-    background-color: var(--color-background) ;
-}
-.copied-text-popup {
-    font-size: 0.875rem;
-    position: absolute;
-    transform: translate(-50%, -120%);
-    width: fit-content;
-    background-color: var(--color-background) ;
-}
-
+/* Binary representation */
 #binary-data {
     height: fit-content;
     width: max-content;
@@ -178,12 +210,6 @@ body {
     transition: background-color 400ms linear;
 }
 
-/* Used to pulse background color when element is copied
-   to clipboard. */
-.copied {
-    background-color: var(--color-main);
-}
-
 @media (max-width: 700px) {
     #binary-data {
         grid-template-columns: 1fr 1fr;
@@ -196,7 +222,8 @@ body {
     }
 }
 
-/* Groups of 8 bits that wrap together depending on grid-template-columns of #binary-data */
+/* Groups of 8 bits that wrap together depending on
+ * #binary-data's grid-template-columns */
 .binary-byte {
     display: grid;
     grid-auto-flow: column;
@@ -215,8 +242,9 @@ body {
     height: 0.9rem;
 
     /* --bit-color defined dynamically by script */
-    color:var(--bit-color);
-    
+    color: var(--bit-color);
+
     display: grid;
-    place-content: center;    
+    place-content: center;
 }
+

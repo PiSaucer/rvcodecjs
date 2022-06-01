@@ -1,113 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RISC-V Encoder/Decoder</title>
+    <title>rvcodec.js · RISC-V Instruction Encoder/Decoder</title>
 
-    <!-- Download IBM Plex Mono font -->
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+    <!-- Page properties -->
+    <meta name="author" content="LupLab @ UC Davis">
+    <meta name="description" content="RISC-V Instruction Encoder/Decoder">
+    <meta name="keywords" content="riscv, risc-v, instruction, decoder, encoder, converter">
+
+    <!-- Style -->
     <link rel="stylesheet" href="./style.css">
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="title-container">
-        <div id="title-box">[ LupLab RISC-V Encoder/Decoder ]</div>
+      <div id="title-box">[ RISC-V Instruction Encoder/Decoder ]</div>
     </div>
-    <div id="searchbar-outer-container">
-        <div id="search-container">
-            <span class='offset-label'>[ Search ]</span>
-            <input type="text" name="input" id="search-input" placeholder="ADD x5,x6,x7" autofocus>
-        </div>
+
+    <div id="search-outer-container">
+      <div id="search-container">
+        <span class='offset-label'>[ Instruction ]</span>
+        <input type="text" name="input" id="search-input" placeholder="addi x5, x6, 7" autofocus>
+      </div>
     </div>
 
     <div id="results-outer-container">
-        <div id="results-container-box">
-            <span id='results-label' class='offset-label'>[ Results ]</span>
-            <div id="results-inner-container">
-                <div class="results-container-spacing"></div>
-                <div class="rows-container">
+      <div id="results-container-box">
+        <span id='results-label' class='offset-label'>[ Conversion ]</span>
+        <div id="results-inner-container">
+          <div class="results-container-spacing"></div>
+          <div class="rows-container">
 
-                    <div class="result-row result-row-title">ASM = </div>
-                    <div id="asm-data" class="result-row result-row-data"></div>
+            <div class="result-row result-row-title">Assembly = </div>
+            <div id="asm-data" class="result-row result-row-data"></div>
 
-                    <div class="result-row">BIN = </div>
-                    <div id="binary-data" class="result-row">
-                        <div class="binary-byte">
-                            <div class="binary-nibble">
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                            </div>
-                            <div class="binary-nibble">
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                            </div>
-                        </div>
-                        <div class="binary-byte">
-                            <div class="binary-nibble">
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                            </div>
-                            <div class="binary-nibble">
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                            </div>
-                        </div>
-                        <div class="binary-byte">
-                            <div class="binary-nibble">
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                            </div>
-                            <div class="binary-nibble">
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                            </div>
-                        </div>
-                        <div class="binary-byte">
-                            <div class="binary-nibble">
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                            </div>
-                            <div class="binary-nibble">
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                                <div class="binary-bit"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="result-row"> HEX = </div>
-                    <div id="hex-data" class="result-row"></div>
-
-
-                    <div class="result-row"> FORMAT = </div>
-                    <div id="format-data" class="result-row"> </div>
-
-                    <div class="result-row">SET = </div>
-                    <div class="result-row" id="set-data"></div>
-                </div>
-                <div class="results-container-spacing"></div>
+            <div class="result-row result-row-title">Binary = </div>
+            <div id="binary-data" class="result-row result-row-data">
+              <span class="binary-byte">
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+              </span>
+              <span class="binary-byte">
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+              </span>
+              <span class="binary-byte">
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+              </span>
+              <span class="binary-byte">
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+                <span class="binary-nibble">
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                  <span class="binary-bit"></span>
+                </span>
+              </span>
             </div>
+
+            <div class="result-row result-row-title"> Hexadecimal = </div>
+            <div id="hex-data" class="result-row result-row-data"></div>
+
+
+            <div class="result-row result-row-title"> Format = </div>
+            <div id="fmt-data" class="result-row"> </div>
+
+            <div class="result-row result-row-title">Instruction set = </div>
+            <div class="result-row result-row-data" id="isa-data"></div>
+          </div>
+          <div class="results-container-spacing"></div>
         </div>
+      </div>
+    </div>
+
+    <div id="copyright-container">
+        <div id="copyright-box">Copyright © 2021-2022 <a href="https://luplab.cs.ucdavis.edu/">LupLab</a> @ University of California, Davis<br/>This website and its components are licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">GNU AGPLv3</a> License</div>
     </div>
 
     <script type="module" src="main.js"></script>
-</body>
+  </body>
 
 </html>
