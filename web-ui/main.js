@@ -1,3 +1,11 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+/*
+ * RISC-V Instruction Encoder/Decoder
+ *
+ * Copyright (c) 2021-2022 LupLab @ UC Davis
+ */
+
 import { Instruction } from "../core/Instruction.js";
 
 /* Import colors from CSS */

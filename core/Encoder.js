@@ -1,7 +1,12 @@
-import { BASE,
-  FIELDS, OPCODE,
-  ISA,
-} from './Constants.js'
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+/*
+ * RISC-V Instruction Encoder/Decoder
+ *
+ * Copyright (c) 2021-2022 LupLab @ UC Davis
+ */
+
+import { BASE, FIELDS, OPCODE, ISA } from './Constants.js'
 
 import { convertBase } from './Instruction.js'
 

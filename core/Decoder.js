@@ -1,3 +1,11 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+/*
+ * RISC-V Instruction Encoder/Decoder
+ *
+ * Copyright (c) 2021-2022 LupLab @ UC Davis
+ */
+
 import { BASE,
   FIELDS, OPCODE,
   ISA_OP, ISA_LOAD, ISA_STORE, ISA_OP_IMM, ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA,
