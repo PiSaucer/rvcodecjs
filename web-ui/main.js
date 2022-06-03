@@ -179,3 +179,18 @@ function renderError(error) {
   resultsContainerElm.append(errorTitle);
   resultsContainerElm.append(errorData);
 }
+
+/**
+ * Focus on input box when pressing '/'
+ */
+document.addEventListener("keydown", e => {
+  // Ignore any other keys than '/'
+  if (e.key !== "/" || e.ctrlKey || e.metaKey)
+    return;
+  // Ignore event if focus is currently in a form
+  if (/^(?:input|textarea|select|button)$/i.test(e.target.tagName))
+    return;
+
+  e.preventDefault();
+  input.focus();
+});
