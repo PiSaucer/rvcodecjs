@@ -518,8 +518,8 @@ export class Decoder {
     this.asmFrags.push(f['opcode'], f['rs1'], f['rs2'], f['imm']);
 
     // Binary fragments from MSB to LSB
-    this.binFrags.push(f['imm_11_5'], f['rs2'], f['rs1'], f['funct3'],
-      f['imm_4_0'], f['opcode']);
+    this.binFrags.push(f['imm_10_5'], f['rs2'], f['rs1'], f['funct3'],
+      f['imm_4_1'], f['opcode']);
 
     // Construct assembly instruction
     this.asm = renderAsm([this.#mne, src1, src2, offset]);
