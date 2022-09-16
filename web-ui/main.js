@@ -79,7 +79,7 @@ window.onload = function () {
  */
 input.onkeydown = function (event) {
   // Run conversion when getting 'Enter'
-  if (event.key != 'Enter') {
+  if (event.key !== 'Enter') {
     return;
   }
 

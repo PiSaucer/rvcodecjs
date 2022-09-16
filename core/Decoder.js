@@ -332,7 +332,7 @@ export class Decoder {
     }
 
     // Check registers
-    if (rd != '00000' || rs1 != '00000') {
+    if (rd !== '00000' || rs1 !== '00000') {
       throw "Registers rd and rs1 should be 0";
     }
 
@@ -401,7 +401,7 @@ export class Decoder {
         throw "Detected SYSTEM instruction but invalid funct12 field";
       }
       // Check registers
-      if (rd != '00000' || rs1 != '00000') {
+      if (rd !== '00000' || rs1 !== '00000') {
         throw "Registers rd and rs1 should be 0 for mne " + this.#mne;
       }
     }
@@ -539,7 +539,7 @@ export class Decoder {
     const immediate = decImm(imm), dest = decReg(rd);
 
     // Determine operation
-    this.#mne = (this.#opcode == OPCODE.AUIPC) ? 'auipc' : 'lui';
+    this.#mne = (this.#opcode === OPCODE.AUIPC) ? 'auipc' : 'lui';
 
     // Create fragments
     const f = {
@@ -680,7 +680,7 @@ function getBits(binary, pos) {
 // Parse given immediate to decimal
 function decImm(immediate, signExtend = true) {
   // Sign extension requested and sign bit set
-  if (signExtend && immediate[0] == '1') {
+  if (signExtend && immediate[0] === '1') {
     return parseInt(immediate, BASE.bin) - parseInt('1' << immediate.length);
   }
   return parseInt(immediate, BASE.bin);
@@ -700,7 +700,7 @@ function decMem(bits) {
 
   // Loop through the access array and binary string
   for (let i = 0; i < bits.length; i++) {
-    if (bits[i] == 1) {
+    if (bits[i] === 1) {
       output += access[i];
     }
   }
