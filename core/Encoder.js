@@ -6,7 +6,7 @@
  * Copyright (c) 2021-2022 LupLab @ UC Davis
  */
 
-import { BASE, FIELDS, OPCODE, ISA } from './Constants.js'
+import {BASE, FIELDS, OPCODE, ISA, REGISTER} from './Constants.js'
 
 import { convertBase } from './Instruction.js'
 
@@ -322,9 +322,12 @@ function encImm(immediate, len) {
 
 // Convert register numbers to binary
 function encReg(reg) {
+  // we attempt a conversion between ABI name to x<num>,
+  // if this fails, assume the user gave us x<num> in the first place
+  reg = REGISTER[reg] ?? reg;
   let dec = reg.substring(1);
   if (reg[0] !== 'x' || dec < 0 || dec > 31) {
-    throw 'Incorrect register format: "' + reg + '"';
+    throw `Invalid or unknown register format: "${reg}"`;
   }
   return convertBase(dec, BASE.dec, BASE.bin, 5);
 }
