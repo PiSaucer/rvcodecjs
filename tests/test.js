@@ -2,7 +2,7 @@
  * @param {boolean} expression
  */
 export function assertEq(got, expected) {
-  if (got != expected) {
+  if (got !== expected) {
     throw new Error('\n\tExpected: ' + expected + '\n\tGot: ' + got)
   } else {
     process.stdout.write('.');

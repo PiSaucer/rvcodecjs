@@ -24,7 +24,7 @@ export class Encoder {
 
   /**
    * Creates an Encoder to convert an assembly instruction to binary
-   * @param {String} assembly
+   * @param {String} asm
    */
   constructor(asm) {
     // Tokenize assembly instruction
@@ -36,7 +36,7 @@ export class Encoder {
 
   /**
    * Convert assembly instruction to binary
-   * @param {Array.String} tokens
+   * @param {String[]} tokens
    */
   #convertAsmToBin(tokens) {
     // The first token is necessarily the instruction's mnemonic
