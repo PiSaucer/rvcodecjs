@@ -56,7 +56,7 @@ window.onload = function () {
   }
 
   // Get hash parameters as a map
-  let hash = window.location.hash.substr(1);
+  let hash = window.location.hash.substring(1);
   let params = hash
     .split('&')
     .map(kv => kv.split('=', 2))
