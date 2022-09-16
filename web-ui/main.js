@@ -160,6 +160,9 @@ function renderConversion(inst) {
  * @param {String} error
  */
 function renderError(error) {
+  // log them to the console - this provides an quick way to get a traceback in the browser
+  console.error(error);
+
   const resultsContainerElm = document.getElementsByClassName('rows-container')[0];
 
   // Reset result container
