@@ -28,7 +28,7 @@ If you'd like to contribute, here are the main features we'd like to add:
 - [ ] Support for RV64I instruction set
 - [ ] Support for rest of GC extensions
     - [x] Zifencei instruction set
-    - [ ] Zicsr instruction set
+    - [X] Zicsr instruction set
     - [ ] M (multiplication/division) instruction set
     - [ ] A (atomic) instruction set
     - [ ] F (single-precision floating point) instruction set
