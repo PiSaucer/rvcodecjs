@@ -56,6 +56,19 @@ test('dec - SYSTEM (trap) - ebreak', function () {
     assertEq(inst.asm, 'ebreak');
 })
 
+// SYSTEM (Zicsr)
+test('dec - SYSTEM (Zicsr) - csrrs', function () {
+    let inst = new Instruction('01111010001001100010001001110011');
+    assertEq(inst.hex, '7a262273');
+    assertEq(inst.asm, 'csrrs x4, tdata2, x12');
+})
+
+test('dec - SYSTEM (Zicsr) - csrrwi', function () {
+    let inst = new Instruction('11110001010010111101000011110011');
+    assertEq(inst.hex, 'f14bd0f3');
+    assertEq(inst.asm, 'csrrwi x1, mhartid, 23');
+})
+
 // STORE
 test('dec - STORE - sw', function () {
     let inst = new Instruction('00000000111000010010010000100011');
