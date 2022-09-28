@@ -39,13 +39,14 @@ test('enc - MISC-MEM - fence', function () {
     assertEq(inst.hex, '0f30000f');
 })
 
-test('enc - MISC-MEM - fence.i', function () {
+// MISC-MEM (Zifencei)
+test('enc - MISC-MEM (Zifencei) - fence.i', function () {
     let inst = new Instruction('fence.i');
     assertEq(inst.hex, '0000100f');
 })
 
-// SYSTEM
-test('enc - SYSTEM - ecall', function () {
+// SYSTEM (trap)
+test('enc - SYSTEM (trap) - ecall', function () {
     let inst = new Instruction('ecall');
     assertEq(inst.hex, '00000073');
 })

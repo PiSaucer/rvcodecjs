@@ -42,14 +42,15 @@ test('dec - MISC-MEM - fence', function () {
     assertEq(inst.asm, 'fence rw, rw');
 })
 
-test('dec - MISC-MEM - fence.i', function () {
+// MISC-MEM (Zifencei)
+test('dec - MISC-MEM (Zifencei) - fence.i', function () {
     let inst = new Instruction('00000000000000000001000000001111');
     assertEq(inst.hex, '0000100f');
     assertEq(inst.asm, 'fence.i');
 })
 
-// SYSTEM
-test('dec - SYSTEM - ebreak', function () {
+// SYSTEM (trap)
+test('dec - SYSTEM (trap) - ebreak', function () {
     let inst = new Instruction('0000000000100000000000001110011');
     assertEq(inst.hex, '00100073');
     assertEq(inst.asm, 'ebreak');
