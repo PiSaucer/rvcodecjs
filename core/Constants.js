@@ -42,7 +42,7 @@ export const FIELDS = {
   i_shtyp:  { pos: [30, 1], name: 'shtyp' },
   i_shamt:  { pos: [24, 5] , name: 'shamt[4:0]' },
 
-  // I-type: system instructions
+  // I-type: trap instructions
   i_funct12: { pos: [31, 12], name: 'funct12' },
 
   // I-type: fence instructions
