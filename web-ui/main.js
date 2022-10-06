@@ -40,7 +40,10 @@ const fieldColorMap = {
   /* Fence */
   'fm': '--color-green',
   'pred': '--color-blue',
-  'succ': '--color-cyan'
+  'succ': '--color-cyan',
+
+  /* CSR */
+  'csr': '--color-green',
 }
 
 /* Fast access to selected document elements */

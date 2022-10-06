@@ -7,7 +7,7 @@
  */
 
 import { BASE,
-  FIELDS, OPCODE,
+  FIELDS, OPCODE, CSR,
   ISA_OP, ISA_LOAD, ISA_STORE, ISA_OP_IMM, ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM,
   ISA,
 } from './Constants.js'
@@ -394,8 +394,9 @@ export class Decoder {
       throw "Detected SYSTEM instruction but invalid funct3 field";
     }
 
-    // Trap instructions
-    if (typeof this.#mne !== 'string') {
+    // Trap instructions - determine mnemonic from funct12
+    let trap = (typeof this.#mne !== 'string');
+    if (trap) {
       this.#mne = this.#mne[funct12];
       if (this.#mne === undefined) {
         throw "Detected SYSTEM instruction but invalid funct12 field";
@@ -406,15 +407,16 @@ export class Decoder {
       }
     }
 
-    // Create fragments
+    // Create common fragments
     const f = {
       opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
       funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      rd:     new Frag(this.#mne, rd, FIELDS.rd.name),
     };
 
-    // Trap instructions
-    if (this.#mne === 'ecall' || this.#mne === 'ebreak') {
+    // Trap instructions - create specific fragments and render  
+    if (trap) {
+      // Create remaining fragments
+      f['rd'] = new Frag(this.#mne, rd, FIELDS.rd.name);
       f['rs1'] = new Frag(this.#mne, rs1, FIELDS.rs1.name);
       f['funct12'] = new Frag(this.#mne, funct12, FIELDS.i_funct12.name);
 
@@ -427,8 +429,44 @@ export class Decoder {
 
       // Construct assembly instruction
       this.asm = renderAsm([this.#mne]);
+    
+    } else {
+      // Zicsr instructions
+
+      // Alias already extracted field for clarity
+      const csrBin = funct12;
+
+      // Convert fields to string types
+      const dest = decReg(rd), csr = decCSR(csrBin);
+
+      // Convert rs1 to register or immediate
+      //   based off high bit of funct3 (0:reg, 1:imm)
+      let src, srcFieldName;
+      if (funct3[0] === '0') {
+        src = decReg(rs1);
+        srcFieldName = FIELDS.rs1.name;
+      } else {
+        src = decImm(rs1, false);
+        srcFieldName = FIELDS.i_imm_4_0.name;
+      }
+
+      // Create remaining fragments
+      f['rd'] = new Frag(dest, rd, FIELDS.rd.name);
+      f['csr'] = new Frag(csr, csrBin, FIELDS.i_csr.name);
+      f['rs1'] = new Frag(src, rs1, srcFieldName);
+
+      // Assembly fragments in order of instruction
+      this.asmFrags.push(f['opcode'], f['rd'], f['csr'], f['rs1']);
+
+      // Binary fragments from MSB to LSB
+      this.binFrags.push(f['csr'], f['rs1'], f['funct3'], f['rd'],
+        f['opcode']);
+
+      // Construct assembly instruction
+      this.asm = renderAsm([this.#mne, dest, csr, src]);
     }
   }
+
   /**
    * Decodes STORE instruction
    */
@@ -708,6 +746,23 @@ function decMem(bits) {
   return output;
 }
 
+// Search for CSR name from the given binary string
+function decCSR(binStr) {
+  // Decode binary string into numerical value
+  const val = parseInt(binStr, BASE.bin);
+
+  // Attempt to search for entry in CSR object with matching value
+  const entry = Object.entries(CSR).find(e => e[1] === val);
+
+  // Get CSR name if it exists,
+  //   otherwise construct an immediate hex string
+  let csr = entry 
+    ? entry[0] 
+    : ('0x' + val.toString(16).padStart(3, '0'));
+
+  return csr;
+}
+
 // Render assembly instruction
 function renderAsm(tokens, lsFmt = false) {
   let inst;
@@ -726,4 +781,3 @@ function renderAsm(tokens, lsFmt = false) {
 
   return inst.trim();
 }
-

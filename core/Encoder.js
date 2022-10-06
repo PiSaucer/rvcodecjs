@@ -6,7 +6,7 @@
  * Copyright (c) 2021-2022 LupLab @ UC Davis
  */
 
-import {BASE, FIELDS, OPCODE, ISA, REGISTER} from './Constants.js'
+import {BASE, FIELDS, OPCODE, ISA, REGISTER, CSR} from './Constants.js'
 
 import { convertBase } from './Instruction.js'
 
@@ -204,13 +204,28 @@ export class Encoder {
    * Encodes SYSTEM instruction
    */
   #encodeSYSTEM() {
-    // Default values
-    let rs1 = ''.padStart(FIELDS.rs1.pos[1], '0'),
-      rd = ''.padStart(FIELDS.rd.pos[1], '0'),
-      imm = ''.padStart(FIELDS.i_imm_11_0.pos[1], '0');
+    // Declare operands
+    let rs1, rd, imm;
 
-    // Trap instructions
-    if (this.#mne === 'ecall' || this.#mne === 'ebreak') {
+    // Zicsr Instructions
+    if (this.#inst.isa == 'Zicsr') {
+      // Get operands
+      const dest = this.#opr[0], csr = this.#opr[1], src = this.#opr[2];
+
+      // Convert to binary representation
+      rd = encReg(dest);
+      imm = encCSR(csr);
+
+      // Convert src to register or immediate
+      //   based off high bit of funct3 (0:reg, 1:imm)
+      rs1 = (this.#inst.funct3[0] === '0')
+        ? encReg(src)
+        : encImm(src, FIELDS.rs1.pos[1]);
+    
+    } else {
+      // Trap instructions
+      rs1 = ''.padStart(FIELDS.rs1.pos[1], '0');
+      rd = ''.padStart(FIELDS.rd.pos[1], '0');
       imm = this.#inst.funct12;
     }
 
@@ -350,3 +365,20 @@ function encMem(input) {
   return bits;
 }
 
+// Convert CSR (name or imm) to binary
+function encCSR(csr) {
+  // Attempt to find CSR value from CSR name map
+  let csrVal = CSR[csr];
+
+  // If failed, attempt to parse as immediate
+  if (csrVal === undefined) {
+    csrVal = Number(csr) >>> 0;
+
+    // If parse failed, neither number nor valid CSR name
+    if (csrVal === 0 && csr != 0) {
+      throw `Invalid or unknown CSR name: "${csr}"`;
+    }
+  }
+
+  return encImm(csrVal, FIELDS.i_csr.pos[1]);
+}

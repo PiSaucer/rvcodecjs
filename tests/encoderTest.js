@@ -39,15 +39,31 @@ test('enc - MISC-MEM - fence', function () {
     assertEq(inst.hex, '0f30000f');
 })
 
-test('enc - MISC-MEM - fence.i', function () {
+// MISC-MEM (Zifencei)
+test('enc - MISC-MEM (Zifencei) - fence.i', function () {
     let inst = new Instruction('fence.i');
     assertEq(inst.hex, '0000100f');
 })
 
-// SYSTEM
-test('enc - SYSTEM - ecall', function () {
+// SYSTEM (trap)
+test('enc - SYSTEM (trap) - ecall', function () {
     let inst = new Instruction('ecall');
     assertEq(inst.hex, '00000073');
+})
+
+// SYSTEM (Zicsr)
+test('enc - SYSTEM (Zicsr) - csrrw', function() {
+    let inst = new Instruction('csrrw x6, cycleh, x8');
+    let abiInst = new Instruction('csrrw t1, cycleh, fp');
+    assertEq(abiInst.bin, '11001000000001000001001101110011');
+    assertEq(inst.bin, '11001000000001000001001101110011');
+})
+
+test('enc - SYSTEM (Zicsr) - csrrci', function() {
+    let inst = new Instruction('csrrci x15, pmpcfg13, 0b10101');
+    let abiInst = new Instruction('csrrci a5, pmpcfg13, 0x15');
+    assertEq(abiInst.bin, '00111010110110101111011111110011');
+    assertEq(inst.bin, '00111010110110101111011111110011');
 })
 
 // STORE
