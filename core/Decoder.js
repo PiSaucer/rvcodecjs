@@ -700,7 +700,7 @@ function decMem(bits) {
 
   // Loop through the access array and binary string
   for (let i = 0; i < bits.length; i++) {
-    if (bits[i] === 1) {
+    if (bits[i] === '1') {
       output += access[i];
     }
   }
