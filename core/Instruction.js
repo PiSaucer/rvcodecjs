@@ -7,6 +7,7 @@
  */
 
 import { BASE } from './Constants.js';
+import { configDefault } from './Config.js';
 
 import { Decoder } from './Decoder.js';
 import { Encoder } from './Encoder.js';
@@ -56,12 +57,17 @@ export class Instruction {
    * @type Array
    */
   binFrags;
+  
+  /* Private members */
+  #config;
 
   /**
    * Creates an instruction represented in multiple formats
    * @param {String} instruction
+   * @param {Object} configuration
    */
-  constructor(instruction) {
+  constructor(instruction, config={}) {
+    this.#config = Object.assign({}, configDefault, config);
     this.#convertInstruction(instruction.trim());
   }
 
@@ -100,7 +106,7 @@ export class Instruction {
   // Decode instruction from binary to assembly
   #decodeAsm() {
     // Create a Decoder for the instruction
-    let decoder = new Decoder(this.bin);
+    let decoder = new Decoder(this.bin, this.#config);
 
     // Get assembly representation
     this.asm = decoder.asm;
@@ -117,7 +123,7 @@ export class Instruction {
   // Encode instruction from assembly to binary
   #encodeBin(instruction) {
     // Create an Encoder for the instruction
-    let encoder = new Encoder(instruction);
+    let encoder = new Encoder(instruction, this.#config);
 
     // Get binary representation
     this.bin = encoder.bin;

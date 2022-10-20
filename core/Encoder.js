@@ -18,6 +18,7 @@ export class Encoder {
   bin;
 
   /* Private members */
+  #config;
   #inst;
   #mne;
   #opr;
@@ -26,7 +27,9 @@ export class Encoder {
    * Creates an Encoder to convert an assembly instruction to binary
    * @param {String} asm
    */
-  constructor(asm) {
+  constructor(asm, config) {
+    this.#config = config;
+
     // Tokenize assembly instruction
     const tokens = asm.toLowerCase().split(/[ ,()]+/);
 

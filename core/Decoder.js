@@ -43,6 +43,7 @@ export class Decoder {
 
   /* Private members */
   #bin;
+  #config;
   #mne;
   #opcode;
 
@@ -51,8 +52,9 @@ export class Decoder {
    * Creates an Decoder to convert a binary instruction to assembly
    * @param {String} bin
    */
-  constructor(bin) {
+  constructor(bin, config) {
     this.#bin = bin;
+    this.#config = config;
 
     // Create an array of assembly fragments
     this.binFrags = [];
