@@ -8,6 +8,8 @@
 
 import {BASE, FIELDS, OPCODE, ISA, REGISTER, CSR} from './Constants.js'
 
+import { COPTS_ISA } from './Config.js'
+
 import { convertBase } from './Instruction.js'
 
 export class Encoder {
@@ -53,10 +55,16 @@ export class Encoder {
       throw "Invalid mnemonic: " + this.#mne;
     }
 
+    // Detect mismatch between ISA and configuration
+    if (this.#config.ISA === COPTS_ISA.RV32I && this.#inst.isa === 'RV64I') {
+      throw `Detected RV64I instruction but configuration ISA set to RV32I`;
+    }
+
     // Encode according to opcode
     switch(this.#inst.opcode) {
         // R-type
       case OPCODE.OP:
+      case OPCODE.OP_32:
         this.#encodeOP();
         break;
 
@@ -68,6 +76,7 @@ export class Encoder {
         this.#encodeLOAD();
         break;
       case OPCODE.OP_IMM:
+      case OPCODE.OP_IMM_32:
         this.#encodeOP_IMM();
         break;
       case OPCODE.MISC_MEM:
@@ -138,7 +147,6 @@ export class Encoder {
    * Encodes LOAD instruction
    */
   #encodeLOAD() {
-
     // Get operands
     const dest = this.#opr[0], offset = this.#opr[1], base = this.#opr[2];
 
@@ -162,17 +170,24 @@ export class Encoder {
 
     let imm = ''.padStart('0', FIELDS.i_imm_11_0.pos[1]);
 
-    if (/^s[lr][al]i$/.test(this.#mne)) {
-      // Shift instruction
-      if (immediate < 0 || immediate >= (1 << FIELDS.i_shamt.pos[1])) {
-        throw 'Incorrect shamt field: "' + immediate + '"';
-      }
-      const imm_11_5 = '0' + this.#inst.shtyp + '00000';
-      const imm_4_0 = encImm(immediate, FIELDS.i_shamt.pos[1]);
+    // Shift instruction
+    if (/^s[lr][al]iw?$/.test(this.#mne)) {
+      // Determine shift-amount width based on opcode and config ISA
+      let shamtWidth = this.#config.ISA === COPTS_ISA.RV32I || this.#inst.opcode === OPCODE.OP_IMM_32
+        ? FIELDS.i_shamt.pos[1]       // 5bit width (RV32I or word-sized)
+        : FIELDS.i_shamt_5_0.pos[1];  // 6bit width (RV64I)
 
-      imm = imm_11_5 + imm_4_0;
+      // Construct immediate field from shift type and shift amount
+      if (immediate < 0 || immediate >= (1 << shamtWidth)) {
+        throw 'Invalid shamt field (out of range): "' + immediate + '"';
+      }
+      const imm_11_6 = '0' + this.#inst.shtyp + '0000';
+      const imm_5_0 = encImm(immediate, FIELDS.i_shamt_5_0.pos[1]);
+
+      imm = imm_11_6 + imm_5_0;
 
     } else {
+      // Non-shift instructions
       imm = encImm(immediate, FIELDS.i_imm_11_0.pos[1]);
     }
 
