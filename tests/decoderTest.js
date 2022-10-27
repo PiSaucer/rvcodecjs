@@ -15,6 +15,20 @@ test('dec - OP-32 (RV64I) - addw', function () {
     assertEq(inst.isa, 'RV64I');
 })
 
+// OP (RV32M)
+test('dec - OP (RV32M) - divu', function () {
+    let inst = new Instruction('00000010111100111101000110110011');
+    assertEq(inst.asm, 'divu x3, x7, x15');
+    assertEq(inst.isa, 'RV32M');
+})
+
+// OP-32 (RV64M)
+test('dec - OP-32 (RV64M) - mulw', function () {
+    let inst = new Instruction('00000011110101101000001010111011');
+    assertEq(inst.asm, 'mulw x5, x13, x29');
+    assertEq(inst.isa, 'RV64M');
+})
+
 // JALR
 test('dec - JALR - jalr', function () {
     let inst = new Instruction('01010101010100010000000011100111');
