@@ -27,7 +27,7 @@ export const XLEN = {
 // Definition of fields shared by most instruction types
 export const FIELDS = {
   // Fields common to multiple instruction types
-  opcode: { pos: [6, 7], name: 'opcode' },
+  opcode: { pos: [6, 7],  name: 'opcode' },
   rd:     { pos: [11, 5], name: 'rd' },
   funct3: { pos: [14, 3], name: 'funct3' },
   rs1:    { pos: [19, 5], name: 'rs1' },
@@ -51,8 +51,8 @@ export const FIELDS = {
   i_funct12: { pos: [31, 12], name: 'funct12' },
 
   // I-type: CSR instructions
-  i_csr: { pos: [31, 12], name: 'csr' },
-  i_imm_4_0: { pos: [19, 5], name: 'imm[4:0]' },
+  i_csr:     { pos: [31, 12], name: 'csr' },
+  i_imm_4_0: { pos: [19, 5],  name: 'imm[4:0]' },
 
   // I-type: fence instructions
   i_fm:   { pos: [31, 4], name: 'fm' },
@@ -65,7 +65,7 @@ export const FIELDS = {
 
   // B-type
   b_imm_4_1:  { pos: [11, 4], name: 'imm[4:1]' },
-  b_imm_11:   { pos: [7, 1], name: 'imm[11]' },
+  b_imm_11:   { pos: [7, 1],  name: 'imm[11]' },
   b_imm_10_5: { pos: [30, 6], name: 'imm[10:5]' },
   b_imm_12:   { pos: [31, 1], name: 'imm[12]' },
 
@@ -73,10 +73,10 @@ export const FIELDS = {
   u_imm_31_12 : { pos: [31, 20], name: 'imm[31:12]' },
 
   // J-type
-  j_imm_20:     { pos: [31, 1], name: 'imm[20]' },
+  j_imm_20:     { pos: [31, 1],  name: 'imm[20]' },
   j_imm_10_1:   { pos: [30, 10], name: 'imm[10:1]' },
-  j_imm_11:     { pos: [20, 1], name: 'imm[11]' },
-  j_imm_19_12:  { pos: [19, 8], name: 'imm[19:12]' },
+  j_imm_11:     { pos: [20, 1],  name: 'imm[11]' },
+  j_imm_19_12:  { pos: [19, 8],  name: 'imm[19:12]' },
 }
 
 
@@ -197,16 +197,16 @@ export const ISA_Zicsr = {
 
 // ISA per opcode
 export const ISA_OP = {
-  [ISA_RV32I['add'].funct7 + ISA_RV32I['add'].funct3]: 'add',
-  [ISA_RV32I['sub'].funct7 + ISA_RV32I['sub'].funct3]: 'sub',
-  [ISA_RV32I['sll'].funct7 + ISA_RV32I['sll'].funct3]: 'sll',
-  [ISA_RV32I['slt'].funct7 + ISA_RV32I['slt'].funct3]: 'slt',
-  [ISA_RV32I['sltu'].funct7 + ISA_RV32I['sltu'].funct3]: 'sltu',
-  [ISA_RV32I['xor'].funct7 + ISA_RV32I['xor'].funct3]: 'xor',
-  [ISA_RV32I['srl'].funct7 + ISA_RV32I['srl'].funct3]: 'srl',
-  [ISA_RV32I['sra'].funct7 + ISA_RV32I['sra'].funct3]: 'sra',
-  [ISA_RV32I['or'].funct7 + ISA_RV32I['or'].funct3]: 'or',
-  [ISA_RV32I['and'].funct7 + ISA_RV32I['and'].funct3]: 'and',
+  [ISA_RV32I['add'].funct7  + ISA_RV32I['add'].funct3]:   'add',
+  [ISA_RV32I['sub'].funct7  + ISA_RV32I['sub'].funct3]:   'sub',
+  [ISA_RV32I['sll'].funct7  + ISA_RV32I['sll'].funct3]:   'sll',
+  [ISA_RV32I['slt'].funct7  + ISA_RV32I['slt'].funct3]:   'slt',
+  [ISA_RV32I['sltu'].funct7 + ISA_RV32I['sltu'].funct3]:  'sltu',
+  [ISA_RV32I['xor'].funct7  + ISA_RV32I['xor'].funct3]:   'xor',
+  [ISA_RV32I['srl'].funct7  + ISA_RV32I['srl'].funct3]:   'srl',
+  [ISA_RV32I['sra'].funct7  + ISA_RV32I['sra'].funct3]:   'sra',
+  [ISA_RV32I['or'].funct7   + ISA_RV32I['or'].funct3]:    'or',
+  [ISA_RV32I['and'].funct7  + ISA_RV32I['and'].funct3]:   'and',
 }
 
 export const ISA_OP_32 = {
@@ -218,13 +218,13 @@ export const ISA_OP_32 = {
 }
 
 export const ISA_LOAD = {
-  [ISA_RV32I['lb'].funct3]: 'lb',
-  [ISA_RV32I['lh'].funct3]: 'lh',
-  [ISA_RV32I['lw'].funct3]: 'lw',
-  [ISA_RV64I['ld'].funct3]: 'ld',
-  [ISA_RV32I['lbu'].funct3]: 'lbu',
-  [ISA_RV32I['lhu'].funct3]: 'lhu',
-  [ISA_RV64I['lwu'].funct3]: 'lwu',
+  [ISA_RV32I['lb'].funct3]:   'lb',
+  [ISA_RV32I['lh'].funct3]:   'lh',
+  [ISA_RV32I['lw'].funct3]:   'lw',
+  [ISA_RV64I['ld'].funct3]:   'ld',
+  [ISA_RV32I['lbu'].funct3]:  'lbu',
+  [ISA_RV32I['lhu'].funct3]:  'lhu',
+  [ISA_RV64I['lwu'].funct3]:  'lwu',
 }
 
 export const ISA_STORE = {
@@ -235,24 +235,24 @@ export const ISA_STORE = {
 }
 
 export const ISA_OP_IMM = {
-  [ISA_RV32I['addi'].funct3]: 'addi',
-  [ISA_RV32I['slti'].funct3]: 'slti',
-  [ISA_RV32I['sltiu'].funct3]: 'stliu',
-  [ISA_RV32I['xori'].funct3]: 'xori',
-  [ISA_RV32I['ori'].funct3]: 'ori',
-  [ISA_RV32I['andi'].funct3]: 'andi',
+  [ISA_RV32I['addi'].funct3]:   'addi',
+  [ISA_RV32I['slti'].funct3]:   'slti',
+  [ISA_RV32I['sltiu'].funct3]:  'stliu',
+  [ISA_RV32I['xori'].funct3]:   'xori',
+  [ISA_RV32I['ori'].funct3]:    'ori',
+  [ISA_RV32I['andi'].funct3]:   'andi',
 
-  [ISA_RV32I['slli'].funct3]: 'slli',
+  [ISA_RV32I['slli'].funct3]:   'slli',
   [ISA_RV32I['srli'].funct3]: {
-    [ISA_RV32I['srli'].shtyp]: 'srli',
-    [ISA_RV32I['srai'].shtyp]: 'srai',
+    [ISA_RV32I['srli'].shtyp]:  'srli',
+    [ISA_RV32I['srai'].shtyp]:  'srai',
   }
 }
 
 export const ISA_OP_IMM_32 = {
-  [ISA_RV64I['addiw'].funct3]: 'addiw',
+  [ISA_RV64I['addiw'].funct3]:  'addiw',
 
-  [ISA_RV64I['slliw'].funct3]: 'slliw',
+  [ISA_RV64I['slliw'].funct3]:  'slliw',
   [ISA_RV64I['srliw'].funct3]: {
     [ISA_RV64I['srliw'].shtyp]: 'srliw',
     [ISA_RV64I['sraiw'].shtyp]: 'sraiw',
@@ -260,27 +260,27 @@ export const ISA_OP_IMM_32 = {
 }
 
 export const ISA_BRANCH = {
-  [ISA_RV32I['beq'].funct3]: 'beq',
-  [ISA_RV32I['bne'].funct3]: 'bne',
-  [ISA_RV32I['blt'].funct3]: 'blt',
-  [ISA_RV32I['bge'].funct3]: 'bge',
+  [ISA_RV32I['beq'].funct3]:  'beq',
+  [ISA_RV32I['bne'].funct3]:  'bne',
+  [ISA_RV32I['blt'].funct3]:  'blt',
+  [ISA_RV32I['bge'].funct3]:  'bge',
   [ISA_RV32I['bltu'].funct3]: 'btlu',
   [ISA_RV32I['bgeu'].funct3]: 'bgeu',
 }
 
 export const ISA_MISC_MEM = {
-  [ISA_RV32I['fence'].funct3]: 'fence',
+  [ISA_RV32I['fence'].funct3]:      'fence',
   [ISA_Zifencei['fence.i'].funct3]: 'fence.i',
 }
 
 export const ISA_SYSTEM = {
   [ISA_RV32I['ecall'].funct3]: {
-    [ISA_RV32I['ecall'].funct12]: 'ecall',
-    [ISA_RV32I['ebreak'].funct12]: 'ebreak',
+    [ISA_RV32I['ecall'].funct12]:   'ecall',
+    [ISA_RV32I['ebreak'].funct12]:  'ebreak',
   },
-  [ISA_Zicsr['csrrw'].funct3]: 'csrrw',
-  [ISA_Zicsr['csrrs'].funct3]: 'csrrs',
-  [ISA_Zicsr['csrrc'].funct3]: 'csrrc',
+  [ISA_Zicsr['csrrw'].funct3]:  'csrrw',
+  [ISA_Zicsr['csrrs'].funct3]:  'csrrs',
+  [ISA_Zicsr['csrrc'].funct3]:  'csrrc',
   [ISA_Zicsr['csrrwi'].funct3]: 'csrrwi',
   [ISA_Zicsr['csrrsi'].funct3]: 'csrrsi',
   [ISA_Zicsr['csrrci'].funct3]: 'csrrci',
@@ -288,38 +288,38 @@ export const ISA_SYSTEM = {
 
 export const REGISTER = {
   zero: "x0",
-  ra: "x1",
-  sp: "x2",
-  gp: "x3",
-  tp: "x4",
-  t0: "x5",
-  t1: "x6",
-  t2: "x7",
-  s0: "x8",
-  s1: "x9",
-  a0: "x10",
-  a1: "x11",
-  a2: "x12",
-  a3: "x13",
-  a4: "x14",
-  a5: "x15",
-  a6: "x16",
-  a7: "x17",
-  s2: "x18",
-  s3: "x19",
-  s4: "x20",
-  s5: "x21",
-  s6: "x22",
-  s7: "x23",
-  s8: "x24",
-  s9: "x25",
-  s10: "x26",
-  s11: "x27",
-  t3: "x28",
-  t4: "x29",
-  t5: "x30",
-  t6: "x31",
-  fp: "x8",  // at bottom to conserve order for ABI indexing
+  ra:   "x1",
+  sp:   "x2",
+  gp:   "x3",
+  tp:   "x4",
+  t0:   "x5",
+  t1:   "x6",
+  t2:   "x7",
+  s0:   "x8",
+  s1:   "x9",
+  a0:   "x10",
+  a1:   "x11",
+  a2:   "x12",
+  a3:   "x13",
+  a4:   "x14",
+  a5:   "x15",
+  a6:   "x16",
+  a7:   "x17",
+  s2:   "x18",
+  s3:   "x19",
+  s4:   "x20",
+  s5:   "x21",
+  s6:   "x22",
+  s7:   "x23",
+  s8:   "x24",
+  s9:   "x25",
+  s10:  "x26",
+  s11:  "x27",
+  t3:   "x28",
+  t4:   "x29",
+  t5:   "x30",
+  t6:   "x31",
+  fp:   "x8",  // at bottom to conserve order for ABI indexing
 }
 
 // CSR Encodings
