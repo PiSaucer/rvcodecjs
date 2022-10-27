@@ -116,7 +116,8 @@ input.onkeydown = function (event) {
  * @param {Object} inst
  */
 function renderConversion(inst) {
-
+  document.getElementById("valid-result").style.display = "inherit";
+  document.getElementById("error-container").style.display = "none";
   // Display hex instruction
   document.getElementById('hex-data').innerText = '0x' + inst.hex;
 
@@ -166,7 +167,9 @@ function renderError(error) {
   // log them to the console - this provides an quick way to get a traceback in the browser
   console.error(error);
 
-  const resultsContainerElm = document.getElementsByClassName('rows-container')[0];
+  const resultsContainerElm = document.getElementById('error-container');
+  resultsContainerElm.style.display = "inherit";
+  document.getElementById("valid-result").style.display = "none";
 
   // Reset result container
   resultsContainerElm.innerHTML = '';
