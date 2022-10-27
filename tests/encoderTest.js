@@ -9,8 +9,8 @@ test('enc - OP - add', function () {
     assertEq(inst.bin, '00000000011100110000001010110011');
 })
 
-// OP (RV64i)
-test('enc - OP (RV64I) - addw', function () {
+// OP-32 (RV64I)
+test('enc - OP-32 (RV64I) - addw', function () {
     let inst = new Instruction('addw x5, x6, x7');
     let abiInst = new Instruction('addw t0, t1, t2');
     assertEq(abiInst.bin, '00000000011100110000001010111011');
@@ -49,22 +49,23 @@ test('enc - OP-IMM - srai', function () {
 })
 
 // OP-IMM (RV64I)
-test('enc - OP-IMM (RV64I) - addiw', function () {
+test('enc - OP-IMM (RV64I) - srai (shamt=43)', function () {
+    let inst = new Instruction('srai x7, x1, 43');
+    assertEq(inst.bin, '01000010101100001101001110010011');
+    assertEq(inst.isa, 'RV64I');
+})
+
+// OP-IMM-32 (RV64I)
+test('enc - OP-IMM-32 (RV64I) - addiw', function () {
     let inst = new Instruction('addiw x15, x1, -50');
     let abiInst = new Instruction('addiw a5, ra, -50');
     assertEq(abiInst.hex, 'fce0879b');
     assertEq(inst.hex, 'fce0879b');
 })
 
-test('enc - OP-IMM (RV64I) - slliw', function () {
+test('enc - OP-IMM-32 (RV64I) - slliw', function () {
     let inst = new Instruction('slliw x4, x8, 21');
     assertEq(inst.hex, '0154121b');
-    assertEq(inst.isa, 'RV64I');
-})
-
-test('enc - OP-IMM (RV64I) - srai (shamt=43)', function () {
-    let inst = new Instruction('srai x7, x1, 43');
-    assertEq(inst.bin, '01000010101100001101001110010011');
     assertEq(inst.isa, 'RV64I');
 })
 
