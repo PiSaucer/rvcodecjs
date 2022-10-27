@@ -104,3 +104,8 @@ test('dec - JAL - jal', function () {
     assertEq(inst.asm, 'jal x2, 132');
 })
 
+// ABI
+test('dec - ABI', function () {
+    let inst = new Instruction('add x8, x29, x16', { ABI: true });
+    assertEq(inst.asm, 'add s0, t4, a6');
+})

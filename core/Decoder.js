@@ -7,7 +7,7 @@
  */
 
 import { BASE,
-  FIELDS, OPCODE, CSR,
+  FIELDS, OPCODE, REGISTER, CSR,
   ISA_OP, ISA_LOAD, ISA_STORE, ISA_OP_IMM, ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM,
   ISA,
 } from './Constants.js'
@@ -43,6 +43,7 @@ export class Decoder {
 
   /* Private members */
   #bin;
+  #config;
   #mne;
   #opcode;
 
@@ -51,8 +52,12 @@ export class Decoder {
    * Creates an Decoder to convert a binary instruction to assembly
    * @param {String} bin
    */
-  constructor(bin) {
+  constructor(bin, config) {
     this.#bin = bin;
+    this.#config = config;
+
+    // Set config options in singletons
+    RegDecoder.useABI(this.#config.ABI); 
 
     // Create an array of assembly fragments
     this.binFrags = [];
@@ -144,7 +149,9 @@ export class Decoder {
     }
 
     // Convert fields to string representations
-    const src1 = decReg(rs1), src2 = decReg(rs2), dest = decReg(rd);
+    const src1 = RegDecoder.decReg(rs1),
+          src2 = RegDecoder.decReg(rs2),
+          dest = RegDecoder.decReg(rd);
 
     // Create fragments
     const f = {
@@ -181,7 +188,9 @@ export class Decoder {
     this.#mne = 'jalr';
 
     // Convert fields to string representations
-    const base = decReg(rs1), dest = decReg(rd), offset = decImm(imm);
+    const base = RegDecoder.decReg(rs1),
+          dest = RegDecoder.decReg(rd),
+          offset = decImm(imm);
 
     // Create fragments
     const f = {
@@ -220,7 +229,9 @@ export class Decoder {
     }
 
     // Convert fields to string representations
-    const base = decReg(rs1), dest = decReg(rd), offset = decImm(imm);
+    const base = RegDecoder.decReg(rs1),
+          dest = RegDecoder.decReg(rd),
+          offset = decImm(imm);
 
     // Create fragments
     const f = {
@@ -266,7 +277,8 @@ export class Decoder {
     }
 
     // Convert fields to string representations
-    const src = decReg(rs1), dest = decReg(rd);
+    const src = RegDecoder.decReg(rs1),
+          dest = RegDecoder.decReg(rd);
 
     // Create fragments
     const f = {
@@ -437,13 +449,14 @@ export class Decoder {
       const csrBin = funct12;
 
       // Convert fields to string types
-      const dest = decReg(rd), csr = decCSR(csrBin);
+      const dest = RegDecoder.decReg(rd),
+            csr = decCSR(csrBin);
 
       // Convert rs1 to register or immediate
       //   based off high bit of funct3 (0:reg, 1:imm)
       let src, srcFieldName;
       if (funct3[0] === '0') {
-        src = decReg(rs1);
+        src = RegDecoder.decReg(rs1);
         srcFieldName = FIELDS.rs1.name;
       } else {
         src = decImm(rs1, false);
@@ -488,8 +501,8 @@ export class Decoder {
 
     // Convert fields to string representations
     const offset = decImm(imm);
-    const base = decReg(rs1);
-    const src = decReg(rs2);
+    const base = RegDecoder.decReg(rs1);
+    const src = RegDecoder.decReg(rs2);
 
     // Create fragments
     const f = {
@@ -537,7 +550,9 @@ export class Decoder {
     }
 
     // Convert fields to string representations
-    const offset = decImm(imm), src2 = decReg(rs2), src1 = decReg(rs1);
+    const offset = decImm(imm), 
+          src2 = RegDecoder.decReg(rs2),
+          src1 = RegDecoder.decReg(rs1);
 
     // Create fragments
     const f = {
@@ -574,7 +589,7 @@ export class Decoder {
     const rd = getBits(this.#bin, FIELDS.rd.pos);
 
     // Convert fields to string representations
-    const immediate = decImm(imm), dest = decReg(rd);
+    const immediate = decImm(imm), dest = RegDecoder.decReg(rd);
 
     // Determine operation
     this.#mne = (this.#opcode === OPCODE.AUIPC) ? 'auipc' : 'lui';
@@ -616,7 +631,7 @@ export class Decoder {
 
     // Convert fields to string representations
     const offset = decImm(imm);
-    const dest = decReg(rd);
+    const dest = RegDecoder.decReg(rd);
 
     // Create fragments
     const f = {
@@ -724,10 +739,22 @@ function decImm(immediate, signExtend = true) {
   return parseInt(immediate, BASE.bin);
 }
 
-// Convert register numbers from binary to string
-function decReg(reg) {
-  return "x" + parseInt(reg, BASE.bin);
-}
+// Singleton that converts register numbers from binary to string
+const RegDecoder = (() => {
+  let _useABI = false;
+
+  return Object.freeze({
+    useABI(abi) {
+      _useABI = abi;
+    },
+    decReg(reg) {
+      if (_useABI) {
+        return Object.keys(REGISTER)[parseInt(reg, BASE.bin)];
+      }
+      return "x" + parseInt(reg, BASE.bin);
+    },
+  });
+})();
 
 // Get device I/O and memory accesses corresponding to given bits
 function decMem(bits) {

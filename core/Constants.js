@@ -247,7 +247,6 @@ export const REGISTER = {
   t0: "x5",
   t1: "x6",
   t2: "x7",
-  fp: "x8",
   s0: "x8",
   s1: "x9",
   a0: "x10",
@@ -271,7 +270,8 @@ export const REGISTER = {
   t3: "x28",
   t4: "x29",
   t5: "x30",
-  t6: "x31"
+  t6: "x31",
+  fp: "x8",  // at bottom to conserve order for ABI indexing
 }
 
 // CSR Encodings
