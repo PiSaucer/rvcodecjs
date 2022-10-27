@@ -195,8 +195,27 @@ export const ISA_Zicsr = {
   csrrci: { isa: 'Zicsr', fmt: 'I-type', funct3: '111', opcode: OPCODE.SYSTEM },
 }
 
+// M instruction set
+export const ISA_M = {
+  mul:    { isa: 'RV32M', fmt: 'R-type', funct7: '0000001', funct3: '000', opcode: OPCODE.OP },
+  mulh:   { isa: 'RV32M', fmt: 'R-type', funct7: '0000001', funct3: '001', opcode: OPCODE.OP },
+  mulhsu: { isa: 'RV32M', fmt: 'R-type', funct7: '0000001', funct3: '010', opcode: OPCODE.OP },
+  mulhu:  { isa: 'RV32M', fmt: 'R-type', funct7: '0000001', funct3: '011', opcode: OPCODE.OP },
+  div:    { isa: 'RV32M', fmt: 'R-type', funct7: '0000001', funct3: '100', opcode: OPCODE.OP },
+  divu:   { isa: 'RV32M', fmt: 'R-type', funct7: '0000001', funct3: '101', opcode: OPCODE.OP },
+  rem:    { isa: 'RV32M', fmt: 'R-type', funct7: '0000001', funct3: '110', opcode: OPCODE.OP },
+  remu:   { isa: 'RV32M', fmt: 'R-type', funct7: '0000001', funct3: '111', opcode: OPCODE.OP },
+
+  mulw:   { isa: 'RV64M', fmt: 'R-type', funct7: '0000001', funct3: '000', opcode: OPCODE.OP_32 },
+  divw:   { isa: 'RV64M', fmt: 'R-type', funct7: '0000001', funct3: '100', opcode: OPCODE.OP_32 },
+  divuw:  { isa: 'RV64M', fmt: 'R-type', funct7: '0000001', funct3: '101', opcode: OPCODE.OP_32 },
+  remw:   { isa: 'RV64M', fmt: 'R-type', funct7: '0000001', funct3: '110', opcode: OPCODE.OP_32 },
+  remuw:  { isa: 'RV64M', fmt: 'R-type', funct7: '0000001', funct3: '111', opcode: OPCODE.OP_32 },
+}
+
 // ISA per opcode
 export const ISA_OP = {
+  // RV32I
   [ISA_RV32I['add'].funct7  + ISA_RV32I['add'].funct3]:   'add',
   [ISA_RV32I['sub'].funct7  + ISA_RV32I['sub'].funct3]:   'sub',
   [ISA_RV32I['sll'].funct7  + ISA_RV32I['sll'].funct3]:   'sll',
@@ -207,14 +226,30 @@ export const ISA_OP = {
   [ISA_RV32I['sra'].funct7  + ISA_RV32I['sra'].funct3]:   'sra',
   [ISA_RV32I['or'].funct7   + ISA_RV32I['or'].funct3]:    'or',
   [ISA_RV32I['and'].funct7  + ISA_RV32I['and'].funct3]:   'and',
+  // RV32M
+  [ISA_M['mul'].funct7    + ISA_M['mul'].funct3]:     'mul',
+  [ISA_M['mulh'].funct7   + ISA_M['mulh'].funct3]:    'mulh',
+  [ISA_M['mulhsu'].funct7 + ISA_M['mulhsu'].funct3]:  'mulhsu',
+  [ISA_M['mulhu'].funct7  + ISA_M['mulhu'].funct3]:   'mulhu',
+  [ISA_M['div'].funct7    + ISA_M['div'].funct3]:     'div',
+  [ISA_M['divu'].funct7   + ISA_M['divu'].funct3]:    'divu',
+  [ISA_M['rem'].funct7    + ISA_M['rem'].funct3]:     'rem',
+  [ISA_M['remu'].funct7   + ISA_M['remu'].funct3]:    'remu',
 }
 
 export const ISA_OP_32 = {
+  // RV64I
   [ISA_RV64I['addw'].funct7 + ISA_RV64I['addw'].funct3]: 'addw',
   [ISA_RV64I['subw'].funct7 + ISA_RV64I['subw'].funct3]: 'subw',
   [ISA_RV64I['sllw'].funct7 + ISA_RV64I['sllw'].funct3]: 'sllw',
   [ISA_RV64I['srlw'].funct7 + ISA_RV64I['srlw'].funct3]: 'srlw',
   [ISA_RV64I['sraw'].funct7 + ISA_RV64I['sraw'].funct3]: 'sraw',
+  // RV64M
+  [ISA_M['mulw'].funct7  + ISA_M['mulw'].funct3]:   'mulw',
+  [ISA_M['divw'].funct7  + ISA_M['divw'].funct3]:   'divw',
+  [ISA_M['divuw'].funct7 + ISA_M['divuw'].funct3]:  'divuw',
+  [ISA_M['remw'].funct7  + ISA_M['remw'].funct3]:   'remw',
+  [ISA_M['remuw'].funct7 + ISA_M['remuw'].funct3]:  'remuw',
 }
 
 export const ISA_LOAD = {
@@ -643,4 +678,4 @@ export const CSR = {
 // Entire ISA
 export const ISA = Object.assign({}, 
   ISA_RV32I, ISA_RV64I, 
-  ISA_Zifencei, ISA_Zicsr);
+  ISA_Zifencei, ISA_Zicsr, ISA_M);
