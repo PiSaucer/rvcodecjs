@@ -135,8 +135,8 @@ export class Decoder {
     this.isa = this.isa ?? ISA[this.#mne].isa;
     
     // Detect mismatch between ISA and configuration
-    if (this.#config.ISA === COPTS_ISA.RV32I && this.isa === 'RV64I') {
-      throw "Detected RV64I instruction but configuration ISA set to RV32I";
+    if (this.#config.ISA === COPTS_ISA.RV32I && /^RV64.$/.test(this.isa)) {
+      throw `Detected ${this.isa} instruction but configuration ISA set to RV32I`;
     }
   }
 

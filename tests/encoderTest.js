@@ -9,12 +9,28 @@ test('enc - OP - add', function () {
     assertEq(inst.bin, '00000000011100110000001010110011');
 })
 
-// OP (RV64i)
-test('enc - OP (RV64I) - addw', function () {
+// OP-32 (RV64I)
+test('enc - OP-32 (RV64I) - addw', function () {
     let inst = new Instruction('addw x5, x6, x7');
     let abiInst = new Instruction('addw t0, t1, t2');
     assertEq(abiInst.bin, '00000000011100110000001010111011');
     assertEq(inst.bin, '00000000011100110000001010111011');
+})
+
+// OP (RV32M)
+test('enc - OP (RV32M) - mulhsu', function () {
+    let inst = new Instruction('mulhsu x9, x23, x8');
+    let abiInst = new Instruction('mulhsu s1, s7, fp');
+    assertEq(abiInst.bin, '00000010100010111010010010110011');
+    assertEq(inst.bin, '00000010100010111010010010110011');
+})
+
+// OP-32 (RV64M)
+test('enc - OP-32 (RV64M) - remw', function () {
+    let inst = new Instruction('remw x15, x7, x30');
+    let abiInst = new Instruction('remw a5, t2, t5');
+    assertEq(abiInst.bin, '00000011111000111110011110111011');
+    assertEq(inst.bin, '00000011111000111110011110111011');
 })
 
 // JALR
@@ -49,22 +65,23 @@ test('enc - OP-IMM - srai', function () {
 })
 
 // OP-IMM (RV64I)
-test('enc - OP-IMM (RV64I) - addiw', function () {
+test('enc - OP-IMM (RV64I) - srai (shamt=43)', function () {
+    let inst = new Instruction('srai x7, x1, 43');
+    assertEq(inst.bin, '01000010101100001101001110010011');
+    assertEq(inst.isa, 'RV64I');
+})
+
+// OP-IMM-32 (RV64I)
+test('enc - OP-IMM-32 (RV64I) - addiw', function () {
     let inst = new Instruction('addiw x15, x1, -50');
     let abiInst = new Instruction('addiw a5, ra, -50');
     assertEq(abiInst.hex, 'fce0879b');
     assertEq(inst.hex, 'fce0879b');
 })
 
-test('enc - OP-IMM (RV64I) - slliw', function () {
+test('enc - OP-IMM-32 (RV64I) - slliw', function () {
     let inst = new Instruction('slliw x4, x8, 21');
     assertEq(inst.hex, '0154121b');
-    assertEq(inst.isa, 'RV64I');
-})
-
-test('enc - OP-IMM (RV64I) - srai (shamt=43)', function () {
-    let inst = new Instruction('srai x7, x1, 43');
-    assertEq(inst.bin, '01000010101100001101001110010011');
     assertEq(inst.isa, 'RV64I');
 })
 
