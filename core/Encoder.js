@@ -56,8 +56,8 @@ export class Encoder {
     }
 
     // Detect mismatch between ISA and configuration
-    if (this.#config.ISA === COPTS_ISA.RV32I && this.#inst.isa === 'RV64I') {
-      throw `Detected RV64I instruction but configuration ISA set to RV32I`;
+    if (this.#config.ISA === COPTS_ISA.RV32I && /^RV64.$/.test(this.#inst.isa)) {
+      throw `Detected ${this.#inst.isa} instruction but configuration ISA set to RV32I`;
     }
 
     // Encode according to opcode
