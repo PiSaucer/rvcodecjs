@@ -9,6 +9,14 @@ test('enc - OP - add', function () {
     assertEq(inst.bin, '00000000011100110000001010110011');
 })
 
+// OP (RV64i)
+test('enc - OP (RV64I) - addw', function () {
+    let inst = new Instruction('addw x5, x6, x7');
+    let abiInst = new Instruction('addw t0, t1, t2');
+    assertEq(abiInst.bin, '00000000011100110000001010111011');
+    assertEq(inst.bin, '00000000011100110000001010111011');
+})
+
 // JALR
 test('enc - JALR - jalr', function () {
     let inst = new Instruction('jalr x16, x5, 24');
@@ -31,6 +39,33 @@ test('enc - OP-IMM - addi', function () {
     let abiInst = new Instruction('addi a5, ra, -50');
     assertEq(abiInst.hex, 'fce08793');
     assertEq(inst.hex, 'fce08793');
+})
+
+test('enc - OP-IMM - srai', function () {
+    let inst = new Instruction('srai x7, x1, 21');
+    let abiInst = new Instruction('srai t2, ra, 21');
+    assertEq(inst.bin, '01000001010100001101001110010011');
+    assertEq(abiInst.bin, '01000001010100001101001110010011');
+})
+
+// OP-IMM (RV64I)
+test('enc - OP-IMM (RV64I) - addiw', function () {
+    let inst = new Instruction('addiw x15, x1, -50');
+    let abiInst = new Instruction('addiw a5, ra, -50');
+    assertEq(abiInst.hex, 'fce0879b');
+    assertEq(inst.hex, 'fce0879b');
+})
+
+test('enc - OP-IMM (RV64I) - slliw', function () {
+    let inst = new Instruction('slliw x4, x8, 21');
+    assertEq(inst.hex, '0154121b');
+    assertEq(inst.isa, 'RV64I');
+})
+
+test('enc - OP-IMM (RV64I) - srai (shamt=43)', function () {
+    let inst = new Instruction('srai x7, x1, 43');
+    assertEq(inst.bin, '01000010101100001101001110010011');
+    assertEq(inst.isa, 'RV64I');
 })
 
 // MISC-MEM

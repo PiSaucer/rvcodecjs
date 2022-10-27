@@ -34,8 +34,9 @@ const fieldColorMap = {
   'rd': '--color-yellow',
 
   /* Immediate */
-  'shamt': '--color-blue',
   'imm': '--color-blue',
+  'shamt': '--color-blue',
+  'shtyp': '--color-orange',
 
   /* Fence */
   'fm': '--color-green',

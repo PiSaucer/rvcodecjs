@@ -25,7 +25,7 @@ encoded as part of the binary representation.
 If you'd like to contribute, here are the main features we'd like to add:
 
 - [x] Support for RV32I instruction set
-- [ ] Support for RV64I instruction set
+- [x] Support for RV64I instruction set
 - [ ] Support for rest of GC extensions
     - [x] Zifencei instruction set
     - [X] Zicsr instruction set

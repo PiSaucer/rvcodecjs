@@ -8,6 +8,13 @@ test('dec - OP - add', function () {
     assertEq(inst.asm, 'add x1, x2, x3');
 })
 
+// OP (RV64i)
+test('decs - OP (RV64I) - addw', function () {
+    let inst = new Instruction('00000000011100110000001010111011');
+    assertEq(inst.asm, 'addw x5, x6, x7');
+    assertEq(inst.isa, 'RV64I');
+})
+
 // JALR
 test('dec - JALR - jalr', function () {
     let inst = new Instruction('01010101010100010000000011100111');
@@ -33,6 +40,25 @@ test('dec - OP-IMM - srai', function () {
     let inst = new Instruction('01000001010100001101001110010011');
     assertEq(inst.hex, '4150d393');
     assertEq(inst.asm, 'srai x7, x1, 21');
+})
+
+// OP-IMM (RV64I)
+test('dec - OP-IMM (RV64I) - addiw', function () {
+    let inst = new Instruction('fce0879b');
+    assertEq(inst.asm, 'addiw x15, x1, -50');
+    assertEq(inst.isa, 'RV64I');
+})
+
+test('dec - OP-IMM (RV64I) - slliw', function () {
+    let inst = new Instruction('0154121b');
+    assertEq(inst.asm, 'slliw x4, x8, 21');
+    assertEq(inst.isa, 'RV64I');
+})
+
+test('dec - OP-IMM (RV64I) - srai (shamt=43)', function () {
+    let inst = new Instruction('01000010101100001101001110010011');
+    assertEq(inst.asm, 'srai x7, x1, 43');
+    assertEq(inst.isa, 'RV64I');
 })
 
 // MISC-MEM

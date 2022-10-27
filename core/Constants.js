@@ -15,7 +15,8 @@ export const BASE = {
 
 // Width of an integer register
 export const XLEN = {
-  rv32: 32
+  rv32: 32,
+  rv64: 64
 }
 
 
@@ -39,8 +40,12 @@ export const FIELDS = {
   i_imm_11_0: { pos: [31, 12], name: 'imm[11:0]' },
 
   // I-type: shift instructions
-  i_shtyp:  { pos: [30, 1], name: 'shtyp' },
-  i_shamt:  { pos: [24, 5] , name: 'shamt[4:0]' },
+  i_shtyp_11_6: { pos: [31, 6], name: 'shtyp[11:6]'},
+  i_shtyp_11_5: { pos: [31, 7], name: 'shtyp[11:5]'},
+  i_shtyp:      { pos: [30, 1], name: 'shtyp' },
+  i_shamt_5:    { pos: [25, 1], name: 'shamt[5]' }, 
+  i_shamt_5_0:  { pos: [25, 6], name: 'shamt[5:0]' },
+  i_shamt:      { pos: [24, 5], name: 'shamt[4:0]' },
 
   // I-type: trap instructions
   i_funct12: { pos: [31, 12], name: 'funct12' },
@@ -84,9 +89,11 @@ export const OPCODE = {
   LOAD:     '0000011',
   MISC_MEM: '0001111',
   OP_IMM:   '0010011',
+  OP_IMM_32:'0011011',
   AUIPC:    '0010111',
   STORE:    '0100011',
   OP:       '0110011',
+  OP_32:    '0111011',
   LUI:      '0110111',
   BRANCH:   '1100011',
   JALR:     '1100111',
@@ -147,10 +154,30 @@ export const ISA_RV32I = {
   or:     { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '110', opcode: OPCODE.OP },
   and:    { isa: 'RV32I', fmt: 'R-type', funct7: '0000000', funct3: '111', opcode: OPCODE.OP },
 
-  fence:    { isa: 'RV32I', fmt: 'I-type', funct3: '000', opcode: OPCODE.MISC_MEM },
+  fence:  { isa: 'RV32I', fmt: 'I-type', funct3: '000', opcode: OPCODE.MISC_MEM },
 
   ecall:  { isa: 'RV32I', fmt: 'I-type', funct12: '000000000000', funct3: '000', opcode: OPCODE.SYSTEM },
   ebreak: { isa: 'RV32I', fmt: 'I-type', funct12: '000000000001', funct3: '000', opcode: OPCODE.SYSTEM },
+}
+
+// RV64I instruction set
+export const ISA_RV64I = {
+  addiw:  { isa: 'RV64I', fmt: 'I-type', funct3: '000', opcode: OPCODE.OP_IMM_32 },
+
+  slliw:  { isa: 'RV64I', fmt: 'I-type', shtyp: '0', funct3: '001', opcode: OPCODE.OP_IMM_32 },
+  srliw:  { isa: 'RV64I', fmt: 'I-type', shtyp: '0', funct3: '101', opcode: OPCODE.OP_IMM_32 },
+  sraiw:  { isa: 'RV64I', fmt: 'I-type', shtyp: '1', funct3: '101', opcode: OPCODE.OP_IMM_32 },
+  
+  addw:   { isa: 'RV64I', fmt: 'R-type', funct7: '0000000', funct3: '000', opcode: OPCODE.OP_32 },
+  subw:   { isa: 'RV64I', fmt: 'R-type', funct7: '0100000', funct3: '000', opcode: OPCODE.OP_32 },
+  sllw:   { isa: 'RV64I', fmt: 'R-type', funct7: '0000000', funct3: '001', opcode: OPCODE.OP_32 },
+  srlw:   { isa: 'RV64I', fmt: 'R-type', funct7: '0000000', funct3: '101', opcode: OPCODE.OP_32 },
+  sraw:   { isa: 'RV64I', fmt: 'R-type', funct7: '0100000', funct3: '101', opcode: OPCODE.OP_32 },
+
+  ld:     { isa: 'RV64I', fmt: 'I-type', funct3: '011', opcode: OPCODE.LOAD },
+  lwu:    { isa: 'RV64I', fmt: 'I-type', funct3: '110', opcode: OPCODE.LOAD },
+
+  sd:     { isa: 'RV64I', fmt: 'S-type', funct3: '011', opcode: OPCODE.STORE },
 }
 
 // Zifencei instruction set
@@ -182,18 +209,29 @@ export const ISA_OP = {
   [ISA_RV32I['and'].funct7 + ISA_RV32I['and'].funct3]: 'and',
 }
 
+export const ISA_OP_32 = {
+  [ISA_RV64I['addw'].funct7 + ISA_RV64I['addw'].funct3]: 'addw',
+  [ISA_RV64I['subw'].funct7 + ISA_RV64I['subw'].funct3]: 'subw',
+  [ISA_RV64I['sllw'].funct7 + ISA_RV64I['sllw'].funct3]: 'sllw',
+  [ISA_RV64I['srlw'].funct7 + ISA_RV64I['srlw'].funct3]: 'srlw',
+  [ISA_RV64I['sraw'].funct7 + ISA_RV64I['sraw'].funct3]: 'sraw',
+}
+
 export const ISA_LOAD = {
   [ISA_RV32I['lb'].funct3]: 'lb',
   [ISA_RV32I['lh'].funct3]: 'lh',
   [ISA_RV32I['lw'].funct3]: 'lw',
+  [ISA_RV64I['ld'].funct3]: 'ld',
   [ISA_RV32I['lbu'].funct3]: 'lbu',
   [ISA_RV32I['lhu'].funct3]: 'lhu',
+  [ISA_RV64I['lwu'].funct3]: 'lwu',
 }
 
 export const ISA_STORE = {
   [ISA_RV32I['sb'].funct3]: 'sb',
   [ISA_RV32I['sh'].funct3]: 'sh',
   [ISA_RV32I['sw'].funct3]: 'sw',
+  [ISA_RV64I['sd'].funct3]: 'sd',
 }
 
 export const ISA_OP_IMM = {
@@ -208,6 +246,16 @@ export const ISA_OP_IMM = {
   [ISA_RV32I['srli'].funct3]: {
     [ISA_RV32I['srli'].shtyp]: 'srli',
     [ISA_RV32I['srai'].shtyp]: 'srai',
+  }
+}
+
+export const ISA_OP_IMM_32 = {
+  [ISA_RV64I['addiw'].funct3]: 'addiw',
+
+  [ISA_RV64I['slliw'].funct3]: 'slliw',
+  [ISA_RV64I['srliw'].funct3]: {
+    [ISA_RV64I['srliw'].shtyp]: 'srliw',
+    [ISA_RV64I['sraiw'].shtyp]: 'sraiw',
   }
 }
 
@@ -593,4 +641,6 @@ export const CSR = {
 }
 
 // Entire ISA
-export const ISA = Object.assign({}, ISA_RV32I, ISA_Zifencei, ISA_Zicsr);
+export const ISA = Object.assign({}, 
+  ISA_RV32I, ISA_RV64I, 
+  ISA_Zifencei, ISA_Zicsr);
