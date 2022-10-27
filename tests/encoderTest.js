@@ -17,6 +17,22 @@ test('enc - OP-32 (RV64I) - addw', function () {
     assertEq(inst.bin, '00000000011100110000001010111011');
 })
 
+// OP (RV32M)
+test('enc - OP (RV32M) - mulhsu', function () {
+    let inst = new Instruction('mulhsu x9, x23, x8');
+    let abiInst = new Instruction('mulhsu s1, s7, fp');
+    assertEq(abiInst.bin, '00000010100010111010010010110011');
+    assertEq(inst.bin, '00000010100010111010010010110011');
+})
+
+// OP-32 (RV64M)
+test('enc - OP-32 (RV64M) - remw', function () {
+    let inst = new Instruction('remw x15, x7, x30');
+    let abiInst = new Instruction('remw a5, t2, t5');
+    assertEq(abiInst.bin, '00000011111000111110011110111011');
+    assertEq(inst.bin, '00000011111000111110011110111011');
+})
+
 // JALR
 test('enc - JALR - jalr', function () {
     let inst = new Instruction('jalr x16, x5, 24');
