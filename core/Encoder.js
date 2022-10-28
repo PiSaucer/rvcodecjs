@@ -372,12 +372,18 @@ function encMem(input) {
   // I: Device input, O: device output, R: memory reads, W: memory writes
   const access = ['i', 'o', 'r', 'w'];
 
+  let one_count = 0;
   for (let i = 0; i < access.length; i++) {
     if (input.includes(access[i])) {
       bits += '1';
+      one_count++;
     } else {
       bits += '0';
     }
+  }
+
+  if (one_count !== input.length || bits === '0000') {
+    throw `Invalid IO/Mem field '${input}', expected some combination of 'iorw'`
   }
 
   return bits;

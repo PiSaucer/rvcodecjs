@@ -836,6 +836,10 @@ function decMem(bits) {
     }
   }
 
+  if (output === "") {
+    throw `Invalid IO/Mem field`;
+  }
+
   return output;
 }
 
