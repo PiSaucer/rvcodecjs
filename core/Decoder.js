@@ -15,7 +15,7 @@ import { BASE,
 
 import { COPTS_ISA } from './Config.js'
 
-import { Frag } from './Instruction.js'
+import { Frag, convertRegToAbi } from './Instruction.js'
 
 export class Decoder {
   /**
@@ -58,9 +58,6 @@ export class Decoder {
   constructor(bin, config) {
     this.#bin = bin;
     this.#config = config;
-
-    // Set config options in singletons
-    RegDecoder.useABI(this.#config.ABI); 
 
     // Create an array of assembly fragments
     this.binFrags = [];
@@ -138,6 +135,10 @@ export class Decoder {
     if (this.#config.ISA === COPTS_ISA.RV32I && /^RV64.$/.test(this.isa)) {
       throw `Detected ${this.isa} instruction but configuration ISA set to RV32I`;
     }
+
+    // Render ASM insturction string (mainly for testing)
+    let mem_inst = this.#opcode === OPCODE.LOAD || this.#opcode === OPCODE.STORE;
+    this.asm = renderAsm(this.asmFrags, mem_inst, this.#config.ABI);
   }
 
   /**
@@ -169,9 +170,9 @@ export class Decoder {
     }
 
     // Convert fields to string representations
-    const src1 = RegDecoder.decReg(rs1),
-          src2 = RegDecoder.decReg(rs2),
-          dest = RegDecoder.decReg(rd);
+    const src1 = decReg(rs1),
+          src2 = decReg(rs2),
+          dest = decReg(rd);
 
     // Create fragments
     const f = {
@@ -189,9 +190,6 @@ export class Decoder {
     // Binary fragments from MSB to LSB
     this.binFrags.push(f['funct7'], f['rs2'], f['rs1'], f['funct3'], f['rd'],
       f['opcode']);
-
-    // Construct assembly instruction
-    this.asm = renderAsm([this.#mne, dest, src1, src2]);
   }
 
   /**
@@ -208,8 +206,8 @@ export class Decoder {
     this.#mne = 'jalr';
 
     // Convert fields to string representations
-    const base = RegDecoder.decReg(rs1),
-          dest = RegDecoder.decReg(rd),
+    const base = decReg(rs1),
+          dest = decReg(rd),
           offset = decImm(imm);
 
     // Create fragments
@@ -226,9 +224,6 @@ export class Decoder {
 
     // Binary fragments from MSB to LSB
     this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
-
-    // Construct assembly instruction
-    this.asm = renderAsm([this.#mne, dest, base, offset]);
   }
 
   /**
@@ -249,8 +244,8 @@ export class Decoder {
     }
 
     // Convert fields to string representations
-    const base = RegDecoder.decReg(rs1),
-          dest = RegDecoder.decReg(rd),
+    const base = decReg(rs1),
+          dest = decReg(rd),
           offset = decImm(imm);
 
     // Create fragments
@@ -267,9 +262,6 @@ export class Decoder {
 
     // Binary fragments from MSB to LSB
     this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
-
-    // Construct assembly instruction
-    this.asm = renderAsm([this.#mne, dest, offset, base], true);
   }
 
   /**
@@ -311,8 +303,8 @@ export class Decoder {
     }
 
     // Convert fields to string representations
-    const src = RegDecoder.decReg(rs1),
-          dest = RegDecoder.decReg(rd);
+    const src = decReg(rs1),
+          dest = decReg(rd);
 
     // Create fragments
     const f = {
@@ -368,9 +360,6 @@ export class Decoder {
       this.binFrags.push(f['shift'], f['imm'], f['rs1'],
         f['funct3'], f['rd'], f['opcode']);
 
-      // Construct assembly instruction
-      this.asm = renderAsm([this.#mne, dest, src, shamt]);
-
     } else {
       const imm = fields['imm'];
       const immediate = decImm(imm);
@@ -379,9 +368,6 @@ export class Decoder {
 
       // Binary fragments from MSB to LSB
       this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
-
-      // Construct assembly instruction
-      this.asm = renderAsm([this.#mne, dest, src, immediate]);
     }
 
     // Assembly fragments in order of instruction
@@ -436,8 +422,6 @@ export class Decoder {
       this.binFrags.push(f['fm'], f['pred'], f['succ'], f['rs1'], f['funct3'],
         f['rd'], f['opcode']);
 
-      // Construct assembly instruction
-      this.asm = renderAsm([this.#mne, predecessor, successor]);
     } else  {
       // FENCE.I case
 
@@ -448,9 +432,6 @@ export class Decoder {
 
       // Binary fragments from MSB to LSB
       this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
-
-      // Construct assembly instruction
-      this.asm = renderAsm([this.#mne]);
     }
   }
 
@@ -503,9 +484,6 @@ export class Decoder {
       // Binary fragments from MSB to LSB
       this.binFrags.push(f['funct12'], f['rs1'], f['funct3'], f['rd'],
         f['opcode']);
-
-      // Construct assembly instruction
-      this.asm = renderAsm([this.#mne]);
     
     } else {
       // Zicsr instructions
@@ -514,14 +492,14 @@ export class Decoder {
       const csrBin = funct12;
 
       // Convert fields to string types
-      const dest = RegDecoder.decReg(rd),
+      const dest = decReg(rd),
             csr = decCSR(csrBin);
 
       // Convert rs1 to register or immediate
       //   based off high bit of funct3 (0:reg, 1:imm)
       let src, srcFieldName;
       if (funct3[0] === '0') {
-        src = RegDecoder.decReg(rs1);
+        src = decReg(rs1);
         srcFieldName = FIELDS.rs1.name;
       } else {
         src = decImm(rs1, false);
@@ -539,9 +517,6 @@ export class Decoder {
       // Binary fragments from MSB to LSB
       this.binFrags.push(f['csr'], f['rs1'], f['funct3'], f['rd'],
         f['opcode']);
-
-      // Construct assembly instruction
-      this.asm = renderAsm([this.#mne, dest, csr, src]);
     }
   }
 
@@ -566,8 +541,8 @@ export class Decoder {
 
     // Convert fields to string representations
     const offset = decImm(imm);
-    const base = RegDecoder.decReg(rs1);
-    const src = RegDecoder.decReg(rs2);
+    const base = decReg(rs1);
+    const src = decReg(rs2);
 
     // Create fragments
     const f = {
@@ -586,9 +561,6 @@ export class Decoder {
     // Binary fragments from MSB to LSB
     this.binFrags.push(f['imm_11_5'], f['rs2'], f['rs1'], f['funct3'],
       f['imm_4_0'], f['opcode']);
-
-    // Construct assembly instruction
-    this.asm = renderAsm([this.#mne, src, offset, base], true);
   }
 
   /**
@@ -616,8 +588,8 @@ export class Decoder {
 
     // Convert fields to string representations
     const offset = decImm(imm), 
-          src2 = RegDecoder.decReg(rs2),
-          src1 = RegDecoder.decReg(rs1);
+          src2 = decReg(rs2),
+          src1 = decReg(rs1);
 
     // Create fragments
     const f = {
@@ -638,11 +610,6 @@ export class Decoder {
     // Binary fragments from MSB to LSB
     this.binFrags.push(f['imm_10_5'], f['rs2'], f['rs1'], f['funct3'],
       f['imm_4_1'], f['opcode']);
-
-    // Construct assembly instruction
-    this.asm = renderAsm([this.#mne, src1, src2, offset]);
-
-    return this.#mne;
   }
 
   /**
@@ -654,7 +621,7 @@ export class Decoder {
     const rd = getBits(this.#bin, FIELDS.rd.pos);
 
     // Convert fields to string representations
-    const immediate = decImm(imm), dest = RegDecoder.decReg(rd);
+    const immediate = decImm(imm), dest = decReg(rd);
 
     // Determine operation
     this.#mne = (this.#opcode === OPCODE.AUIPC) ? 'auipc' : 'lui';
@@ -671,11 +638,6 @@ export class Decoder {
 
     // Binary fragments from MSB to LSB
     this.binFrags.push(f['imm'], f['rd'], f['opcode']);
-
-    // Construct assembly instruction
-    this.asm = renderAsm([this.#mne, dest, immediate]);
-
-    return this.#mne;
   }
 
   /**
@@ -696,7 +658,7 @@ export class Decoder {
 
     // Convert fields to string representations
     const offset = decImm(imm);
-    const dest = RegDecoder.decReg(rd);
+    const dest = decReg(rd);
 
     // Create fragments
     const f = {
@@ -715,11 +677,6 @@ export class Decoder {
     // Binary fragments from MSB to LSB
     this.binFrags.push(f['imm_20'], f['imm_10_1'], f['imm_11'], f['imm_19_12'],
       f['rd'], f['opcode']);
-
-    // Construct assembly instruction
-    this.asm = renderAsm([this.#mne, dest, offset]);
-
-    return this.#mne;
   }
 
 }
@@ -805,22 +762,15 @@ function decImm(immediate, signExtend = true) {
   return parseInt(immediate, BASE.bin);
 }
 
-// Singleton that converts register numbers from binary to string
-const RegDecoder = (() => {
-  let _useABI = false;
+// Convert register numbers from binary to string
+function decReg(reg) {
+  return "x" + parseInt(reg, BASE.bin);
+}
 
-  return Object.freeze({
-    useABI(abi) {
-      _useABI = abi;
-    },
-    decReg(reg) {
-      if (_useABI) {
-        return Object.keys(REGISTER)[parseInt(reg, BASE.bin)];
-      }
-      return "x" + parseInt(reg, BASE.bin);
-    },
-  });
-})();
+// Convert register numbers from binary to ABI name string
+export function decRegAbi(reg, base=BASE.dec) {
+  return Object.keys(REGISTER)[parseInt(reg, base)];
+}
 
 // Get device I/O and memory accesses corresponding to given bits
 function decMem(bits) {
@@ -861,14 +811,18 @@ function decCSR(binStr) {
 }
 
 // Render assembly instruction
-function renderAsm(tokens, lsFmt = false) {
-  let inst;
-
-  if ((!lsFmt && tokens.length < 1) || (lsFmt && tokens.length !== 4)) {
+function renderAsm(asmFrags, memFmt = false, abi = false) {
+  // Validate assembly arguments
+  if ((!memFmt && asmFrags.length < 1) || (memFmt && asmFrags.length !== 4)) {
       throw 'Invalid number of arguments';
   }
 
-  if (!lsFmt) {
+  // Extract assembly tokens and build instruction
+  let inst;
+  const tokens = [...asmFrags].map(
+    (f) => abi ? convertRegToAbi(f.asm) : f.asm
+  );
+  if (!memFmt) {
     // Regular instruction
     inst = `${tokens[0]} ` + tokens.splice(1).join(', ');
   } else {
