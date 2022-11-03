@@ -144,7 +144,7 @@ body {
 #results-container-box{
     border: 1px solid var(--color-fg);
     margin: 0ch 1ch 1ch 1ch;
-
+    padding-right: 1.5ch;
     /* Results are hidden by default and dynamically shown on search*/
     display: none;
 }
@@ -248,3 +248,48 @@ body {
     place-content: center;
 }
 
+/*css the copy-button and the row-data*/
+.copy-button {
+    margin: auto 0;
+    height: 1.5rem;
+    background-color: inherit;
+    border: none;
+    background: url("./assets/copy-icon.svg") no-repeat center;
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+}
+
+.copy-button:active {
+    background: url("./assets/check-icon.svg") no-repeat center;
+}
+
+.result-row-data {
+    grid-template-columns: 4fr 0.15fr;
+}
+
+/*css the tooltip*/
+.copy-tooltip {
+    visibility: hidden;
+    width: 3rem;
+    background-color: var(--color-fg);
+    color: var(--color-bg);
+    text-align: center;
+    border-radius: 5px;
+    padding: 3px 0;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+    bottom: 100%;
+    left: -200%;
+    margin-left: -50%;
+}
+
+.copy-button:hover .copy-tooltip {
+    visibility: visible;
+}
+
+.copy-button:active .copy-tooltip {
+    visibility: hidden;
+}
