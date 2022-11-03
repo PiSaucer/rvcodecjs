@@ -145,6 +145,7 @@ function renderConversion(inst) {
 
   // Display binary instruction
   let idx = 0;
+  let binaryData = "";
   inst.binFrags.forEach(frag => {
     let field = frag.field.match(/^[a-z0-9]+/);
     let color = fieldColorMap[field];
@@ -152,10 +153,25 @@ function renderConversion(inst) {
     [...frag.bits].forEach(bit => {
       let bitElm = document.getElementsByClassName('binary-bit')[idx];
       bitElm.innerText = bit;
+      binaryData += bit;
       bitElm.style.color = `var(${color})`;
       idx++;
     });
   });
+
+  // Copy button function
+  let copyBtn = {
+    "asm-copy": inst.asm,
+    "binary-copy": binaryData,
+    "hex-copy": '0x' + inst.hex
+  }
+
+  for (let buttonId in copyBtn) {
+    let button = document.getElementById(buttonId);
+    button.addEventListener("click", () => {
+      navigator.clipboard.writeText(copyBtn[buttonId]);
+    })
+  }
 }
 
 /**
