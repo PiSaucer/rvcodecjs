@@ -159,16 +159,33 @@ function enc_zicsr_system_csrrci() {
 function enc_rv32m_op_mulhsu() {
     let inst = new Instruction('mulhsu x9, x23, x8');
     let abiInst = new Instruction('mulhsu s1, s7, fp');
-    assertEq(abiInst.bin, '00000010100010111010010010110011');
     assertEq(inst.bin, '00000010100010111010010010110011');
+    assertEq(abiInst.bin, inst.bin);
 }
 
 // OP-32
 function enc_rv64m_op32_remw() {
     let inst = new Instruction('remw x15, x7, x30');
     let abiInst = new Instruction('remw a5, t2, t5');
-    assertEq(abiInst.bin, '00000011111000111110011110111011');
     assertEq(inst.bin, '00000011111000111110011110111011');
+    assertEq(abiInst.bin, inst.bin);
+}
+
+/*
+ * A extension
+ */
+function enc_rv32a_amo_lrw() {
+    let inst = new Instruction('lr.w x6, (x10)');
+    let abiInst = new Instruction('lr.w t1, (a0)');
+    assertEq(abiInst.bin, '00010000000001010010001100101111');
+    assertEq(abiInst.bin, inst.bin);
+}
+
+function enc_rv64a_amo_amoswapd() {
+    let inst = new Instruction('amoswap.d x31, x30, (x12)');
+    let abiInst = new Instruction('amoswap.d t6, t5, (a2)');
+    assertEq(abiInst.bin, '00001001111001100011111110101111');
+    assertEq(abiInst.bin, inst.bin);
 }
 
 test('Enc - RV32I    - LUI       - lui', enc_rv32i_lui_lui);
@@ -192,6 +209,8 @@ test('Enc - Zicsr    - SYSTEM    - csrrw', enc_zicsr_system_csrrw);
 test('Enc - Zicsr    - SYSTEM    - csrrci', enc_zicsr_system_csrrci);
 test('Enc - RV32M    - OP        - mulhsu', enc_rv32m_op_mulhsu);
 test('Enc - RV64M    - OP-32     - remw', enc_rv64m_op32_remw);
+test('Enc - RV32A    - AMO       - lr.w', enc_rv32a_amo_lrw);
+test('Enc - RV64A    - AMO       - amoswap.d', enc_rv64a_amo_amoswapd);
 
 // Newline
 console.log('');
