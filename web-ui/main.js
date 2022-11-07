@@ -25,6 +25,7 @@ const fieldColorMap = {
   /* Operation */
   'opcode': '--color-orange',
   'funct3': '--color-orange',
+  'funct5': '--color-orange',
   'funct7': '--color-orange',
   'funct12': '--color-orange',
 
@@ -45,6 +46,10 @@ const fieldColorMap = {
 
   /* CSR */
   'csr': '--color-green',
+
+  /* AMO */
+  'aq': '--color-green',
+  'rl': '--color-green',
 }
 
 /* Fast access to selected document elements */
