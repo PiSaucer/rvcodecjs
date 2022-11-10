@@ -6,7 +6,7 @@
  * Copyright (c) 2021-2022 LupLab @ UC Davis
  */
 
-import { Instruction } from "../core/Instruction.js";
+import { Instruction, convertRegToAbi } from "../core/Instruction.js";
 
 /* Import colors from CSS */
 const colors = [
@@ -103,7 +103,7 @@ input.onkeydown = function (event) {
   // Convert instruction
   try {
     const inst = new Instruction(q);
-    renderConversion(inst);
+    renderConversion(inst, false); // @TODO: replace `false` with config.ABI
   } catch (error) {
     renderError(error);
   }
@@ -116,7 +116,7 @@ input.onkeydown = function (event) {
  * Render successful conversion
  * @param {Object} inst
  */
-function renderConversion(inst) {
+function renderConversion(inst, abi=false) {
   document.getElementById("valid-result").style.display = "inherit";
   document.getElementById("error-container").style.display = "none";
   // Display hex instruction
@@ -129,7 +129,7 @@ function renderConversion(inst) {
   // Display assembly instruction
   let asmInst;
   let asmTokens = inst.asmFrags.map(frag => {
-    let asm = frag.asm;
+    let asm = abi ? convertRegToAbi(frag.asm) : frag.asm;
     let field = frag.field.match(/^[a-z0-9]+/);
     let color = fieldColorMap[field];
 

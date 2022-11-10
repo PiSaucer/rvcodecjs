@@ -1,152 +1,200 @@
 import { test, assertEq } from './test.js';
 import { Instruction } from '../core/Instruction.js';
 
-// OP
-test('dec - OP - add', function () {
-    let inst = new Instruction('00000000001100010000000010110011');
-    assertEq(inst.hex, '003100b3');
-    assertEq(inst.asm, 'add x1, x2, x3');
-})
+/*
+ * RV32I
+ */
+// LUI
+function dec_rv32i_lui_lui() {
+    let inst = new Instruction('0001e1B7');
+    let instAbi = new Instruction('0001e1B7', { ABI:true });
+    assertEq(inst.asm, 'lui x3, 30');
+    assertEq(instAbi.asm, 'lui gp, 30');
+}
 
-// OP-32 (RV64I)
-test('dec - OP-32 (RV64I) - addw', function () {
-    let inst = new Instruction('00000000011100110000001010111011');
-    assertEq(inst.asm, 'addw x5, x6, x7');
-    assertEq(inst.isa, 'RV64I');
-})
+// AUIPC
+function dec_rv32i_auipc_auipc() {
+    let inst = new Instruction('00000000000000011110001010010111');
+    let instAbi = new Instruction('00000000000000011110001010010111', { ABI:true });
+    assertEq(inst.asm, 'auipc x5, 30');
+    assertEq(instAbi.asm, 'auipc t0, 30');
+}
 
-// OP (RV32M)
-test('dec - OP (RV32M) - divu', function () {
-    let inst = new Instruction('00000010111100111101000110110011');
-    assertEq(inst.asm, 'divu x3, x7, x15');
-    assertEq(inst.isa, 'RV32M');
-})
-
-// OP-32 (RV64M)
-test('dec - OP-32 (RV64M) - mulw', function () {
-    let inst = new Instruction('00000011110101101000001010111011');
-    assertEq(inst.asm, 'mulw x5, x13, x29');
-    assertEq(inst.isa, 'RV64M');
-})
+// JAL
+function dec_rv32i_jal_jal() {
+    let inst = new Instruction('00001000010000000000000101101111');
+    let instAbi = new Instruction('00001000010000000000000101101111', { ABI:true });
+    assertEq(inst.asm, 'jal x2, 132');
+    assertEq(instAbi.asm, 'jal sp, 132');
+}
 
 // JALR
-test('dec - JALR - jalr', function () {
+function dec_rv32i_jalr_jalr() {
     let inst = new Instruction('01010101010100010000000011100111');
-    assertEq(inst.hex, '555100e7');
+    let instAbi = new Instruction('01010101010100010000000011100111', { ABI:true });
     assertEq(inst.asm, 'jalr x1, x2, 1365');
-})
+    assertEq(instAbi.asm, 'jalr ra, sp, 1365');
+}
+
+// BRANCH
+function dec_rv32i_branch_beq() {
+    let inst = new Instruction('00000000101010011000100001100011');
+    let instAbi = new Instruction('00000000101010011000100001100011', { ABI:true });
+    assertEq(inst.asm, 'beq x19, x10, 16');
+    assertEq(instAbi.asm, 'beq s3, a0, 16');
+}
 
 // LOAD
-test('dec - LOAD - lw', function () {
+function dec_rv32i_load_lw() {
     let inst = new Instruction('0xff442503');
-    assertEq(inst.bin, '11111111010001000010010100000011');
+    let instAbi = new Instruction('0xff442503', { ABI:true });
     assertEq(inst.asm, 'lw x10, -12(x8)');
-})
+    assertEq(instAbi.asm, 'lw a0, -12(s0)');
+}
+
+// STORE
+function dec_rv32i_store_sw() {
+    let inst = new Instruction('00000000111000010010010000100011');
+    let instAbi = new Instruction('00000000111000010010010000100011', { ABI:true });
+    assertEq(inst.asm, 'sw x14, 8(x2)');
+    assertEq(instAbi.asm, 'sw a4, 8(sp)');
+}
 
 // OP-IMM
-test('dec - OP-IMM - addi', function () {
+function dec_rv32i_opimm_addi() {
     let inst = new Instruction('11111100111000001000011110010011');
-    assertEq(inst.hex, 'fce08793');
+    let instAbi = new Instruction('11111100111000001000011110010011', { ABI:true });
     assertEq(inst.asm, 'addi x15, x1, -50');
-})
+    assertEq(instAbi.asm, 'addi a5, ra, -50');
+}
 
-test('dec - OP-IMM - srai', function () {
+function dec_rv32i_opimm_srai() {
     let inst = new Instruction('01000001010100001101001110010011');
-    assertEq(inst.hex, '4150d393');
+    let instAbi = new Instruction('01000001010100001101001110010011', { ABI:true });
     assertEq(inst.asm, 'srai x7, x1, 21');
-})
+    assertEq(instAbi.asm, 'srai t2, ra, 21');
+}
 
-// OP-IMM (RV64I)
-test('dec - OP-IMM (RV64I) - srai (shamt=43)', function () {
-    let inst = new Instruction('01000010101100001101001110010011');
-    assertEq(inst.asm, 'srai x7, x1, 43');
-    assertEq(inst.isa, 'RV64I');
-})
-
-// OP-IMM-32 (RV64I)
-test('dec - OP-IMM-32 (RV64I) - addiw', function () {
-    let inst = new Instruction('fce0879b');
-    assertEq(inst.asm, 'addiw x15, x1, -50');
-    assertEq(inst.isa, 'RV64I');
-})
-
-test('dec - OP-IMM-32 (RV64I) - slliw', function () {
-    let inst = new Instruction('0154121b');
-    assertEq(inst.asm, 'slliw x4, x8, 21');
-    assertEq(inst.isa, 'RV64I');
-})
+// OP
+function dec_rv32i_op_add() {
+    let inst = new Instruction('00000000001100010000000010110011');
+    let instAbi = new Instruction('00000000001100010000000010110011', { ABI:true });
+    assertEq(inst.asm, 'add x1, x2, x3');
+    assertEq(instAbi.asm, 'add ra, sp, gp');
+}
 
 // MISC-MEM
-test('dec - MISC-MEM - fence', function () {
+function dec_rv32i_miscmem_fence() {
     let inst = new Instruction('00000011001100000000000000001111');
     assertEq(inst.hex, '0330000f');
     assertEq(inst.asm, 'fence rw, rw');
-})
+}
 
-// MISC-MEM (Zifencei)
-test('dec - MISC-MEM (Zifencei) - fence.i', function () {
-    let inst = new Instruction('00000000000000000001000000001111');
-    assertEq(inst.hex, '0000100f');
-    assertEq(inst.asm, 'fence.i');
-})
-
-// SYSTEM (trap)
-test('dec - SYSTEM (trap) - ebreak', function () {
-    let inst = new Instruction('0000000000100000000000001110011');
-    assertEq(inst.hex, '00100073');
+// SYSTEM
+function dec_rv32i_system_ebreak() {
+    let inst = new Instruction('00100073');
+    assertEq(inst.bin, '00000000000100000000000001110011');
     assertEq(inst.asm, 'ebreak');
-})
+}
 
-// SYSTEM (Zicsr)
-test('dec - SYSTEM (Zicsr) - csrrs', function () {
+/*
+ * RV64I
+ */
+// OP-32
+function dec_rv64i_op32_addw() {
+    let inst = new Instruction('00000000011100110000001010111011');
+    assertEq(inst.asm, 'addw x5, x6, x7');
+    assertEq(inst.isa, 'RV64I');
+}
+
+// OP-IMM
+function dec_rv64i_opimm_srai_shamt43() {
+    let inst = new Instruction('01000010101100001101001110010011');
+    assertEq(inst.asm, 'srai x7, x1, 43');
+    assertEq(inst.isa, 'RV64I');
+}
+
+// OP-IMM-32
+function dec_rv64i_opimm32_addiw() {
+    let inst = new Instruction('fce0879b');
+    assertEq(inst.asm, 'addiw x15, x1, -50');
+    assertEq(inst.isa, 'RV64I');
+}
+
+function dec_rv64i_opim32_slliw() {
+    let inst = new Instruction('0154121b');
+    assertEq(inst.asm, 'slliw x4, x8, 21');
+    assertEq(inst.isa, 'RV64I');
+}
+
+/*
+ * Zifencei
+ */
+// MISC-MEM
+function dec_zifencei_miscmem_zifencei() {
+    let inst = new Instruction('0000100f');
+    assertEq(inst.bin, '00000000000000000001000000001111');
+    assertEq(inst.asm, 'fence.i');
+}
+
+/*
+ * Zicsr
+ */
+function dec_zicsr_system_csrrs() {
     let inst = new Instruction('01111010001001100010001001110011');
-    assertEq(inst.hex, '7a262273');
+    let instAbi = new Instruction('01111010001001100010001001110011', { ABI:true });
     assertEq(inst.asm, 'csrrs x4, tdata2, x12');
-})
+    assertEq(instAbi.asm, 'csrrs tp, tdata2, a2');
+}
 
-test('dec - SYSTEM (Zicsr) - csrrwi', function () {
+function dec_zicsr_system_csrrwi() {
     let inst = new Instruction('11110001010010111101000011110011');
-    assertEq(inst.hex, 'f14bd0f3');
+    let instAbi = new Instruction('11110001010010111101000011110011', { ABI:true });
     assertEq(inst.asm, 'csrrwi x1, mhartid, 23');
-})
+    assertEq(instAbi.asm, 'csrrwi ra, mhartid, 23');
+}
 
-// STORE
-test('dec - STORE - sw', function () {
-    let inst = new Instruction('00000000111000010010010000100011');
-    assertEq(inst.hex, '00e12423');
-    assertEq(inst.asm, 'sw x14, 8(x2)');
-})
+/*
+ * M extension
+ */
+// OP
+function dec_rv32m_op_divu() {
+    let inst = new Instruction('00000010111100111101000110110011');
+    assertEq(inst.asm, 'divu x3, x7, x15');
+    assertEq(inst.isa, 'RV32M');
+}
 
-// BRANCH
-test('dec - BRANCH - beq', function () {
-    let inst = new Instruction('00000000101010011000100001100011');
-    assertEq(inst.hex, '00a98863');
-    assertEq(inst.asm, 'beq x19, x10, 16');
-})
+// OP-32
+function dec_rv64m_op32_mulw() {
+    let inst = new Instruction('00000011110101101000001010111011');
+    assertEq(inst.asm, 'mulw x5, x13, x29');
+    assertEq(inst.isa, 'RV64M');
+}
 
-// LUI
-test('dec - LUI - lui', function () {
-    let inst = new Instruction('0001e1B7');
-    assertEq(inst.bin, '00000000000000011110000110110111');
-    assertEq(inst.asm, 'lui x3, 30');
-})
+/*
+ * Execute tests
+ */
+test('Dec - RV32I    - LUI       - lui', dec_rv32i_lui_lui);
+test('Dec - RV32I    - AUIPC     - auipc', dec_rv32i_auipc_auipc);
+test('Dec - RV32I    - JAL       - jal', dec_rv32i_jal_jal);
+test('Dec - RV32I    - JALR      - jalr', dec_rv32i_jalr_jalr);
+test('Dec - RV32I    - BRANCH    - beq', dec_rv32i_branch_beq);
+test('Dec - RV32I    - LOAD      - lw', dec_rv32i_load_lw);
+test('Dec - RV32I    - STORE     - sw', dec_rv32i_store_sw);
+test('Dec - RV32I    - OP-IMM    - addi', dec_rv32i_opimm_addi);
+test('Dec - RV32I    - OP-IMM    - srai', dec_rv32i_opimm_srai);
+test('Dec - RV32I    - OP        - add', dec_rv32i_op_add);
+test('Dec - RV32I    - MISC-MEM  - fence', dec_rv32i_miscmem_fence);
+test('Dec - RV32I    - SYSTEM    - ebreak', dec_rv32i_system_ebreak);
+test('Dec - RV64I    - OP-32     - addw', dec_rv64i_op32_addw);
+test('Dec - RV64I    - OP-IMM    - srai - [shamt=43]', dec_rv64i_opimm_srai_shamt43);
+test('Dec - RV64I    - OP-IMM-32 - addiw', dec_rv64i_opimm32_addiw);
+test('Dec - RV64I    - OP-IMM-32 - slliw', dec_rv64i_opim32_slliw);
+test('Dec - Zifencei - MISC-MEM  - fence.i', dec_zifencei_miscmem_zifencei);
+test('Dec - Zicsr    - SYSTEM    - csrrs', dec_zicsr_system_csrrs);
+test('Dec - Zicsr    - SYSTEM    - csrrwi', dec_zicsr_system_csrrwi);
+test('Dec - RV32M    - OP        - divu', dec_rv32m_op_divu);
+test('Dec - RV64M    - OP-32     - mulw', dec_rv64m_op32_mulw);
 
-// AUIPC
-test('dec - AUIPC - auipc', function () {
-    let inst = new Instruction('00000000000000011110001010010111');
-    assertEq(inst.hex, '0001e297');
-    assertEq(inst.asm, 'auipc x5, 30');
-})
-
-// JAL
-test('dec - JAL - jal', function () {
-    let inst = new Instruction('00001000010000000000000101101111');
-    assertEq(inst.hex, '0840016f');
-    assertEq(inst.asm, 'jal x2, 132');
-})
-
-// ABI
-test('dec - ABI', function () {
-    let inst = new Instruction('add x8, x29, x16', { ABI: true });
-    assertEq(inst.asm, 'add s0, t4, a6');
-})
+// Newline
+console.log('');

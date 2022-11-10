@@ -9,7 +9,7 @@
 import { BASE } from './Constants.js';
 import { configDefault } from './Config.js';
 
-import { Decoder } from './Decoder.js';
+import { Decoder, decRegAbi } from './Decoder.js';
 import { Encoder } from './Encoder.js';
 
 /**
@@ -134,6 +134,15 @@ export class Instruction {
 // Convert between bases and pads
 export function convertBase(val, baseSrc, baseDst, Pad) {
   return parseInt(val, baseSrc).toString(baseDst).padStart(Pad, '0');
+}
+
+// Convert register names to ABI names
+export function convertRegToAbi(reg) {
+  const match = /^x(\d+)$/.exec(reg);
+  if(match !== null) {
+    reg = decRegAbi(match[1]);
+  }
+  return reg;
 }
 
 /**
