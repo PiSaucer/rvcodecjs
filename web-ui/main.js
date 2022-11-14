@@ -133,15 +133,25 @@ function renderConversion(inst, abi=false) {
     let field = frag.field.match(/^[a-z0-9]+/);
     let color = fieldColorMap[field];
 
+    if (frag.mem) {
+      asm = '(' + asm + ')';
+    }
+    
     return `<span style='color:var(${color})'>${asm}<span/>`;
   });
 
-  if (inst.asmFrags.length === 4 && inst.asmFrags[2].field.startsWith('imm')) {
-    // Render load-store instruction
-    asmInst = `${asmTokens[0]} ${asmTokens[1]}, ${asmTokens[2]}(${asmTokens[3]})`;
-  } else {
-    // Render regular instruction
-    asmInst = `${asmTokens[0]} ` + asmTokens.splice(1).join(', ');
+  asmInst = asmTokens[0];
+  for (let i = 1; i < asmTokens.length; i++) {
+    // Append delimeter
+    if (i === 1) {
+      asmInst += ' ';
+    }
+    else if (!inst.asmFrags[i].mem || !/^imm/.test(inst.asmFrags[i-1].field)) {
+      asmInst += ', ';
+    }
+
+    // Append assembly fragment
+    asmInst += asmTokens[i];
   }
   document.getElementById('asm-data').innerHTML = asmInst;
 
