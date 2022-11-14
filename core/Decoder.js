@@ -137,8 +137,7 @@ export class Decoder {
     }
 
     // Render ASM insturction string (mainly for testing)
-    let mem_inst = this.#opcode === OPCODE.LOAD || this.#opcode === OPCODE.STORE;
-    this.asm = renderAsm(this.asmFrags, mem_inst, this.#config.ABI);
+    this.asm = renderAsm(this.asmFrags, this.#config.ABI);
   }
 
   /**
@@ -253,7 +252,7 @@ export class Decoder {
       opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
       funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
       rd:     new Frag(dest, rd, FIELDS.rd.name),
-      rs1:    new Frag(base, rs1, FIELDS.rs1.name),
+      rs1:    new Frag(base, rs1, FIELDS.rs1.name, true),
       imm:    new Frag(offset, imm, FIELDS.i_imm_11_0.name),
     };
 
@@ -548,7 +547,7 @@ export class Decoder {
     const f = {
       opcode:   new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
       funct3:   new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      rs1:      new Frag(base, rs1, FIELDS.rs1.name),
+      rs1:      new Frag(base, rs1, FIELDS.rs1.name, true),
       rs2:      new Frag(src, rs2, FIELDS.rs2.name),
       imm_4_0:  new Frag(offset, imm_4_0, FIELDS.s_imm_4_0.name),
       imm_11_5: new Frag(offset, imm_11_5, FIELDS.s_imm_11_5.name),
@@ -811,23 +810,27 @@ function decCSR(binStr) {
 }
 
 // Render assembly instruction
-function renderAsm(asmFrags, memFmt = false, abi = false) {
-  // Validate assembly arguments
-  if ((!memFmt && asmFrags.length < 1) || (memFmt && asmFrags.length !== 4)) {
-      throw 'Invalid number of arguments';
-  }
-
+function renderAsm(asmFrags, abi = false) {
   // Extract assembly tokens and build instruction
-  let inst;
-  const tokens = [...asmFrags].map(
-    (f) => abi ? convertRegToAbi(f.asm) : f.asm
-  );
-  if (!memFmt) {
-    // Regular instruction
-    inst = `${tokens[0]} ` + tokens.splice(1).join(', ');
-  } else {
-    // Load store instruction
-    inst = `${tokens[0]} ${tokens[1]}, ${tokens[2]}(${tokens[3]})`
+  let inst = asmFrags[0].asm;
+  for (let i = 1; i < asmFrags.length; i++) {
+    // Conditionally use ABI names for registers
+    let asm = abi ? convertRegToAbi(asmFrags[i].asm) : asmFrags[i].asm;
+
+    // Append delimeter
+    if (i === 1) {
+      inst += ' ';
+    }
+    else if (!asmFrags[i].mem || !/^imm/.test(asmFrags[i-1].field)) {
+      inst += ', ';
+    }
+
+    // Append assembly fragment
+    if (asmFrags[i].mem) {
+      inst += '(' + asm + ')';
+    } else {
+      inst += asm;
+    }
   }
 
   return inst.trim();
