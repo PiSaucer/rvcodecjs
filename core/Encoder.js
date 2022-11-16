@@ -67,6 +67,9 @@ export class Encoder {
       case OPCODE.OP_32:
         this.#encodeOP();
         break;
+      case OPCODE.AMO:
+        this.#encodeAMO();
+        break;
 
         // I-type
       case OPCODE.JALR:
@@ -343,6 +346,34 @@ export class Encoder {
 
     // Construct binary instruction
     this.bin = imm_20 + imm_10_1 + imm_11 + imm_19_12 + rd + this.#inst.opcode;
+  }
+
+  /**
+   * Encodes AMO instruction
+   */
+  #encodeAMO() {
+    // Declare operands
+    let dest, addr, src;
+
+    // Get operands, separately for 'lr' instruction  
+    if (/^lr\.[wd]$/.test(this.#mne)) {
+      dest = this.#opr[0];
+      addr = this.#opr[1];
+      src  = 'x0'; // converts to '00000'
+    }
+    else {
+      dest = this.#opr[0];
+      addr = this.#opr[2];
+      src  = this.#opr[1];
+    }
+
+    // Convert to binary representation
+    const rd = encReg(dest), rs1 = encReg(addr), rs2 = encReg(src),
+      aq = '0', rl = '0';
+
+    // Construct binary instruction
+    this.bin = this.#inst.funct5 + aq + rl + rs2 + rs1 + 
+      this.#inst.funct3 + rd + this.#inst.opcode;
   }
 }
 

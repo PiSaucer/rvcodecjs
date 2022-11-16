@@ -172,6 +172,23 @@ function dec_rv64m_op32_mulw() {
 }
 
 /*
+ * A extension
+ */
+function dec_rv32a_amo_amomaxuw() {
+    let inst = new Instruction('11100000010101010010001100101111');
+    let instAbi = new Instruction('11100000010101010010001100101111', { ABI:true });
+    assertEq(inst.asm, 'amomaxu.w x6, x5, (x10)');
+    assertEq(instAbi.asm, 'amomaxu.w t1, t0, (a0)');
+}
+
+function dec_rv64a_amo_lrd() {
+    let inst = new Instruction('00010110000001010011001100101111');
+    let instAbi = new Instruction('00010110000001010011001100101111', { ABI:true });
+    assertEq(inst.asm, 'lr.d x6, (x10)');
+    assertEq(instAbi.asm, 'lr.d t1, (a0)');
+}
+
+/*
  * Execute tests
  */
 test('Dec - RV32I    - LUI       - lui', dec_rv32i_lui_lui);
@@ -195,6 +212,8 @@ test('Dec - Zicsr    - SYSTEM    - csrrs', dec_zicsr_system_csrrs);
 test('Dec - Zicsr    - SYSTEM    - csrrwi', dec_zicsr_system_csrrwi);
 test('Dec - RV32M    - OP        - divu', dec_rv32m_op_divu);
 test('Dec - RV64M    - OP-32     - mulw', dec_rv64m_op32_mulw);
+test('Dec - RV32A    - AMO       - amomaxu.w', dec_rv32a_amo_amomaxuw);
+test('Dec - RV64A    - AMO       - lr.d', dec_rv64a_amo_lrd);
 
 // Newline
 console.log('');

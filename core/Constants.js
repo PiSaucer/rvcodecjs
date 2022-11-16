@@ -34,7 +34,12 @@ export const FIELDS = {
   rs2:    { pos: [24, 5], name: 'rs2' },
 
   // R-type
+  r_funct5: { pos: [31, 5], name: 'funct5' },
   r_funct7: { pos: [31, 7], name: 'funct7' },
+
+  // R-type: AMO acquire/release bits
+  r_aq: { pos: [26, 1], name: 'aq' },
+  r_rl: { pos: [25, 1], name: 'rl' },
 
   // I-type
   i_imm_11_0: { pos: [31, 12], name: 'imm[11:0]' },
@@ -92,6 +97,7 @@ export const OPCODE = {
   OP_IMM_32:'0011011',
   AUIPC:    '0010111',
   STORE:    '0100011',
+  AMO:      '0101111',
   OP:       '0110011',
   OP_32:    '0111011',
   LUI:      '0110111',
@@ -213,6 +219,33 @@ export const ISA_M = {
   remuw:  { isa: 'RV64M', fmt: 'R-type', funct7: '0000001', funct3: '111', opcode: OPCODE.OP_32 },
 }
 
+// A instruction set
+export const ISA_A = {
+  'lr.w':      { isa: 'RV32A', fmt: 'R-type', funct5: '00010', funct3: '010', opcode: OPCODE.AMO },
+  'sc.w':      { isa: 'RV32A', fmt: 'R-type', funct5: '00011', funct3: '010', opcode: OPCODE.AMO },
+  'amoswap.w': { isa: 'RV32A', fmt: 'R-type', funct5: '00001', funct3: '010', opcode: OPCODE.AMO },
+  'amoadd.w':  { isa: 'RV32A', fmt: 'R-type', funct5: '00000', funct3: '010', opcode: OPCODE.AMO },
+  'amoxor.w':  { isa: 'RV32A', fmt: 'R-type', funct5: '00100', funct3: '010', opcode: OPCODE.AMO },
+  'amoand.w':  { isa: 'RV32A', fmt: 'R-type', funct5: '01100', funct3: '010', opcode: OPCODE.AMO },
+  'amoor.w':   { isa: 'RV32A', fmt: 'R-type', funct5: '01000', funct3: '010', opcode: OPCODE.AMO },
+  'amomin.w':  { isa: 'RV32A', fmt: 'R-type', funct5: '10000', funct3: '010', opcode: OPCODE.AMO },
+  'amomax.w':  { isa: 'RV32A', fmt: 'R-type', funct5: '10100', funct3: '010', opcode: OPCODE.AMO },
+  'amominu.w': { isa: 'RV32A', fmt: 'R-type', funct5: '11000', funct3: '010', opcode: OPCODE.AMO },
+  'amomaxu.w': { isa: 'RV32A', fmt: 'R-type', funct5: '11100', funct3: '010', opcode: OPCODE.AMO },
+
+  'lr.d':      { isa: 'RV64A', fmt: 'R-type', funct5: '00010', funct3: '011', opcode: OPCODE.AMO },
+  'sc.d':      { isa: 'RV64A', fmt: 'R-type', funct5: '00011', funct3: '011', opcode: OPCODE.AMO },
+  'amoswap.d': { isa: 'RV64A', fmt: 'R-type', funct5: '00001', funct3: '011', opcode: OPCODE.AMO },
+  'amoadd.d':  { isa: 'RV64A', fmt: 'R-type', funct5: '00000', funct3: '011', opcode: OPCODE.AMO },
+  'amoxor.d':  { isa: 'RV64A', fmt: 'R-type', funct5: '00100', funct3: '011', opcode: OPCODE.AMO },
+  'amoand.d':  { isa: 'RV64A', fmt: 'R-type', funct5: '01100', funct3: '011', opcode: OPCODE.AMO },
+  'amoor.d':   { isa: 'RV64A', fmt: 'R-type', funct5: '01000', funct3: '011', opcode: OPCODE.AMO },
+  'amomin.d':  { isa: 'RV64A', fmt: 'R-type', funct5: '10000', funct3: '011', opcode: OPCODE.AMO },
+  'amomax.d':  { isa: 'RV64A', fmt: 'R-type', funct5: '10100', funct3: '011', opcode: OPCODE.AMO },
+  'amominu.d': { isa: 'RV64A', fmt: 'R-type', funct5: '11000', funct3: '011', opcode: OPCODE.AMO },
+  'amomaxu.d': { isa: 'RV64A', fmt: 'R-type', funct5: '11100', funct3: '011', opcode: OPCODE.AMO },
+}
+
 // ISA per opcode
 export const ISA_OP = {
   // RV32I
@@ -319,6 +352,32 @@ export const ISA_SYSTEM = {
   [ISA_Zicsr['csrrwi'].funct3]: 'csrrwi',
   [ISA_Zicsr['csrrsi'].funct3]: 'csrrsi',
   [ISA_Zicsr['csrrci'].funct3]: 'csrrci',
+}
+
+export const ISA_AMO = {
+  [ISA_A['lr.w'].funct5        + ISA_A['lr.w'].funct3]:      'lr.w',
+  [ISA_A['sc.w'].funct5        + ISA_A['sc.w'].funct3]:      'sc.w',
+  [ISA_A['amoswap.w'].funct5   + ISA_A['amoswap.w'].funct3]: 'amoswap.w',
+  [ISA_A['amoadd.w'].funct5    + ISA_A['amoadd.w'].funct3]:  'amoadd.w',
+  [ISA_A['amoxor.w'].funct5    + ISA_A['amoxor.w'].funct3]:  'amoxor.w',
+  [ISA_A['amoand.w'].funct5    + ISA_A['amoand.w'].funct3]:  'amoand.w',
+  [ISA_A['amoor.w'].funct5     + ISA_A['amoor.w'].funct3]:   'amoor.w',
+  [ISA_A['amomin.w'].funct5    + ISA_A['amomin.w'].funct3]:  'amomin.w',
+  [ISA_A['amomax.w'].funct5    + ISA_A['amomax.w'].funct3]:  'amomax.w',
+  [ISA_A['amominu.w'].funct5   + ISA_A['amominu.w'].funct3]: 'amominu.w',
+  [ISA_A['amomaxu.w'].funct5   + ISA_A['amomaxu.w'].funct3]: 'amomaxu.w',
+
+  [ISA_A['lr.d'].funct5        + ISA_A['lr.d'].funct3]:      'lr.d',
+  [ISA_A['sc.d'].funct5        + ISA_A['sc.d'].funct3]:      'sc.d',
+  [ISA_A['amoswap.d'].funct5   + ISA_A['amoswap.d'].funct3]: 'amoswap.d',
+  [ISA_A['amoadd.d'].funct5    + ISA_A['amoadd.d'].funct3]:  'amoadd.d',
+  [ISA_A['amoxor.d'].funct5    + ISA_A['amoxor.d'].funct3]:  'amoxor.d',
+  [ISA_A['amoand.d'].funct5    + ISA_A['amoand.d'].funct3]:  'amoand.d',
+  [ISA_A['amoor.d'].funct5     + ISA_A['amoor.d'].funct3]:   'amoor.d',
+  [ISA_A['amomin.d'].funct5    + ISA_A['amomin.d'].funct3]:  'amomin.d',
+  [ISA_A['amomax.d'].funct5    + ISA_A['amomax.d'].funct3]:  'amomax.d',
+  [ISA_A['amominu.d'].funct5   + ISA_A['amominu.d'].funct3]: 'amominu.d',
+  [ISA_A['amomaxu.d'].funct5   + ISA_A['amomaxu.d'].funct3]: 'amomaxu.d',
 }
 
 export const REGISTER = {
@@ -678,4 +737,4 @@ export const CSR = {
 // Entire ISA
 export const ISA = Object.assign({}, 
   ISA_RV32I, ISA_RV64I, 
-  ISA_Zifencei, ISA_Zicsr, ISA_M);
+  ISA_Zifencei, ISA_Zicsr, ISA_M, ISA_A);

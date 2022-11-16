@@ -9,7 +9,7 @@
 import { BASE,
   FIELDS, OPCODE, REGISTER, CSR,
   ISA_OP, ISA_OP_32, ISA_LOAD, ISA_STORE, ISA_OP_IMM, ISA_OP_IMM_32, 
-  ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM,
+  ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA_AMO,
   ISA,
 } from './Constants.js'
 
@@ -78,6 +78,9 @@ export class Decoder {
       case OPCODE.OP_32:
         this.#decodeOP();
         break;
+      case OPCODE.AMO:
+        this.#decodeAMO();
+        break;
 
         // I-type
       case OPCODE.JALR:
@@ -137,8 +140,7 @@ export class Decoder {
     }
 
     // Render ASM insturction string (mainly for testing)
-    let mem_inst = this.#opcode === OPCODE.LOAD || this.#opcode === OPCODE.STORE;
-    this.asm = renderAsm(this.asmFrags, mem_inst, this.#config.ABI);
+    this.asm = renderAsm(this.asmFrags, this.#config.ABI);
   }
 
   /**
@@ -253,7 +255,7 @@ export class Decoder {
       opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
       funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
       rd:     new Frag(dest, rd, FIELDS.rd.name),
-      rs1:    new Frag(base, rs1, FIELDS.rs1.name),
+      rs1:    new Frag(base, rs1, FIELDS.rs1.name, true),
       imm:    new Frag(offset, imm, FIELDS.i_imm_11_0.name),
     };
 
@@ -548,7 +550,7 @@ export class Decoder {
     const f = {
       opcode:   new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
       funct3:   new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      rs1:      new Frag(base, rs1, FIELDS.rs1.name),
+      rs1:      new Frag(base, rs1, FIELDS.rs1.name, true),
       rs2:      new Frag(src, rs2, FIELDS.rs2.name),
       imm_4_0:  new Frag(offset, imm_4_0, FIELDS.s_imm_4_0.name),
       imm_11_5: new Frag(offset, imm_11_5, FIELDS.s_imm_11_5.name),
@@ -679,6 +681,57 @@ export class Decoder {
       f['rd'], f['opcode']);
   }
 
+  /**
+   * Decodes AMO instruction
+   */
+  #decodeAMO() {
+    // Get fields
+    const fields = extractRFields(this.#bin);
+    const funct5 = fields['funct5'],
+      aq = fields['aq'],
+      rl = fields['rl'],
+      rs2 = fields['rs2'],
+      rs1 = fields['rs1'],
+      funct3 = fields['funct3'],
+      rd = fields['rd'];
+
+    // Find instruction
+    this.#mne = ISA_AMO[funct5+funct3];
+    if (this.#mne === undefined) {
+      throw "Detected AMO instruction but invalid funct5 and funct3 fields";
+    }
+
+    // Check if 'lr' instruction
+    const lr = /^lr\.[wd]$/.test(this.#mne);
+
+    // Convert fields to string representations
+    const dest = decReg(rd);
+    const addr = decReg(rs1);
+    const src  = lr ? 'n/a' : decReg(rs2);
+
+    // Create fragments
+    const f = {
+      opcode:   new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      rd:       new Frag(dest, rd, FIELDS.rd.name),
+      funct3:   new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      rs1:      new Frag(addr, rs1, FIELDS.rs1.name, true),
+      rs2:      new Frag(src, rs2, FIELDS.rs2.name),
+      rl:       new Frag(this.#mne, rl, FIELDS.r_rl.name),
+      aq:       new Frag(this.#mne, aq, FIELDS.r_aq.name),
+      funct5:   new Frag(this.#mne, funct5, FIELDS.r_funct5.name),
+    };
+
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rd']);
+    if (!lr) {
+      this.asmFrags.push(f['rs2']);
+    }
+    this.asmFrags.push(f['rs1']);
+
+    // Binary fragments from MSB to LSB
+    this.binFrags.push(f['funct5'], f['aq'], f['rl'], f['rs2'], 
+      f['rs1'], f['funct3'], f['rd'], f['opcode']);
+  }
 }
 
 // Extract R-types fields from instruction
@@ -688,7 +741,10 @@ function extractRFields(binary) {
     'rs1': getBits(binary, FIELDS.rs1.pos),
     'funct3': getBits(binary, FIELDS.funct3.pos),
     'rd': getBits(binary, FIELDS.rd.pos),
+    'funct5': getBits(binary, FIELDS.r_funct5.pos),
     'funct7': getBits(binary, FIELDS.r_funct7.pos),
+    'aq': getBits(binary, FIELDS.r_aq.pos),
+    'rl': getBits(binary, FIELDS.r_rl.pos),
   };
 }
 
@@ -811,23 +867,27 @@ function decCSR(binStr) {
 }
 
 // Render assembly instruction
-function renderAsm(asmFrags, memFmt = false, abi = false) {
-  // Validate assembly arguments
-  if ((!memFmt && asmFrags.length < 1) || (memFmt && asmFrags.length !== 4)) {
-      throw 'Invalid number of arguments';
-  }
-
+function renderAsm(asmFrags, abi = false) {
   // Extract assembly tokens and build instruction
-  let inst;
-  const tokens = [...asmFrags].map(
-    (f) => abi ? convertRegToAbi(f.asm) : f.asm
-  );
-  if (!memFmt) {
-    // Regular instruction
-    inst = `${tokens[0]} ` + tokens.splice(1).join(', ');
-  } else {
-    // Load store instruction
-    inst = `${tokens[0]} ${tokens[1]}, ${tokens[2]}(${tokens[3]})`
+  let inst = asmFrags[0].asm;
+  for (let i = 1; i < asmFrags.length; i++) {
+    // Conditionally use ABI names for registers
+    let asm = abi ? convertRegToAbi(asmFrags[i].asm) : asmFrags[i].asm;
+
+    // Append delimeter
+    if (i === 1) {
+      inst += ' ';
+    }
+    else if (!asmFrags[i].mem || !/^imm/.test(asmFrags[i-1].field)) {
+      inst += ', ';
+    }
+
+    // Append assembly fragment
+    if (asmFrags[i].mem) {
+      inst += '(' + asm + ')';
+    } else {
+      inst += asm;
+    }
   }
 
   return inst.trim();

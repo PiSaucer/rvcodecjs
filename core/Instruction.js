@@ -150,7 +150,7 @@ export function convertRegToAbi(reg) {
  * @class
  */
 export class Frag {
-  constructor(asm, bits, field) {
+  constructor(asm, bits, field, mem = false) {
     /** Assembly fragment (e.g., 'addi', 'x5', etc.)
      * @type {String}
      */
@@ -163,5 +163,9 @@ export class Frag {
      * @type {String}
      */
     this.field = field;
+    /** Signals fragment is a memory address
+     * @type {Boolean}
+     */
+    this.mem = mem;
   }
 }
