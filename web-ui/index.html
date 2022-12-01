@@ -24,6 +24,26 @@
       <div id="search-container">
         <span class='offset-label'>[ Instruction ]</span>
         <input type="text" name="input" id="search-input" placeholder="addi x5, x6, 7" autofocus>
+        <button id="parameter-button"></button>
+      </div>
+    </div>
+
+    <!-- Parameter container -->
+    <div id="modal-container">
+      <div id="parameter-container">
+        <span id="close">✔</span>
+        <div class="parameter-row">
+          <label class="switch">
+            <input type="checkbox" id="abi">
+            <span class="slider round"></span>
+          </label>
+          <label class="parameter-label" for="abi">ABI</label>
+        </div>
+        <div class="parameter-row">
+          <select id="isa" name="isa">
+          </select>
+          <label class="parameter-label" for="isa">ISA</label>
+        </div>
       </div>
     </div>
 
