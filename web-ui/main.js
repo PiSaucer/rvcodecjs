@@ -7,6 +7,7 @@
  */
 
 import { Instruction, convertRegToAbi } from "../core/Instruction.js";
+import { COPTS_ISA } from "../core/Config.js";
 
 /* Import colors from CSS */
 const colors = [
@@ -54,6 +55,8 @@ const fieldColorMap = {
 
 /* Fast access to selected document elements */
 const input = document.getElementById('search-input');
+const abiParameter = document.getElementById('abi');
+const isaParameter = document.getElementById('isa');
 
 /**
  * Upon loading page, trigger conversion if hash params exist
@@ -77,6 +80,12 @@ window.onload = function () {
   // Set input field
   input.value = params.q;
 
+  // Set ABI parameter
+  abiParameter.checked = (params.abi === "true");
+
+  // Set ISA parameter
+  isaParameter.value = params.isa || "auto";
+
   // Trigger input event to run conversion
   let event = new Event('keydown');
   event.key = 'Enter';
@@ -92,9 +101,12 @@ input.onkeydown = function (event) {
     return;
   }
 
-  // Get query
-  let q = event.currentTarget.value.trim();
+  runResult();
+}
 
+function runResult() {
+  // Get the instruction from input box
+  let q = input.value;
   // Reset UI if query is empty
   if (q === "") {
     document.getElementById('results-container-box').style.display = 'none';
@@ -103,12 +115,16 @@ input.onkeydown = function (event) {
   }
 
   // Set hash
-  window.location.hash = 'q=' + q.replace(/\s/g, '+');
+  window.location.hash = 'q=' + q.replace(/\s/g, '+') + '&abi=' + abiParameter.checked + '&isa=' + isaParameter.value;
 
   // Convert instruction
   try {
-    const inst = new Instruction(q);
-    renderConversion(inst, false); // @TODO: replace `false` with config.ABI
+    const inst = new Instruction(q,
+      {
+        ABI: abiParameter.checked,
+        ISA: COPTS_ISA[isaParameter.value]
+      });
+    renderConversion(inst, abiParameter.checked);
   } catch (error) {
     renderError(error);
   }
@@ -235,3 +251,40 @@ document.addEventListener("keydown", e => {
   e.preventDefault();
   input.focus();
 });
+
+// Control the modal div
+const modalDiv = document.getElementById("modal-container");
+const parameterBtn = document.getElementById("parameter-button");
+const closeBtn = document.getElementById('close');
+const isaMenu = document.getElementById('isa');
+
+// Add ISA option based on Config.js provides
+for (let option in COPTS_ISA) {
+  let isaOption = document.createElement("option");
+  isaOption.text = option;
+  isaOption.value = option;
+  isaMenu.add(isaOption);
+}
+
+// When user clicks the button, display the modal div
+parameterBtn.addEventListener("click", () => {
+    modalDiv.style.display = "block";
+  }
+);
+
+// When user clicks the close button or outside the modal div, close the div and update the result
+function updateParameter() {
+  modalDiv.style.display = "none";
+  runResult();
+}
+
+closeBtn.addEventListener("click", () => {
+  updateParameter();
+})
+
+window.addEventListener("click", (event) => {
+    if (event.target == modalDiv) {
+      updateParameter();
+    }
+  }
+)
