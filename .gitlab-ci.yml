@@ -6,8 +6,8 @@ pages:
     - cp -r core public
     # web-ui files at root of directory
     - cp -r web-ui/* public
-    # change js file path according to changed folder structure
-    - sed -i -e 's/\.\.\/core\/Instruction\.js/\.\/core\/Instruction\.js/g' ./public/main.js
+    # change js file paths according to changed folder structure
+    - sed -i -e 's/\.\.\/core\//\.\/core\//g' ./public/main.js
   artifacts:
     paths:
       - public
