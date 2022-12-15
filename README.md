@@ -31,7 +31,7 @@ If you'd like to contribute, here are the main features we'd like to add:
     - [x] Zicsr instruction set
     - [x] M (multiplication/division) instruction set
     - [x] A (atomic) instruction set
-    - [ ] F (single-precision floating point) instruction set
+    - [x] F (single-precision floating point) instruction set
     - [ ] D (double-precision floating point) instruction set
     - [ ] C (compressed) instruction set
 
