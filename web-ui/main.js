@@ -24,16 +24,18 @@ const colors = [
 /* Define colors per field type */
 const fieldColorMap = {
   /* Operation */
-  'opcode': '--color-orange',
-  'funct3': '--color-orange',
-  'funct5': '--color-orange',
-  'funct7': '--color-orange',
+  'opcode':  '--color-orange',
+  'funct3':  '--color-orange',
+  'funct5':  '--color-orange',
+  'funct7':  '--color-orange',
   'funct12': '--color-orange',
+  'fmt':     '--color-orange',
 
   /* Registers */
   'rs1': '--color-cyan',
   'rs2': '--color-violet',
-  'rd': '--color-yellow',
+  'rs3': '--color-blue',
+  'rd':  '--color-yellow',
 
   /* Immediate */
   'imm': '--color-blue',
@@ -51,6 +53,9 @@ const fieldColorMap = {
   /* AMO */
   'aq': '--color-green',
   'rl': '--color-green',
+
+  /* FP */
+  'rm': '--color-magenta',
 }
 
 /* Fast access to selected document elements */
