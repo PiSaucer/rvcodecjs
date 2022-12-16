@@ -38,11 +38,7 @@ If you'd like to contribute, here are the main features we'd like to add:
 ## Credit and license
 
 **rvcodec.js** is developed by the [LupLab](https://luplab.cs.ucdavis.edu/) at
-UC Davis. Contributors include or have included:
-
-- Hikari Nicole Sakai *(backend's first functional version)*
-- Abhiroop Sohal *(frontend's first function version)*
-- Joël Porquet-Lupine
+UC Davis.
 
 **rvcodec.js** is released under the [GNU Affero General Public License
 v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html).
