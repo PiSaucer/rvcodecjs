@@ -67,6 +67,9 @@ export class Encoder {
       case OPCODE.OP_32:
         this.#encodeOP();
         break;
+      case OPCODE.OP_FP:
+        this.#encodeOP_FP();
+        break;
       case OPCODE.AMO:
         this.#encodeAMO();
         break;
@@ -76,6 +79,7 @@ export class Encoder {
         this.#encodeJALR();
         break;
       case OPCODE.LOAD:
+      case OPCODE.LOAD_FP:
         this.#encodeLOAD();
         break;
       case OPCODE.OP_IMM:
@@ -91,6 +95,7 @@ export class Encoder {
 
         // S-type
       case OPCODE.STORE:
+      case OPCODE.STORE_FP:
         this.#encodeSTORE();
         break;
 
@@ -99,7 +104,7 @@ export class Encoder {
         this.#encodeBRANCH();
         break;
 
-        // U-type:
+        // U-type
       case OPCODE.LUI:
       case OPCODE.AUIPC:
         this.#encodeUType();
@@ -108,6 +113,14 @@ export class Encoder {
         // J-type:
       case OPCODE.JAL:
         this.#encodeJAL();
+        break;
+
+        // R4-type
+      case OPCODE.MADD:
+      case OPCODE.MSUB:
+      case OPCODE.NMADD:
+      case OPCODE.NMSUB:
+        this.#encodeR4();
         break;
 
         // Invalid opcode
@@ -128,6 +141,34 @@ export class Encoder {
 
     // Construct binary instruction
     this.bin = this.#inst.funct7 + rs2 + rs1 + this.#inst.funct3 + rd +
+      this.#inst.opcode;
+  }
+
+  /**
+   * Encodes OP-FP instruction
+   */
+  #encodeOP_FP() {
+    // Get operands
+    const dest = this.#opr[0], src1 = this.#opr[1], src2 = this.#opr[2];
+
+    // Convert to binary representation
+    let floatRd = true;
+    let floatRs1 = true;
+    if (this.#inst.funct7[0] === '1') {
+      // Conditionally encode rd or rs1 as an int register, based on funct7
+      if (this.#inst.funct7[3] === '1') {
+        floatRs1 = false;
+      } else {
+        floatRd = false;
+      }
+    }
+    const rd = encReg(dest, floatRd), 
+      rs1 = encReg(src1, floatRs1), 
+      rs2 = this.#inst.rs2 ?? encReg(src2, true),
+      rm = this.#inst.funct3 ?? '111'; // funct3 or dynamic rounding mode
+
+    // Construct binary instruction
+    this.bin = this.#inst.funct7 + rs2 + rs1 + rm + rd +
       this.#inst.opcode;
   }
 
@@ -154,7 +195,9 @@ export class Encoder {
     const dest = this.#opr[0], offset = this.#opr[1], base = this.#opr[2];
 
     // Convert to binary representation
-    const rd = encReg(dest), rs1 = encReg(base),
+    const floatInst = this.#inst.opcode === OPCODE.LOAD_FP;
+    const rd = encReg(dest, floatInst),
+      rs1 = encReg(base),
       imm = encImm(offset, FIELDS.i_imm_11_0.pos[1]);
 
     // Construct binary instruction
@@ -266,7 +309,8 @@ export class Encoder {
       len_4_0 = FIELDS.s_imm_4_0.pos[1];
 
     // Convert to binary representation
-    const rs2 = encReg(src),
+    const floatInst = this.#inst.opcode === OPCODE.STORE_FP;
+    const rs2 = encReg(src, floatInst), 
       rs1 = encReg(base),
       imm = encImm(offset, len_11_5 + len_4_0),
       imm_11_5 = imm.substring(0, len_11_5),
@@ -375,6 +419,24 @@ export class Encoder {
     this.bin = this.#inst.funct5 + aq + rl + rs2 + rs1 + 
       this.#inst.funct3 + rd + this.#inst.opcode;
   }
+
+  /**
+   * Encodes OP instruction
+   */
+  #encodeR4() {
+    // Get operands
+    const dest = this.#opr[0], src1 = this.#opr[1], 
+      src2 = this.#opr[2], src3 = this.#opr[3];
+
+    // Convert to binary representation
+    const rd = encReg(dest, true), rs1 = encReg(src1, true), 
+      rs2 = encReg(src2, true), rs3 = encReg(src3, true),
+      fmt = this.#inst.funct2, rm = '111'; // dynamic rounding mode
+
+    // Construct binary instruction
+    this.bin = rs3 + fmt + rs2 + rs1 + rm + rd +
+      this.#inst.opcode;
+  }
 }
 
 // Parse given immediate to binary
@@ -385,13 +447,22 @@ function encImm(immediate, len) {
 }
 
 // Convert register numbers to binary
-function encReg(reg) {
-  // we attempt a conversion between ABI name to x<num>,
-  // if this fails, assume the user gave us x<num> in the first place
-  reg = REGISTER[reg] ?? reg;
-  let dec = reg.substring(1);
-  if (reg[0] !== 'x' || dec < 0 || dec > 31) {
-    throw `Invalid or unknown register format: "${reg}"`;
+function encReg(reg, floatReg=false) {
+  // Attempt to convert from ABI name to x<num> (only for integer registers)
+  if (!floatReg) {
+    reg = REGISTER[reg] ?? reg;
+  }
+  // Validate with register file prefix determined from `floatReg` parameter
+  let regFile = floatReg ? 'f' : 'x';
+  if (reg[0] !== regFile) {
+    throw `Invalid or unknown ${floatReg ? 'float ' : ''}register format: "${reg}"`;
+  }
+  // Attempt to parse the decimal register address, set to 0 on failed parse
+  let dec = parseInt(reg.substring(1));
+  if (isNaN(dec)) {
+    dec = 0;
+  } else if (dec < 0 || dec > 31) {
+    throw `Register address out of range: "${reg}"`;
   }
   return convertBase(dec, BASE.dec, BASE.bin, 5);
 }
