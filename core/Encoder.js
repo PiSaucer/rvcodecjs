@@ -154,9 +154,9 @@ export class Encoder {
     // Convert to binary representation
     let floatRd = true;
     let floatRs1 = true;
-    if (this.#inst.funct7[0] === '1') {
+    if (this.#inst.funct5[0] === '1') {
       // Conditionally encode rd or rs1 as an int register, based on funct7
-      if (this.#inst.funct7[3] === '1') {
+      if (this.#inst.funct5[3] === '1') {
         floatRs1 = false;
       } else {
         floatRd = false;
@@ -168,7 +168,7 @@ export class Encoder {
       rm = this.#inst.funct3 ?? '111'; // funct3 or dynamic rounding mode
 
     // Construct binary instruction
-    this.bin = this.#inst.funct7 + rs2 + rs1 + rm + rd +
+    this.bin = this.#inst.funct5 + this.#inst.fp_fmt + rs2 + rs1 + rm + rd +
       this.#inst.opcode;
   }
 
@@ -431,7 +431,7 @@ export class Encoder {
     // Convert to binary representation
     const rd = encReg(dest, true), rs1 = encReg(src1, true), 
       rs2 = encReg(src2, true), rs3 = encReg(src3, true),
-      fmt = this.#inst.funct2, rm = '111'; // dynamic rounding mode
+      fmt = this.#inst.fp_fmt, rm = '111'; // dynamic rounding mode
 
     // Construct binary instruction
     this.bin = rs3 + fmt + rs2 + rs1 + rm + rd +
