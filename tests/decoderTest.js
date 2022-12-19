@@ -131,7 +131,7 @@ function dec_rv64i_opim32_slliw() {
  * Zifencei
  */
 // MISC-MEM
-function dec_zifencei_miscmem_zifencei() {
+function dec_zifencei_miscmem_fencei() {
     let inst = new Instruction('0000100f');
     assertEq(inst.bin, '00000000000000000001000000001111');
     assertEq(inst.asm, 'fence.i');
@@ -189,6 +189,67 @@ function dec_rv64a_amo_lrd() {
 }
 
 /*
+ * F extension
+ */
+function dec_rv32f_loadfp_flw() {
+    let inst = new Instruction('00000110010001000010001110000111');
+    let instAbi = new Instruction('00000110010001000010001110000111', { ABI:true });
+    assertEq(inst.asm, 'flw f7, 100(x8)');
+    assertEq(instAbi.asm, 'flw f7, 100(s0)');
+}
+
+function dec_rv32f_storefp_fsw() {
+    let inst = new Instruction('00000110111001001010001000100111');
+    let instAbi = new Instruction('00000110111001001010001000100111', { ABI:true });
+    assertEq(inst.asm, 'fsw f14, 100(x9)');
+    assertEq(instAbi.asm, 'fsw f14, 100(s1)');
+}
+
+function dec_rv32f_madd_fmadds() {
+    let inst = new Instruction('11111000111100111000000111000011');
+    assertEq(inst.asm, 'fmadd.s f3, f7, f15, f31');
+    assertEq(inst.isa, 'RV32F');
+}
+
+function dec_rv32f_nmsub_fnmsubs() {
+    let inst = new Instruction('10000000100000100101000101001011');
+    assertEq(inst.asm, 'fnmsub.s f2, f4, f8, f16');
+    assertEq(inst.isa, 'RV32F');
+}
+
+function dec_rv32f_opfp_fadds() {
+    let inst = new Instruction('00000001000101001010001011010011');
+    assertEq(inst.asm, 'fadd.s f5, f9, f17');
+    assertEq(inst.isa, 'RV32F');
+}
+
+function dec_rv32f_opfp_fsgnjxs() {
+    let inst = new Instruction('00100001100001100010001101010011');
+    assertEq(inst.asm, 'fsgnjx.s f6, f12, f24');
+    assertEq(inst.isa, 'RV32F');
+}
+
+function dec_rv32f_opfp_flts() {
+    let inst = new Instruction('10100000010100100001001101010011');
+    let instAbi = new Instruction('10100000010100100001001101010011', { ABI:true });
+    assertEq(inst.asm, 'flt.s x6, f4, f5');
+    assertEq(instAbi.asm, 'flt.s t1, f4, f5');
+}
+
+function dec_rv32f_opfp_fmvwx() {
+    let inst = new Instruction('11110000000001010000010111010011');
+    let instAbi = new Instruction('11110000000001010000010111010011', { ABI:true });
+    assertEq(inst.asm, 'fmv.w.x f11, x10');
+    assertEq(instAbi.asm, 'fmv.w.x f11, a0');
+}
+
+function dec_rv64f_opfp_fcvtlus() {
+    let inst = new Instruction('11000000001100001110011101010011');
+    assertEq(inst.asm, 'fcvt.lu.s x14, f1');
+    assertEq(inst.isa, 'RV64F');
+}
+
+/*
  * Execute tests
  */
 test('Dec - RV32I    - LUI       - lui', dec_rv32i_lui_lui);
@@ -207,13 +268,23 @@ test('Dec - RV64I    - OP-32     - addw', dec_rv64i_op32_addw);
 test('Dec - RV64I    - OP-IMM    - srai - [shamt=43]', dec_rv64i_opimm_srai_shamt43);
 test('Dec - RV64I    - OP-IMM-32 - addiw', dec_rv64i_opimm32_addiw);
 test('Dec - RV64I    - OP-IMM-32 - slliw', dec_rv64i_opim32_slliw);
-test('Dec - Zifencei - MISC-MEM  - fence.i', dec_zifencei_miscmem_zifencei);
+test('Dec - Zifencei - MISC-MEM  - fence.i', dec_zifencei_miscmem_fencei);
 test('Dec - Zicsr    - SYSTEM    - csrrs', dec_zicsr_system_csrrs);
 test('Dec - Zicsr    - SYSTEM    - csrrwi', dec_zicsr_system_csrrwi);
 test('Dec - RV32M    - OP        - divu', dec_rv32m_op_divu);
 test('Dec - RV64M    - OP-32     - mulw', dec_rv64m_op32_mulw);
 test('Dec - RV32A    - AMO       - amomaxu.w', dec_rv32a_amo_amomaxuw);
 test('Dec - RV64A    - AMO       - lr.d', dec_rv64a_amo_lrd);
+test('Dec - RV32F    - LOAD-FP   - flw', dec_rv32f_loadfp_flw);
+test('Dec - RV32F    - STORE-FP  - fsw', dec_rv32f_storefp_fsw);
+test('Dec - RV32F    - MADD      - fmadd.s', dec_rv32f_madd_fmadds);
+test('Dec - RV32F    - NMSUB     - fnmsub.s', dec_rv32f_nmsub_fnmsubs);
+test('Dec - RV32F    - OP-FP     - fadd.s', dec_rv32f_opfp_fadds);
+test('Dec - RV32F    - OP-FP     - fsgnjx.s', dec_rv32f_opfp_fsgnjxs);
+test('Dec - RV32F    - OP-FP     - flt.s', dec_rv32f_opfp_flts);
+test('Dec - RV32F    - OP-FP     - fmv.w.x', dec_rv32f_opfp_fmvwx);
+test('Dec - RV64F    - OP-FP     - fcvt.lu.s', dec_rv64f_opfp_fcvtlus);
+
 
 // Newline
 console.log('');
