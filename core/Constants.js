@@ -365,6 +365,51 @@ export const ISA_D = {
   'fcvt.d.lu': { isa: 'RV64D', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.D, rs2: '00011', opcode: OPCODE.OP_FP },  
 }
 
+// Q instruction set
+export const ISA_Q = {
+  'flq':       { isa: 'RV32Q', fmt: 'I-type', funct3: FP_WIDTH.Q, opcode: OPCODE.LOAD_FP },
+  'fsq':       { isa: 'RV32Q', fmt: 'S-type', funct3: FP_WIDTH.Q, opcode: OPCODE.STORE_FP },
+
+  'fmadd.q':   { isa: 'RV32Q', fmt: 'R4-type', fp_fmt: FP_FMT.Q, opcode: OPCODE.MADD },
+  'fmsub.q':   { isa: 'RV32Q', fmt: 'R4-type', fp_fmt: FP_FMT.Q, opcode: OPCODE.MSUB },
+  'fnmadd.q':  { isa: 'RV32Q', fmt: 'R4-type', fp_fmt: FP_FMT.Q, opcode: OPCODE.NMADD },
+  'fnmsub.q':  { isa: 'RV32Q', fmt: 'R4-type', fp_fmt: FP_FMT.Q, opcode: OPCODE.NMSUB },
+
+  'fadd.q':    { isa: 'RV32Q', fmt: 'R-type', funct5: '00000', fp_fmt: FP_FMT.Q, opcode: OPCODE.OP_FP },
+  'fsub.q':    { isa: 'RV32Q', fmt: 'R-type', funct5: '00001', fp_fmt: FP_FMT.Q, opcode: OPCODE.OP_FP },
+  'fmul.q':    { isa: 'RV32Q', fmt: 'R-type', funct5: '00010', fp_fmt: FP_FMT.Q, opcode: OPCODE.OP_FP },
+  'fdiv.q':    { isa: 'RV32Q', fmt: 'R-type', funct5: '00011', fp_fmt: FP_FMT.Q, opcode: OPCODE.OP_FP },
+
+  'fsqrt.q':   { isa: 'RV32Q', fmt: 'R-type', funct5: '01011', fp_fmt: FP_FMT.Q, rs2: '00000', opcode: OPCODE.OP_FP },
+
+  'fsgnj.q':   { isa: 'RV32Q', fmt: 'R-type', funct5: '00100', fp_fmt: FP_FMT.Q, funct3: '000', opcode: OPCODE.OP_FP },
+  'fsgnjn.q':  { isa: 'RV32Q', fmt: 'R-type', funct5: '00100', fp_fmt: FP_FMT.Q, funct3: '001', opcode: OPCODE.OP_FP },
+  'fsgnjx.q':  { isa: 'RV32Q', fmt: 'R-type', funct5: '00100', fp_fmt: FP_FMT.Q, funct3: '010', opcode: OPCODE.OP_FP },
+  'fmin.q':    { isa: 'RV32Q', fmt: 'R-type', funct5: '00101', fp_fmt: FP_FMT.Q, funct3: '000', opcode: OPCODE.OP_FP },
+  'fmax.q':    { isa: 'RV32Q', fmt: 'R-type', funct5: '00101', fp_fmt: FP_FMT.Q, funct3: '001', opcode: OPCODE.OP_FP },
+
+  'feq.q':     { isa: 'RV32Q', fmt: 'R-type', funct5: '10100', fp_fmt: FP_FMT.Q, funct3: '010', opcode: OPCODE.OP_FP },
+  'flt.q':     { isa: 'RV32Q', fmt: 'R-type', funct5: '10100', fp_fmt: FP_FMT.Q, funct3: '001', opcode: OPCODE.OP_FP },
+  'fle.q':     { isa: 'RV32Q', fmt: 'R-type', funct5: '10100', fp_fmt: FP_FMT.Q, funct3: '000', opcode: OPCODE.OP_FP },
+
+  'fcvt.w.q':  { isa: 'RV32Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00000', opcode: OPCODE.OP_FP },
+  'fcvt.wu.q': { isa: 'RV32Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00001', opcode: OPCODE.OP_FP },
+  'fcvt.q.w':  { isa: 'RV32Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00000', opcode: OPCODE.OP_FP },
+  'fcvt.q.wu': { isa: 'RV32Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00001', opcode: OPCODE.OP_FP },
+
+  'fcvt.s.q':  { isa: 'RV32Q', fmt: 'R-type', funct5: '01000', fp_fmt: FP_FMT.S, rs2: '000'+FP_FMT.Q, opcode: OPCODE.OP_FP },
+  'fcvt.q.s':  { isa: 'RV32Q', fmt: 'R-type', funct5: '01000', fp_fmt: FP_FMT.Q, rs2: '000'+FP_FMT.S, opcode: OPCODE.OP_FP },
+  'fcvt.d.q':  { isa: 'RV32Q', fmt: 'R-type', funct5: '01000', fp_fmt: FP_FMT.D, rs2: '000'+FP_FMT.Q, opcode: OPCODE.OP_FP },
+  'fcvt.q.d':  { isa: 'RV32Q', fmt: 'R-type', funct5: '01000', fp_fmt: FP_FMT.Q, rs2: '000'+FP_FMT.D, opcode: OPCODE.OP_FP },
+
+  'fclass.q':  { isa: 'RV32Q', fmt: 'R-type', funct5: '11100', fp_fmt: FP_FMT.Q, rs2: '00000', funct3: '001', opcode: OPCODE.OP_FP },
+
+  'fcvt.l.q':  { isa: 'RV64Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00010', opcode: OPCODE.OP_FP },
+  'fcvt.lu.q': { isa: 'RV64Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00011', opcode: OPCODE.OP_FP },
+  'fcvt.q.l':  { isa: 'RV64Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00010', opcode: OPCODE.OP_FP },
+  'fcvt.q.lu': { isa: 'RV64Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00011', opcode: OPCODE.OP_FP },  
+}
+
 // ISA per opcode
 export const ISA_OP = {
   // RV32I
@@ -502,53 +547,64 @@ export const ISA_AMO = {
 export const ISA_LOAD_FP = {
   [FP_WIDTH.S]: 'flw',
   [FP_WIDTH.D]: 'fld',
+  [FP_WIDTH.Q]: 'flq',
 }
 
 export const ISA_STORE_FP = {
   [FP_WIDTH.S]: 'fsw',
   [FP_WIDTH.D]: 'fsd',
+  [FP_WIDTH.Q]: 'fsq',
 }
 
 export const ISA_MADD = {
   [FP_FMT.S]: 'fmadd.s',
   [FP_FMT.D]: 'fmadd.d',
+  [FP_FMT.Q]: 'fmadd.q',
 }
 
 export const ISA_MSUB = {
   [FP_FMT.S]: 'fmsub.s',
   [FP_FMT.D]: 'fmsub.d',
+  [FP_FMT.Q]: 'fmsub.q',
 }
 
 export const ISA_NMADD = {
   [FP_FMT.S]: 'fnmadd.s',
   [FP_FMT.D]: 'fnmadd.d',
+  [FP_FMT.Q]: 'fnmadd.q',
 }
 
 export const ISA_NMSUB = {
   [FP_FMT.S]: 'fnmsub.s',
   [FP_FMT.D]: 'fnmsub.d',
+  [FP_FMT.Q]: 'fnmsub.q',
 }
 
 export const ISA_OP_FP = {
   [ISA_F['fadd.s'].funct5]: {
     [FP_FMT.S]: 'fadd.s',
     [FP_FMT.D]: 'fadd.d',
+    [FP_FMT.Q]: 'fadd.q',
   },
   [ISA_F['fsub.s'].funct5]: {
     [FP_FMT.S]: 'fsub.s',
     [FP_FMT.D]: 'fsub.d',
+    [FP_FMT.Q]: 'fsub.q',
   },
   [ISA_F['fmul.s'].funct5]: {
     [FP_FMT.S]: 'fmul.s',
     [FP_FMT.D]: 'fmul.d',
+    [FP_FMT.Q]: 'fmul.q',
   },
   [ISA_F['fdiv.s'].funct5]: {
     [FP_FMT.S]: 'fdiv.s',
     [FP_FMT.D]: 'fdiv.d',
+    [FP_FMT.Q]: 'fdiv.q',
   },
   [ISA_F['fsqrt.s'].funct5]: {
     [FP_FMT.S]: 'fsqrt.s',
     [FP_FMT.D]: 'fsqrt.d',
+    [FP_FMT.Q]: 'fsqrt.q',
   },
   [ISA_F['fmv.w.x'].funct5]: {
     [FP_FMT.S]: 'fmv.w.x',
@@ -563,6 +619,9 @@ export const ISA_OP_FP = {
       [ISA_D['fclass.d'].funct3]:   'fclass.d',
       [ISA_D['fmv.x.d'].funct3]:    'fmv.x.d',
     },
+    [FP_FMT.Q]: {
+      [ISA_Q['fclass.q'].funct3]:   'fclass.q',
+    },
   },
   [ISA_F['fsgnj.s'].funct5]: {
     [FP_FMT.S]: {
@@ -575,6 +634,11 @@ export const ISA_OP_FP = {
       [ISA_D['fsgnjn.d'].funct3]:   'fsgnjn.d',
       [ISA_D['fsgnjx.d'].funct3]:   'fsgnjx.d',
     },
+    [FP_FMT.Q]: {
+      [ISA_Q['fsgnj.q'].funct3]:    'fsgnj.q',
+      [ISA_Q['fsgnjn.q'].funct3]:   'fsgnjn.q',
+      [ISA_Q['fsgnjx.q'].funct3]:   'fsgnjx.q',
+    },
   },
   [ISA_F['fmin.s'].funct5]: {
     [FP_FMT.S]: {
@@ -584,6 +648,10 @@ export const ISA_OP_FP = {
     [FP_FMT.D]: {
       [ISA_D['fmin.d'].funct3]:     'fmin.d',
       [ISA_D['fmax.d'].funct3]:     'fmax.d',
+    },
+    [FP_FMT.Q]: {
+      [ISA_Q['fmin.q'].funct3]:     'fmin.q',
+      [ISA_Q['fmax.q'].funct3]:     'fmax.q',
     },
   },
   [ISA_F['feq.s'].funct5]: {
@@ -596,6 +664,11 @@ export const ISA_OP_FP = {
       [ISA_D['feq.d'].funct3]:     'feq.d',
       [ISA_D['flt.d'].funct3]:     'flt.d',
       [ISA_D['fle.d'].funct3]:     'fle.d',
+    },
+    [FP_FMT.Q]: {
+      [ISA_Q['feq.q'].funct3]:     'feq.q',
+      [ISA_Q['flt.q'].funct3]:     'flt.q',
+      [ISA_Q['fle.q'].funct3]:     'fle.q',
     },
   },
   [ISA_F['fcvt.w.s'].funct5]: {
@@ -611,6 +684,12 @@ export const ISA_OP_FP = {
       [ISA_D['fcvt.l.d'].rs2]:   'fcvt.l.d',
       [ISA_D['fcvt.lu.d'].rs2]:  'fcvt.lu.d',
     },
+    [FP_FMT.Q]: {
+      [ISA_Q['fcvt.w.q'].rs2]:   'fcvt.w.q',
+      [ISA_Q['fcvt.wu.q'].rs2]:  'fcvt.wu.q',
+      [ISA_Q['fcvt.l.q'].rs2]:   'fcvt.l.q',
+      [ISA_Q['fcvt.lu.q'].rs2]:  'fcvt.lu.q',
+    },
   },
   [ISA_F['fcvt.s.w'].funct5]: {
     [FP_FMT.S]: {
@@ -625,13 +704,25 @@ export const ISA_OP_FP = {
       [ISA_D['fcvt.d.l'].rs2]:   'fcvt.d.l',
       [ISA_D['fcvt.d.lu'].rs2]:  'fcvt.d.lu',
     },
+    [FP_FMT.Q]: {
+      [ISA_Q['fcvt.q.w'].rs2]:   'fcvt.q.w',
+      [ISA_Q['fcvt.q.wu'].rs2]:  'fcvt.q.wu',
+      [ISA_Q['fcvt.q.l'].rs2]:   'fcvt.q.l',
+      [ISA_Q['fcvt.q.lu'].rs2]:  'fcvt.q.lu',
+    },
   },
   [ISA_D['fcvt.s.d'].funct5]: {
     [FP_FMT.S]: {
       [ISA_D['fcvt.s.d'].rs2]:   'fcvt.s.d',
+      [ISA_Q['fcvt.s.q'].rs2]:   'fcvt.s.q',
     },
     [FP_FMT.D]: {
       [ISA_D['fcvt.d.s'].rs2]:   'fcvt.d.s',
+      [ISA_Q['fcvt.d.q'].rs2]:   'fcvt.d.q',
+    },
+    [FP_FMT.Q]: {
+      [ISA_Q['fcvt.q.s'].rs2]:   'fcvt.q.s',
+      [ISA_Q['fcvt.q.d'].rs2]:   'fcvt.q.d',
     },
   },
 }
@@ -993,4 +1084,4 @@ export const CSR = {
 // Entire ISA
 export const ISA = Object.assign({}, 
   ISA_RV32I, ISA_RV64I, 
-  ISA_Zifencei, ISA_Zicsr, ISA_M, ISA_A, ISA_F, ISA_D);
+  ISA_Zifencei, ISA_Zicsr, ISA_M, ISA_A, ISA_F, ISA_D, ISA_Q);
