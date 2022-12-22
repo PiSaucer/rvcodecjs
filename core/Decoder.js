@@ -9,7 +9,9 @@
 import { BASE,
   FIELDS, OPCODE, REGISTER, CSR,
   ISA_OP, ISA_OP_32, ISA_LOAD, ISA_STORE, ISA_OP_IMM, ISA_OP_IMM_32, 
-  ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA_AMO,
+  ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA_AMO, 
+  ISA_LOAD_FP, ISA_STORE_FP, ISA_OP_FP, 
+  ISA_MADD, ISA_MSUB, ISA_NMADD, ISA_NMSUB,
   ISA,
 } from './Constants.js'
 
@@ -78,6 +80,9 @@ export class Decoder {
       case OPCODE.OP_32:
         this.#decodeOP();
         break;
+      case OPCODE.OP_FP:
+        this.#decodeOP_FP();
+        break;
       case OPCODE.AMO:
         this.#decodeAMO();
         break;
@@ -87,6 +92,7 @@ export class Decoder {
         this.#decodeJALR();
         break;
       case OPCODE.LOAD:
+      case OPCODE.LOAD_FP:
         this.#decodeLOAD();
         break;
       case OPCODE.OP_IMM:
@@ -102,6 +108,7 @@ export class Decoder {
 
         // S-type
       case OPCODE.STORE:
+      case OPCODE.STORE_FP:
         this.#decodeSTORE();
         break;
 
@@ -119,6 +126,14 @@ export class Decoder {
         // J-type:
       case OPCODE.JAL:
         this.#decodeJAL();
+        break;
+
+        // R4-type
+      case OPCODE.MADD:
+      case OPCODE.MSUB:
+      case OPCODE.NMADD:
+      case OPCODE.NMSUB:
+        this.#decodeR4();
         break;
 
         // Invalid opcode
@@ -195,6 +210,73 @@ export class Decoder {
   }
 
   /**
+   * Decodes OP-FP instructions
+   */
+  #decodeOP_FP() {
+    // Get each field
+    const fields = extractRFields(this.#bin);
+    const funct7 = fields['funct7'],
+      funct3 = fields['funct3'],
+      rs2 = fields['rs2'],
+      rs1 = fields['rs1'],
+      rd = fields['rd'];
+
+    // Find instruction - check opcode for RV32I vs RV64I
+    let opcodeName;
+    this.#mne = ISA_OP_FP[funct7];
+    if (this.#mne !== undefined && typeof this.#mne !== 'string') {
+      if (this.#mne[rs2] !== undefined) {
+        // fcvt instructions - use rs2 as lookup
+        this.#mne = this.#mne[rs2];
+      } else {
+        // others - use funct3 as lookup
+        this.#mne = this.#mne[funct3];
+      }
+    }
+    if (this.#mne === undefined) {
+      throw 'Detected OP-FP instruction but invalid funct field combination';
+    }
+
+    // Convert fields to string representations
+    const inst = ISA[this.#mne];
+    const useRs2 = inst.rs2 === undefined;
+    let floatRd = true;
+    let floatRs1 = true;
+    if (funct7[0] === '1') {
+      // Conditionally decode rd or rs1 as an int register, based on funct7
+      if (funct7[3] === '1') {
+        floatRs1 = false;
+      } else {
+        floatRd = false;
+      }
+    }
+    const src1 = decReg(rs1, floatRs1),
+          src2 = decReg(rs2, true),
+          dest = decReg(rd, floatRd);
+
+    // Create fragments
+    const useRm = inst.funct3 === undefined;
+    const f = {
+      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(this.#mne, funct3, useRm ? 'rm' : FIELDS.funct3.name),
+      funct7: new Frag(this.#mne, funct7, FIELDS.r_funct7.name),
+      rd:     new Frag(dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(src1, rs1, FIELDS.rs1.name),
+      rs2:    new Frag(src2, rs2, FIELDS.rs2.name),
+    };
+
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rd'], f['rs1']);
+    if (useRs2) {
+      this.asmFrags.push(f['rs2']);
+    }
+
+    // Binary fragments from MSB to LSB
+    this.binFrags.push(f['funct7'], f['rs2'], f['rs1'], f['funct3'], f['rd'],
+      f['opcode']);
+  }
+
+  /**
    * Decodes JALR instructions
    */
   #decodeJALR() {
@@ -240,14 +322,16 @@ export class Decoder {
       rd = fields['rd'];
 
     // Find instruction
-    this.#mne = ISA_LOAD[funct3];
+    const floatInst = this.#opcode === OPCODE.LOAD_FP;
+    this.#mne = floatInst ? ISA_LOAD_FP[funct3] : ISA_LOAD[funct3];
     if (this.#mne === undefined) {
-      throw "Detected LOAD instruction but invalid funct3 field";
+      throw `Detected LOAD${floatInst ? '-FP' : ''} `
+        + 'instruction but invalid funct3 field';
     }
 
     // Convert fields to string representations
     const base = decReg(rs1),
-          dest = decReg(rd),
+          dest = decReg(rd, floatInst),
           offset = decImm(imm);
 
     // Create fragments
@@ -536,17 +620,19 @@ export class Decoder {
       imm = imm_11_5 + imm_4_0;
 
     // Find instruction
-    this.#mne = ISA_STORE[funct3];
+    const floatInst = this.#opcode === OPCODE.STORE_FP;
+    this.#mne = floatInst ? ISA_STORE_FP[funct3] : ISA_STORE[funct3];
     if (this.#mne === undefined) {
-      throw "Detected STORE instruction but invalid funct3 field";
+      throw `Detected STORE${floatInst ? '-FP' : ''} `
+        + 'instruction but invalid funct3 field';
     }
 
     // Convert fields to string representations
     const offset = decImm(imm);
     const base = decReg(rs1);
-    const src = decReg(rs2);
+    const src = decReg(rs2, floatInst);
 
-    // Create fragments
+    // Create common fragments
     const f = {
       opcode:   new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
       funct3:   new Frag(this.#mne, funct3, FIELDS.funct3.name),
@@ -732,6 +818,63 @@ export class Decoder {
     this.binFrags.push(f['funct5'], f['aq'], f['rl'], f['rs2'], 
       f['rs1'], f['funct3'], f['rd'], f['opcode']);
   }
+
+  /**
+   * Decodes R4 instructions
+   */
+  #decodeR4() {
+    // Get each field
+    const fields = extractRFields(this.#bin);
+    const rs3 = fields['funct5'],
+      fmt = fields['fmt'],
+      rs2 = fields['rs2'],
+      rs1 = fields['rs1'],
+      rm = fields['funct3'],
+      rd = fields['rd'];
+
+    // Find instruction
+    switch (this.#opcode) {
+      case OPCODE.MADD:
+        this.#mne = ISA_MADD[fmt];
+        break;
+      case OPCODE.MSUB:
+        this.#mne = ISA_MSUB[fmt];
+        break;
+      case OPCODE.NMADD:
+        this.#mne = ISA_NMADD[fmt];
+        break;
+      case OPCODE.NMSUB:
+        this.#mne = ISA_NMSUB[fmt];
+        break;
+    }
+    if (this.#mne === undefined) {
+      throw `Detected fused multiply-add instruction but invalid fmt field`;
+    }
+
+    // Convert fields to string representations
+    const src1 = decReg(rs1, true),
+          src2 = decReg(rs2, true),
+          src3 = decReg(rs3, true),
+          dest = decReg(rd, true);
+
+    // Create fragments
+    const f = {
+      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      fmt:    new Frag(this.#mne, fmt, FIELDS.r_fmt.name),
+      rm:     new Frag(this.#mne, rm, 'rm'),
+      rd:     new Frag(dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(src1, rs1, FIELDS.rs1.name),
+      rs2:    new Frag(src2, rs2, FIELDS.rs2.name),
+      rs3:    new Frag(src3, rs3, 'rs3'),
+    };
+
+    // Assembly fragments in order of instruction
+    this.asmFrags.push(f['opcode'], f['rd'], f['rs1'], f['rs2'], f['rs3']);
+
+    // Binary fragments from MSB to LSB
+    this.binFrags.push(f['rs3'], f['fmt'], f['rs2'], f['rs1'], f['rm'], f['rd'],
+      f['opcode']);
+  }
 }
 
 // Extract R-types fields from instruction
@@ -745,6 +888,7 @@ function extractRFields(binary) {
     'funct7': getBits(binary, FIELDS.r_funct7.pos),
     'aq': getBits(binary, FIELDS.r_aq.pos),
     'rl': getBits(binary, FIELDS.r_rl.pos),
+    'fmt': getBits(binary, FIELDS.r_fmt.pos),
   };
 }
 
@@ -819,8 +963,8 @@ function decImm(immediate, signExtend = true) {
 }
 
 // Convert register numbers from binary to string
-function decReg(reg) {
-  return "x" + parseInt(reg, BASE.bin);
+function decReg(reg, floatReg=false) {
+  return (floatReg ? 'f' : 'x') + parseInt(reg, BASE.bin);
 }
 
 // Convert register numbers from binary to ABI name string
