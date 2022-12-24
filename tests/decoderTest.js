@@ -250,6 +250,61 @@ function dec_rv64f_opfp_fcvtlus() {
 }
 
 /*
+ * D extension
+ */
+function dec_rv32d_loadfp_fld() {
+    let inst = new Instruction('00000110010101001011001010000111');
+    let instAbi = new Instruction('00000110010101001011001010000111', { ABI:true });
+    assertEq(inst.asm, 'fld f5, 101(x9)');
+    assertEq(instAbi.asm, 'fld f5, 101(s1)');
+}
+
+function dec_rv32d_storefp_fsd() {
+    let inst = new Instruction('00000110110101000011000110100111');
+    let instAbi = new Instruction('00000110110101000011000110100111', { ABI:true });
+    assertEq(inst.asm, 'fsd f13, 99(x8)');
+    assertEq(instAbi.asm, 'fsd f13, 99(s0)');
+}
+
+function dec_rv32d_msub_fmsubd() {
+    let inst = new Instruction('11110010111000110111000101000111');
+    assertEq(inst.asm, 'fmsub.d f2, f6, f14, f30');
+    assertEq(inst.isa, 'RV32D');
+}
+
+function dec_rv32d_opfp_fsubd() {
+    let inst = new Instruction('00001011000001000111001001010011');
+    assertEq(inst.asm, 'fsub.d f4, f8, f16');
+    assertEq(inst.isa, 'RV32D');
+}
+
+function dec_rv32d_opfp_fsgnjnd() {
+    let inst = new Instruction('00100011100101101001001111010011');
+    assertEq(inst.asm, 'fsgnjn.d f7, f13, f25');
+    assertEq(inst.isa, 'RV32D');
+}
+
+function dec_rv32d_opfp_feqd() {
+    let inst = new Instruction('10100010010000101010001111010011');
+    let instAbi = new Instruction('10100010010000101010001111010011', { ABI:true });
+    assertEq(inst.asm, 'feq.d x7, f5, f4');
+    assertEq(instAbi.asm, 'feq.d t2, f5, f4');
+}
+
+function dec_rv32d_opfp_fcvtdw() {
+    let inst = new Instruction('11010010000010100111000111010011');
+    let instAbi = new Instruction('11010010000010100111000111010011', { ABI:true });
+    assertEq(inst.asm, 'fcvt.d.w f3, x20');
+    assertEq(instAbi.asm, 'fcvt.d.w f3, s4');
+}
+
+function dec_rv64d_opfp_fmvxd() {
+    let inst = new Instruction('11100010000001001000011001010011');
+    assertEq(inst.asm, 'fmv.x.d x12, f9');
+    assertEq(inst.isa, 'RV64D');
+}
+
+/*
  * Execute tests
  */
 test('Dec - RV32I    - LUI       - lui', dec_rv32i_lui_lui);
@@ -284,7 +339,14 @@ test('Dec - RV32F    - OP-FP     - fsgnjx.s', dec_rv32f_opfp_fsgnjxs);
 test('Dec - RV32F    - OP-FP     - flt.s', dec_rv32f_opfp_flts);
 test('Dec - RV32F    - OP-FP     - fmv.w.x', dec_rv32f_opfp_fmvwx);
 test('Dec - RV64F    - OP-FP     - fcvt.lu.s', dec_rv64f_opfp_fcvtlus);
-
+test('Dec - RV32D    - LOAD-FP   - fld', dec_rv32d_loadfp_fld);
+test('Dec - RV32D    - STORE-FP  - fsd', dec_rv32d_storefp_fsd);
+test('Dec - RV32D    - MSUB      - fmsub.d', dec_rv32d_msub_fmsubd);
+test('Dec - RV32D    - OP-FP     - fsub.d', dec_rv32d_opfp_fsubd);
+test('Dec - RV32D    - OP-FP     - fsgnjn.d', dec_rv32d_opfp_fsgnjnd);
+test('Dec - RV32D    - OP-FP     - feq.d', dec_rv32d_opfp_feqd);
+test('Dec - RV32D    - OP-FP     - fcvt.d.w', dec_rv32d_opfp_fcvtdw);
+test('Dec - RV64D    - OP-FP     - fmv.x.d', dec_rv64d_opfp_fmvxd);
 
 // Newline
 console.log('');
