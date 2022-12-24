@@ -7,7 +7,7 @@
  */
 
 import { BASE,
-  FIELDS, OPCODE, REGISTER, CSR,
+  FIELDS, OPCODE, REGISTER, FLOAT_REGISTER, CSR,
   ISA_OP, ISA_OP_32, ISA_LOAD, ISA_STORE, ISA_OP_IMM, ISA_OP_IMM_32, 
   ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA_AMO, 
   ISA_LOAD_FP, ISA_STORE_FP, ISA_OP_FP, 
@@ -970,8 +970,10 @@ function decReg(reg, floatReg=false) {
 }
 
 // Convert register numbers from binary to ABI name string
-export function decRegAbi(reg, base=BASE.dec) {
-  return Object.keys(REGISTER)[parseInt(reg, base)];
+export function decRegAbi(regDec, floatReg=false) {
+  return Object.keys(
+      (floatReg ? FLOAT_REGISTER : REGISTER)
+    )[parseInt(regDec, BASE.dec)];
 }
 
 // Get device I/O and memory accesses corresponding to given bits
