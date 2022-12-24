@@ -195,52 +195,56 @@ function dec_rv32f_loadfp_flw() {
     let inst = new Instruction('00000110010001000010001110000111');
     let instAbi = new Instruction('00000110010001000010001110000111', { ABI:true });
     assertEq(inst.asm, 'flw f7, 100(x8)');
-    assertEq(instAbi.asm, 'flw f7, 100(s0)');
+    assertEq(instAbi.asm, 'flw ft7, 100(s0)');
 }
 
 function dec_rv32f_storefp_fsw() {
     let inst = new Instruction('00000110111001001010001000100111');
     let instAbi = new Instruction('00000110111001001010001000100111', { ABI:true });
     assertEq(inst.asm, 'fsw f14, 100(x9)');
-    assertEq(instAbi.asm, 'fsw f14, 100(s1)');
+    assertEq(instAbi.asm, 'fsw fa4, 100(s1)');
 }
 
 function dec_rv32f_madd_fmadds() {
     let inst = new Instruction('11111000111100111000000111000011');
+    let instAbi = new Instruction('11111000111100111000000111000011', { ABI:true });
     assertEq(inst.asm, 'fmadd.s f3, f7, f15, f31');
-    assertEq(inst.isa, 'RV32F');
+    assertEq(instAbi.asm, 'fmadd.s ft3, ft7, fa5, ft11');
 }
 
 function dec_rv32f_nmsub_fnmsubs() {
     let inst = new Instruction('10000000100000100101000101001011');
+    let instAbi = new Instruction('10000000100000100101000101001011', { ABI:true });
     assertEq(inst.asm, 'fnmsub.s f2, f4, f8, f16');
-    assertEq(inst.isa, 'RV32F');
+    assertEq(instAbi.asm, 'fnmsub.s ft2, ft4, fs0, fa6');
 }
 
 function dec_rv32f_opfp_fadds() {
     let inst = new Instruction('00000001000101001010001011010011');
+    let instAbi = new Instruction('00000001000101001010001011010011', { ABI:true });
     assertEq(inst.asm, 'fadd.s f5, f9, f17');
-    assertEq(inst.isa, 'RV32F');
+    assertEq(instAbi.asm, 'fadd.s ft5, fs1, fa7');
 }
 
 function dec_rv32f_opfp_fsgnjxs() {
     let inst = new Instruction('00100001100001100010001101010011');
+    let instAbi = new Instruction('00100001100001100010001101010011', { ABI:true });
     assertEq(inst.asm, 'fsgnjx.s f6, f12, f24');
-    assertEq(inst.isa, 'RV32F');
+    assertEq(instAbi.asm, 'fsgnjx.s ft6, fa2, fs8');
 }
 
 function dec_rv32f_opfp_flts() {
     let inst = new Instruction('10100000010100100001001101010011');
     let instAbi = new Instruction('10100000010100100001001101010011', { ABI:true });
     assertEq(inst.asm, 'flt.s x6, f4, f5');
-    assertEq(instAbi.asm, 'flt.s t1, f4, f5');
+    assertEq(instAbi.asm, 'flt.s t1, ft4, ft5');
 }
 
 function dec_rv32f_opfp_fmvwx() {
     let inst = new Instruction('11110000000001010000010111010011');
     let instAbi = new Instruction('11110000000001010000010111010011', { ABI:true });
     assertEq(inst.asm, 'fmv.w.x f11, x10');
-    assertEq(instAbi.asm, 'fmv.w.x f11, a0');
+    assertEq(instAbi.asm, 'fmv.w.x fa1, a0');
 }
 
 function dec_rv64f_opfp_fcvtlus() {
@@ -256,46 +260,49 @@ function dec_rv32d_loadfp_fld() {
     let inst = new Instruction('00000110010101001011001010000111');
     let instAbi = new Instruction('00000110010101001011001010000111', { ABI:true });
     assertEq(inst.asm, 'fld f5, 101(x9)');
-    assertEq(instAbi.asm, 'fld f5, 101(s1)');
+    assertEq(instAbi.asm, 'fld ft5, 101(s1)');
 }
 
 function dec_rv32d_storefp_fsd() {
     let inst = new Instruction('00000110110101000011000110100111');
     let instAbi = new Instruction('00000110110101000011000110100111', { ABI:true });
     assertEq(inst.asm, 'fsd f13, 99(x8)');
-    assertEq(instAbi.asm, 'fsd f13, 99(s0)');
+    assertEq(instAbi.asm, 'fsd fa3, 99(s0)');
 }
 
 function dec_rv32d_msub_fmsubd() {
     let inst = new Instruction('11110010111000110111000101000111');
+    let instAbi = new Instruction('11110010111000110111000101000111', { ABI:true });
     assertEq(inst.asm, 'fmsub.d f2, f6, f14, f30');
-    assertEq(inst.isa, 'RV32D');
+    assertEq(instAbi.asm, 'fmsub.d ft2, ft6, fa4, ft10');
 }
 
 function dec_rv32d_opfp_fsubd() {
     let inst = new Instruction('00001011000001000111001001010011');
+    let instAbi = new Instruction('00001011000001000111001001010011', { ABI:true });
     assertEq(inst.asm, 'fsub.d f4, f8, f16');
-    assertEq(inst.isa, 'RV32D');
+    assertEq(instAbi.asm, 'fsub.d ft4, fs0, fa6');
 }
 
 function dec_rv32d_opfp_fsgnjnd() {
     let inst = new Instruction('00100011100101101001001111010011');
+    let instAbi = new Instruction('00100011100101101001001111010011', { ABI:true });
     assertEq(inst.asm, 'fsgnjn.d f7, f13, f25');
-    assertEq(inst.isa, 'RV32D');
+    assertEq(instAbi.asm, 'fsgnjn.d ft7, fa3, fs9');
 }
 
 function dec_rv32d_opfp_feqd() {
     let inst = new Instruction('10100010010000101010001111010011');
     let instAbi = new Instruction('10100010010000101010001111010011', { ABI:true });
     assertEq(inst.asm, 'feq.d x7, f5, f4');
-    assertEq(instAbi.asm, 'feq.d t2, f5, f4');
+    assertEq(instAbi.asm, 'feq.d t2, ft5, ft4');
 }
 
 function dec_rv32d_opfp_fcvtdw() {
     let inst = new Instruction('11010010000010100111000111010011');
     let instAbi = new Instruction('11010010000010100111000111010011', { ABI:true });
     assertEq(inst.asm, 'fcvt.d.w f3, x20');
-    assertEq(instAbi.asm, 'fcvt.d.w f3, s4');
+    assertEq(instAbi.asm, 'fcvt.d.w ft3, s4');
 }
 
 function dec_rv64d_opfp_fmvxd() {
@@ -311,51 +318,56 @@ function dec_rv32q_loadfp_flq() {
     let inst = new Instruction('00000110011101010100001000000111');
     let instAbi = new Instruction('00000110011101010100001000000111', { ABI:true });
     assertEq(inst.asm, 'flq f4, 103(x10)');
-    assertEq(instAbi.asm, 'flq f4, 103(a0)');
+    assertEq(instAbi.asm, 'flq ft4, 103(a0)');
 }
 
 function dec_rv32q_storefp_fsq() {
     let inst = new Instruction('00000110110000111100000000100111');
     let instAbi = new Instruction('00000110110000111100000000100111', { ABI:true });
     assertEq(inst.asm, 'fsq f12, 96(x7)');
-    assertEq(instAbi.asm, 'fsq f12, 96(t2)');
+    assertEq(instAbi.asm, 'fsq fa2, 96(t2)');
 }
 
 function dec_rv32q_nmadd_fnmaddq() {
     let inst = new Instruction('11101110110100101111000011001111');
+    let instAbi = new Instruction('11101110110100101111000011001111', { ABI:true });
     assertEq(inst.asm, 'fnmadd.q f1, f5, f13, f29');
-    assertEq(inst.isa, 'RV32Q');
+    assertEq(instAbi.asm, 'fnmadd.q ft1, ft5, fa3, ft9');
 }
 
 function dec_rv32q_opfp_fsqrtq() {
     let inst = new Instruction('01011110000010101111010111010011');
+    let instAbi = new Instruction('01011110000010101111010111010011', { ABI:true });
     assertEq(inst.asm, 'fsqrt.q f11, f21');
-    assertEq(inst.isa, 'RV32Q');
+    assertEq(instAbi.asm, 'fsqrt.q fa1, fs5');
 }
 
 function dec_rv32q_opfp_fmaxq() {
     let inst = new Instruction('00101111111011100001011111010011');
+    let instAbi = new Instruction('00101111111011100001011111010011', { ABI:true });
     assertEq(inst.asm, 'fmax.q f15, f28, f30');
-    assertEq(inst.isa, 'RV32Q');
+    assertEq(instAbi.asm, 'fmax.q fa5, ft8, ft10');
 }
 
 function dec_rv32q_opfp_fclassq() {
     let inst = new Instruction('11100110000000000001100111010011');
     let instAbi = new Instruction('11100110000000000001100111010011', { ABI:true });
     assertEq(inst.asm, 'fclass.q x19, f0');
-    assertEq(instAbi.asm, 'fclass.q s3, f0');
+    assertEq(instAbi.asm, 'fclass.q s3, ft0');
 }
 
 function dec_rv32q_opfp_fcvtqd() {
     let inst = new Instruction('01000110000101000111001111010011');
+    let instAbi = new Instruction('01000110000101000111001111010011', { ABI:true });
     assertEq(inst.asm, 'fcvt.q.d f7, f8');
-    assertEq(inst.isa, 'RV32Q');
+    assertEq(instAbi.asm, 'fcvt.q.d ft7, fs0');
 }
 
 function dec_rv32q_opfp_fcvtsq() {
     let inst = new Instruction('01000000001101001111001101010011');
+    let instAbi = new Instruction('01000000001101001111001101010011', { ABI:true });
     assertEq(inst.asm, 'fcvt.s.q f6, f9');
-    assertEq(inst.isa, 'RV32Q');
+    assertEq(instAbi.asm, 'fcvt.s.q ft6, fs1');
 }
 
 /*

@@ -138,9 +138,11 @@ export function convertBase(val, baseSrc, baseDst, Pad) {
 
 // Convert register names to ABI names
 export function convertRegToAbi(reg) {
-  const match = /^x(\d+)$/.exec(reg);
+  const match = /^[xf](\d+)$/.exec(reg);
   if(match !== null) {
-    reg = decRegAbi(match[1]);
+    const floatReg = reg[0] === 'f';
+    const regDec = match[1];
+    reg = decRegAbi(regDec, floatReg);
   }
   return reg;
 }
