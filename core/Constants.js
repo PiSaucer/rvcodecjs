@@ -763,6 +763,41 @@ export const REGISTER = {
   fp:   "x8",  // at bottom to conserve order for ABI indexing
 }
 
+export const FLOAT_REGISTER = {
+  ft0:  "f0",
+  ft1:  "f1",
+  ft2:  "f2",
+  ft3:  "f3",
+  ft4:  "f4",
+  ft5:  "f5",
+  ft6:  "f6",
+  ft7:  "f7",
+  fs0:  "f8",
+  fs1:  "f9",
+  fa0:  "f10",
+  fa1:  "f11",
+  fa2:  "f12",
+  fa3:  "f13",
+  fa4:  "f14",
+  fa5:  "f15",
+  fa6:  "f16",
+  fa7:  "f17",
+  fs2:  "f18",
+  fs3:  "f19",
+  fs4:  "f20",
+  fs5:  "f21",
+  fs6:  "f22",
+  fs7:  "f23",
+  fs8:  "f24",
+  fs9:  "f25",
+  fs10: "f26",
+  fs11: "f27",
+  ft8:  "f28",
+  ft9:  "f29",
+  ft10: "f30",
+  ft11: "f31",
+}
+
 // CSR Encodings
 export const CSR = {
   cycle:          0xc00,
