@@ -215,15 +215,16 @@ export class Decoder {
   #decodeOP_FP() {
     // Get each field
     const fields = extractRFields(this.#bin);
-    const funct7 = fields['funct7'],
+    const funct5 = fields['funct5'],
       funct3 = fields['funct3'],
+      fmt = fields['fmt'],
       rs2 = fields['rs2'],
       rs1 = fields['rs1'],
       rd = fields['rd'];
 
     // Find instruction - check opcode for RV32I vs RV64I
     let opcodeName;
-    this.#mne = ISA_OP_FP[funct7];
+    this.#mne = ISA_OP_FP[funct5]?.[fmt];
     if (this.#mne !== undefined && typeof this.#mne !== 'string') {
       if (this.#mne[rs2] !== undefined) {
         // fcvt instructions - use rs2 as lookup
@@ -234,7 +235,7 @@ export class Decoder {
       }
     }
     if (this.#mne === undefined) {
-      throw 'Detected OP-FP instruction but invalid funct field combination';
+      throw 'Detected OP-FP instruction but invalid funct and fmt fields';
     }
 
     // Convert fields to string representations
@@ -242,9 +243,9 @@ export class Decoder {
     const useRs2 = inst.rs2 === undefined;
     let floatRd = true;
     let floatRs1 = true;
-    if (funct7[0] === '1') {
+    if (funct5[0] === '1') {
       // Conditionally decode rd or rs1 as an int register, based on funct7
-      if (funct7[3] === '1') {
+      if (funct5[3] === '1') {
         floatRs1 = false;
       } else {
         floatRd = false;
@@ -259,7 +260,8 @@ export class Decoder {
     const f = {
       opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
       funct3: new Frag(this.#mne, funct3, useRm ? 'rm' : FIELDS.funct3.name),
-      funct7: new Frag(this.#mne, funct7, FIELDS.r_funct7.name),
+      funct5: new Frag(this.#mne, funct5, FIELDS.r_funct5.name),
+      fmt:    new Frag(this.#mne, fmt, FIELDS.r_fp_fmt.name),
       rd:     new Frag(dest, rd, FIELDS.rd.name),
       rs1:    new Frag(src1, rs1, FIELDS.rs1.name),
       rs2:    new Frag(src2, rs2, FIELDS.rs2.name),
@@ -272,7 +274,7 @@ export class Decoder {
     }
 
     // Binary fragments from MSB to LSB
-    this.binFrags.push(f['funct7'], f['rs2'], f['rs1'], f['funct3'], f['rd'],
+    this.binFrags.push(f['funct5'], f['fmt'], f['rs2'], f['rs1'], f['funct3'], f['rd'],
       f['opcode']);
   }
 
@@ -860,7 +862,7 @@ export class Decoder {
     // Create fragments
     const f = {
       opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      fmt:    new Frag(this.#mne, fmt, FIELDS.r_fmt.name),
+      fmt:    new Frag(this.#mne, fmt, FIELDS.r_fp_fmt.name),
       rm:     new Frag(this.#mne, rm, 'rm'),
       rd:     new Frag(dest, rd, FIELDS.rd.name),
       rs1:    new Frag(src1, rs1, FIELDS.rs1.name),
@@ -888,7 +890,7 @@ function extractRFields(binary) {
     'funct7': getBits(binary, FIELDS.r_funct7.pos),
     'aq': getBits(binary, FIELDS.r_aq.pos),
     'rl': getBits(binary, FIELDS.r_rl.pos),
-    'fmt': getBits(binary, FIELDS.r_fmt.pos),
+    'fmt': getBits(binary, FIELDS.r_fp_fmt.pos),
   };
 }
 
