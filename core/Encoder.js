@@ -6,7 +6,7 @@
  * Copyright (c) 2021-2022 LupLab @ UC Davis
  */
 
-import {BASE, FIELDS, OPCODE, ISA, REGISTER, CSR} from './Constants.js'
+import {BASE, FIELDS, OPCODE, ISA, REGISTER, FLOAT_REGISTER, CSR} from './Constants.js'
 
 import { COPTS_ISA } from './Config.js'
 
@@ -448,11 +448,9 @@ function encImm(immediate, len) {
 
 // Convert register numbers to binary
 function encReg(reg, floatReg=false) {
-  // Attempt to convert from ABI name to x<num> (only for integer registers)
-  if (!floatReg) {
-    reg = REGISTER[reg] ?? reg;
-  }
-  // Validate with register file prefix determined from `floatReg` parameter
+  // Attempt to convert from ABI name to x<num> or f<num>, depending on `floatReg`
+  reg = (floatReg ? FLOAT_REGISTER[reg] : REGISTER[reg]) ?? reg;
+  // Validate using register file prefix determined from `floatReg` parameter
   let regFile = floatReg ? 'f' : 'x';
   if (reg[0] !== regFile) {
     throw `Invalid or unknown ${floatReg ? 'float ' : ''}register format: "${reg}"`;
