@@ -27,7 +27,7 @@ export const CONFIG_TYPE = makeEnum(
  * Configuration options enums
  */
 export const COPTS_ISA = makeEnum(
-  ['AUTO', 'RV32I', 'RV64I']
+  ['AUTO', 'RV32I', 'RV64I', 'RV128I']
 );
 
 /**
