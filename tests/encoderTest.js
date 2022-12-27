@@ -211,6 +211,14 @@ function enc_rv64m_op32_remw() {
     assertEq(abiInst.bin, inst.bin);
 }
 
+// OP-64
+function enc_rv128m_op64_divud() {
+    let inst = new Instruction('remd x7, x19, x1');
+    let abiInst = new Instruction('remd t2, s3, ra');
+    assertEq(inst.bin, '00000010000110011110001111111011');
+    assertEq(abiInst.bin, inst.bin);
+}
+
 /*
  * A extension
  */
@@ -225,6 +233,13 @@ function enc_rv64a_amo_amoswapd() {
     let inst = new Instruction('amoswap.d x31, x30, (x12)');
     let abiInst = new Instruction('amoswap.d t6, t5, (a2)');
     assertEq(inst.bin, '00001001111001100011111110101111');
+    assertEq(abiInst.bin, inst.bin);
+}
+
+function enc_rv128a_amo_amoorq() {
+    let inst = new Instruction('amoor.q x29, x28, (x10)');
+    let abiInst = new Instruction('amoor.q t4, t3, (a0)');
+    assertEq(inst.bin, '01000001110001010100111010101111');
     assertEq(abiInst.bin, inst.bin);
 }
 
@@ -414,8 +429,10 @@ test('Enc - Zicsr    - SYSTEM    - csrrw', enc_zicsr_system_csrrw);
 test('Enc - Zicsr    - SYSTEM    - csrrci', enc_zicsr_system_csrrci);
 test('Enc - RV32M    - OP        - mulhsu', enc_rv32m_op_mulhsu);
 test('Enc - RV64M    - OP-32     - remw', enc_rv64m_op32_remw);
+test('Enc - RV128M   - OP-64     - divud', enc_rv128m_op64_divud);
 test('Enc - RV32A    - AMO       - lr.w', enc_rv32a_amo_lrw);
 test('Enc - RV64A    - AMO       - amoswap.d', enc_rv64a_amo_amoswapd);
+test('Enc - RV128A   - AMO       - amoor.q', enc_rv128a_amo_amoorq);
 test('Enc - RV32F    - LOAD-FP   - flw', enc_rv32f_loadfp_flw);
 test('Enc - RV32F    - STORE-FP  - fsw', enc_rv32f_storefp_fsw);
 test('Enc - RV32F    - MADD      - fmadd.s', enc_rv32f_madd_fmadds);
