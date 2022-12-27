@@ -304,6 +304,12 @@ function dec_rv64f_opfp_fcvtlus() {
     assertEq(inst.isa, 'RV64F');
 }
 
+function dec_rv128f_opfp_fcvtst() {
+    let inst = new Instruction('11010000010001111111000101010011');
+    assertEq(inst.asm, 'fcvt.s.t f2, x15');
+    assertEq(inst.isa, 'RV128F');
+}
+
 /*
  * D extension
  */
@@ -360,6 +366,12 @@ function dec_rv64d_opfp_fmvxd() {
     let inst = new Instruction('11100010000001001000011001010011');
     assertEq(inst.asm, 'fmv.x.d x12, f9');
     assertEq(inst.isa, 'RV64D');
+}
+
+function dec_rv128d_opfp_fcvttud() {
+    let inst = new Instruction('11000010010101000111010101010011', { ABI:true });
+    assertEq(inst.asm, 'fcvt.tu.d a0, fs0');
+    assertEq(inst.isa, 'RV128D');
 }
 
 /*
@@ -421,6 +433,12 @@ function dec_rv32q_opfp_fcvtsq() {
     assertEq(instAbi.asm, 'fcvt.s.q ft6, fs1');
 }
 
+function dec_rv128q_opfp_fmvxq() {
+    let inst = new Instruction('11100110000010011000010011010011', { ABI:true });
+    assertEq(inst.asm, 'fmv.x.q s1, fs3');
+    assertEq(inst.isa, 'RV128Q');
+}
+
 /*
  * Execute tests
  */
@@ -463,6 +481,7 @@ test('Dec - RV32F    - OP-FP     - fsgnjx.s', dec_rv32f_opfp_fsgnjxs);
 test('Dec - RV32F    - OP-FP     - flt.s', dec_rv32f_opfp_flts);
 test('Dec - RV32F    - OP-FP     - fmv.w.x', dec_rv32f_opfp_fmvwx);
 test('Dec - RV64F    - OP-FP     - fcvt.lu.s', dec_rv64f_opfp_fcvtlus);
+test('Dec - RV128F   - OP-FP     - fcvt.s.t', dec_rv128f_opfp_fcvtst);
 test('Dec - RV32D    - LOAD-FP   - fld', dec_rv32d_loadfp_fld);
 test('Dec - RV32D    - STORE-FP  - fsd', dec_rv32d_storefp_fsd);
 test('Dec - RV32D    - MSUB      - fmsub.d', dec_rv32d_msub_fmsubd);
@@ -471,6 +490,7 @@ test('Dec - RV32D    - OP-FP     - fsgnjn.d', dec_rv32d_opfp_fsgnjnd);
 test('Dec - RV32D    - OP-FP     - feq.d', dec_rv32d_opfp_feqd);
 test('Dec - RV32D    - OP-FP     - fcvt.d.w', dec_rv32d_opfp_fcvtdw);
 test('Dec - RV64D    - OP-FP     - fmv.x.d', dec_rv64d_opfp_fmvxd);
+test('Dec - RV128D   - OP-FP     - fcvt.tu.d', dec_rv128d_opfp_fcvttud);
 test('Dec - RV32Q    - LOAD-FP   - flq', dec_rv32q_loadfp_flq);
 test('Dec - RV32Q    - STORE-FP  - fsq', dec_rv32q_storefp_fsq);
 test('Dec - RV32Q    - NMADD     - fnmadd.q', dec_rv32q_nmadd_fnmaddq);
@@ -479,6 +499,7 @@ test('Dec - RV32Q    - OP-FP     - fmax.q', dec_rv32q_opfp_fmaxq);
 test('Dec - RV32Q    - OP-FP     - fclass.q', dec_rv32q_opfp_fclassq);
 test('Dec - RV32Q    - OP-FP     - fcvt.q.d', dec_rv32q_opfp_fcvtqd);
 test('Dec - RV32Q    - OP-FP     - fcvt.s.q', dec_rv32q_opfp_fcvtsq);
+test('Dec - RV128Q   - OP-FP     - fmv.x.q', dec_rv128q_opfp_fmvxq);
 
 // Newline
 console.log('');
