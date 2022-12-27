@@ -56,8 +56,10 @@ export class Encoder {
     }
 
     // Detect mismatch between ISA and configuration
-    if (this.#config.ISA === COPTS_ISA.RV32I && /^RV64.$/.test(this.#inst.isa)) {
+    if (this.#config.ISA === COPTS_ISA.RV32I && /^RV(?:64|128)/.test(this.#inst.isa)) {
       throw `Detected ${this.#inst.isa} instruction but configuration ISA set to RV32I`;
+    } else if ((this.#config.ISA === COPTS_ISA.RV64I && /^RV128/.test(this.#inst.isa))) {
+      throw `Detected ${this.#inst.isa} instruction but configuration ISA set to RV64I`;
     }
 
     // Encode according to opcode
@@ -65,6 +67,7 @@ export class Encoder {
         // R-type
       case OPCODE.OP:
       case OPCODE.OP_32:
+      case OPCODE.OP_64:
         this.#encodeOP();
         break;
       case OPCODE.OP_FP:
@@ -84,6 +87,7 @@ export class Encoder {
         break;
       case OPCODE.OP_IMM:
       case OPCODE.OP_IMM_32:
+      case OPCODE.OP_IMM_64:
         this.#encodeOP_IMM();
         break;
       case OPCODE.MISC_MEM:
@@ -217,20 +221,26 @@ export class Encoder {
     let imm = ''.padStart('0', FIELDS.i_imm_11_0.pos[1]);
 
     // Shift instruction
-    if (/^s[lr][al]iw?$/.test(this.#mne)) {
-      // Determine shift-amount width based on opcode and config ISA
-      let shamtWidth = this.#config.ISA === COPTS_ISA.RV32I || this.#inst.opcode === OPCODE.OP_IMM_32
-        ? FIELDS.i_shamt.pos[1]       // 5bit width (RV32I or word-sized)
-        : FIELDS.i_shamt_5_0.pos[1];  // 6bit width (RV64I)
+    if (/^s[lr][al]i/.test(this.#mne)) {
+      // Determine shift-amount width based on opcode or config ISA
+      //   For encoding, default to the widest shamt possible with the given parameters
+      let shamtWidth;
+      if (this.#config.isa === COPTS_ISA.RV32I || this.#inst.opcode === OPCODE.OP_IMM_32) {
+        shamtWidth = FIELDS.i_shamt.pos[1];     // 5bit width (RV32I)
+      } else if (this.#config.isa === COPTS_ISA.RV64I || this.#inst.opcode === OPCODE.OP_IMM_64) {
+        shamtWidth = FIELDS.i_shamt_5_0.pos[1]; // 6bit width (RV64I)
+      } else {
+        shamtWidth = FIELDS.i_shamt_6_0.pos[1]; // 7bit width (RV128I)
+      }
 
       // Construct immediate field from shift type and shift amount
       if (immediate < 0 || immediate >= (1 << shamtWidth)) {
         throw 'Invalid shamt field (out of range): "' + immediate + '"';
       }
-      const imm_11_6 = '0' + this.#inst.shtyp + '0000';
-      const imm_5_0 = encImm(immediate, FIELDS.i_shamt_5_0.pos[1]);
+      const imm_11_7 = '0' + this.#inst.shtyp + '000';
+      const imm_6_0 = encImm(immediate, FIELDS.i_shamt_6_0.pos[1]);
 
-      imm = imm_11_6 + imm_5_0;
+      imm = imm_11_7 + imm_6_0;
 
     } else {
       // Non-shift instructions
@@ -250,7 +260,19 @@ export class Encoder {
       rd = ''.padStart(FIELDS.rd.pos[1], '0'),
       imm = ''.padStart(FIELDS.i_imm_11_0.pos[1], '0');
 
-    if (this.#mne === 'fence') {
+    // Signals when MISC-MEM used as extended encoding space for load operations
+    const loadExt = this.#mne === 'lq';
+
+    if (loadExt) {
+      // Get operands
+      const dest = this.#opr[0], offset = this.#opr[1], base = this.#opr[2];
+
+      // Convert to binary representation
+      rd = encReg(dest);
+      imm = encImm(offset, FIELDS.i_imm_11_0.pos[1]);
+      rs1 = encReg(base);
+
+    } else if (this.#mne === 'fence') {
       // Get operands
       const predecessor = this.#opr[0], successor = this.#opr[1];
 
@@ -452,7 +474,7 @@ function encReg(reg, floatReg=false) {
   reg = (floatReg ? FLOAT_REGISTER[reg] : REGISTER[reg]) ?? reg;
   // Validate using register file prefix determined from `floatReg` parameter
   let regFile = floatReg ? 'f' : 'x';
-  if (reg[0] !== regFile) {
+  if (reg?.[0] !== regFile) {
     throw `Invalid or unknown ${floatReg ? 'float ' : ''}register format: "${reg}"`;
   }
   // Attempt to parse the decimal register address, set to 0 on failed parse
