@@ -15,8 +15,9 @@ export const BASE = {
 
 // Width of an integer register
 export const XLEN = {
-  rv32: 32,
-  rv64: 64
+  rv32:  32,
+  rv64:  64,
+  rv128: 128,
 }
 
 // Width of a floating-point register
@@ -68,9 +69,12 @@ export const FIELDS = {
   i_imm_11_0: { pos: [31, 12], name: 'imm[11:0]' },
 
   // I-type: shift instructions
+  i_shtyp_11_7: { pos: [31, 5], name: 'shtyp[11:7]'},
   i_shtyp_11_6: { pos: [31, 6], name: 'shtyp[11:6]'},
   i_shtyp_11_5: { pos: [31, 7], name: 'shtyp[11:5]'},
   i_shtyp:      { pos: [30, 1], name: 'shtyp' },
+  i_shamt_6:    { pos: [26, 1], name: 'shamt[6]' }, 
+  i_shamt_6_0:  { pos: [26, 7], name: 'shamt[6:0]' }, 
   i_shamt_5:    { pos: [25, 1], name: 'shamt[5]' }, 
   i_shamt_5_0:  { pos: [25, 6], name: 'shamt[5:0]' },
   i_shamt:      { pos: [24, 5], name: 'shamt[4:0]' },
@@ -131,10 +135,12 @@ export const OPCODE = {
   NMSUB:    '1001011',
   NMADD:    '1001111',
   OP_FP:    '1010011',
+  OP_IMM_64:'1011011',
   BRANCH:   '1100011',
   JALR:     '1100111',
   JAL:      '1101111',
   SYSTEM:   '1110011',
+  OP_64:    '1111011',
 }
 
 
@@ -214,6 +220,26 @@ export const ISA_RV64I = {
   lwu:    { isa: 'RV64I', fmt: 'I-type', funct3: '110', opcode: OPCODE.LOAD },
 
   sd:     { isa: 'RV64I', fmt: 'S-type', funct3: '011', opcode: OPCODE.STORE },
+}
+
+// RV6128I instruction set
+export const ISA_RV128I = {
+  addid:  { isa: 'RV128I', fmt: 'I-type', funct3: '000', opcode: OPCODE.OP_IMM_64 },
+
+  sllid:  { isa: 'RV128I', fmt: 'I-type', shtyp: '0', funct3: '001', opcode: OPCODE.OP_IMM_64 },
+  srlid:  { isa: 'RV128I', fmt: 'I-type', shtyp: '0', funct3: '101', opcode: OPCODE.OP_IMM_64 },
+  sraid:  { isa: 'RV128I', fmt: 'I-type', shtyp: '1', funct3: '101', opcode: OPCODE.OP_IMM_64 },
+  
+  addd:   { isa: 'RV128I', fmt: 'R-type', funct7: '0000000', funct3: '000', opcode: OPCODE.OP_64 },
+  subd:   { isa: 'RV128I', fmt: 'R-type', funct7: '0100000', funct3: '000', opcode: OPCODE.OP_64 },
+  slld:   { isa: 'RV128I', fmt: 'R-type', funct7: '0000000', funct3: '001', opcode: OPCODE.OP_64 },
+  srld:   { isa: 'RV128I', fmt: 'R-type', funct7: '0000000', funct3: '101', opcode: OPCODE.OP_64 },
+  srad:   { isa: 'RV128I', fmt: 'R-type', funct7: '0100000', funct3: '101', opcode: OPCODE.OP_64 },
+
+  lq:     { isa: 'RV128I', fmt: 'I-type', funct3: '010', opcode: OPCODE.MISC_MEM },
+  ldu:    { isa: 'RV128I', fmt: 'I-type', funct3: '111', opcode: OPCODE.LOAD },
+
+  sq:     { isa: 'RV128I', fmt: 'S-type', funct3: '100', opcode: OPCODE.STORE },
 }
 
 // Zifencei instruction set
@@ -449,6 +475,15 @@ export const ISA_OP_32 = {
   [ISA_M['remuw'].funct7 + ISA_M['remuw'].funct3]:  'remuw',
 }
 
+export const ISA_OP_64 = {
+  // RV128I
+  [ISA_RV128I['addd'].funct7 + ISA_RV128I['addd'].funct3]: 'addd',
+  [ISA_RV128I['subd'].funct7 + ISA_RV128I['subd'].funct3]: 'subd',
+  [ISA_RV128I['slld'].funct7 + ISA_RV128I['slld'].funct3]: 'slld',
+  [ISA_RV128I['srld'].funct7 + ISA_RV128I['srld'].funct3]: 'srld',
+  [ISA_RV128I['srad'].funct7 + ISA_RV128I['srad'].funct3]: 'srad',
+}
+
 export const ISA_LOAD = {
   [ISA_RV32I['lb'].funct3]:   'lb',
   [ISA_RV32I['lh'].funct3]:   'lh',
@@ -457,13 +492,15 @@ export const ISA_LOAD = {
   [ISA_RV32I['lbu'].funct3]:  'lbu',
   [ISA_RV32I['lhu'].funct3]:  'lhu',
   [ISA_RV64I['lwu'].funct3]:  'lwu',
+  [ISA_RV128I['ldu'].funct3]: 'ldu',
 }
 
 export const ISA_STORE = {
-  [ISA_RV32I['sb'].funct3]: 'sb',
-  [ISA_RV32I['sh'].funct3]: 'sh',
-  [ISA_RV32I['sw'].funct3]: 'sw',
-  [ISA_RV64I['sd'].funct3]: 'sd',
+  [ISA_RV32I['sb'].funct3]:   'sb',
+  [ISA_RV32I['sh'].funct3]:   'sh',
+  [ISA_RV32I['sw'].funct3]:   'sw',
+  [ISA_RV64I['sd'].funct3]:   'sd',
+  [ISA_RV128I['sq'].funct3]:  'sq',
 }
 
 export const ISA_OP_IMM = {
@@ -491,6 +528,16 @@ export const ISA_OP_IMM_32 = {
   }
 }
 
+export const ISA_OP_IMM_64 = {
+  [ISA_RV128I['addid'].funct3]:   'addid',
+
+  [ISA_RV128I['sllid'].funct3]:   'sllid',
+  [ISA_RV128I['srlid'].funct3]: {
+    [ISA_RV128I['srlid'].shtyp]:  'srlid',
+    [ISA_RV128I['sraid'].shtyp]:  'sraid',
+  }
+}
+
 export const ISA_BRANCH = {
   [ISA_RV32I['beq'].funct3]:  'beq',
   [ISA_RV32I['bne'].funct3]:  'bne',
@@ -503,6 +550,7 @@ export const ISA_BRANCH = {
 export const ISA_MISC_MEM = {
   [ISA_RV32I['fence'].funct3]:      'fence',
   [ISA_Zifencei['fence.i'].funct3]: 'fence.i',
+  [ISA_RV128I['lq'].funct3]:        'lq',
 }
 
 export const ISA_SYSTEM = {
@@ -1118,5 +1166,5 @@ export const CSR = {
 
 // Entire ISA
 export const ISA = Object.assign({}, 
-  ISA_RV32I, ISA_RV64I, 
+  ISA_RV32I, ISA_RV64I, ISA_RV128I, 
   ISA_Zifencei, ISA_Zicsr, ISA_M, ISA_A, ISA_F, ISA_D, ISA_Q);
