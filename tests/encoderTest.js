@@ -107,7 +107,7 @@ function enc_rv64i_op32_addw() {
 }
 
 // OP-IMM
-function enc_rv64i_oppimm_srai_shamt43() {
+function enc_rv64i_opimm_srai_shamt43() {
     let inst = new Instruction('srai x7, x1, 43');
     assertEq(inst.bin, '01000010101100001101001110010011');
     assertEq(inst.isa, 'RV64I');
@@ -125,6 +125,46 @@ function enc_rv64i_opimm32_slliw() {
     let inst = new Instruction('slliw x4, x8, 21');
     assertEq(inst.hex, '0154121b');
     assertEq(inst.isa, 'RV64I');
+}
+
+/*
+ * RV128I
+ */
+// MISC-MEM
+function enc_rv128i_miscmem_lq() {
+    let inst = new Instruction('lq x10, 12(x8)');
+    let abiInst = new Instruction('lq a0, 12(fp)');
+    assertEq(inst.bin, '00000000110001000010010100001111');
+    assertEq(abiInst.bin, inst.bin);
+}
+
+// OP-64
+function enc_rv128i_op64_subd() {
+    let inst = new Instruction('subd x5, x6, x7');
+    let abiInst = new Instruction('subd t0, t1, t2');
+    assertEq(inst.bin, '01000000011100110000001011111011');
+    assertEq(abiInst.bin, inst.bin);
+}
+
+// OP-IMM
+function enc_rv128i_opimm_srli_shamt101() {
+    let inst = new Instruction('srli x7, x1, 101');
+    assertEq(inst.bin, '00000110010100001101001110010011');
+    assertEq(inst.isa, 'RV128I');
+}
+
+// OP-IMM-64
+function enc_rv128i_opimm64_addid() {
+    let inst = new Instruction('addid x15, x1, -50');
+    let abiInst = new Instruction('addid a5, ra, -50');
+    assertEq(inst.hex, 'fce087db');
+    assertEq(abiInst.hex, inst.hex);
+}
+
+function enc_rv128i_opimm64_sraid() {
+    let inst = new Instruction('sraid x4, x8, 21');
+    assertEq(inst.hex, '4154525b');
+    assertEq(inst.isa, 'RV128I');
 }
 
 /*
@@ -361,9 +401,14 @@ test('Enc - RV32I    - OP        - add', enc_rv32i_op_add);
 test('Enc - RV32I    - MISC-MEM  - fence', enc_rv32i_miscmem_fence);
 test('Enc - RV32I    - SYSTEM    - ecall', enc_rv32i_system_ecall);
 test('Enc - RV64I    - OP-32     - addw', enc_rv64i_op32_addw);
-test('Enc - RV64I    - OP-IMM    - srai - [shamt=43]', enc_rv64i_oppimm_srai_shamt43);
+test('Enc - RV64I    - OP-IMM    - srai - [shamt=43]', enc_rv64i_opimm_srai_shamt43);
 test('Enc - RV64I    - OP-IMM-32 - addiw', enc_rv64i_opimm32_addiw);
 test('Enc - RV64I    - OP-IMM-32 - slliw', enc_rv64i_opimm32_slliw);
+test('Enc - RV128I   - MISC-MEM  - lq', enc_rv128i_miscmem_lq);
+test('Enc - RV128I   - OP-64     - subd', enc_rv128i_op64_subd);
+test('Enc - RV128I   - OP-IMM    - srli - [shamt=101]', enc_rv128i_opimm_srli_shamt101);
+test('Enc - RV128I   - OP-IMM-64 - addid', enc_rv128i_opimm64_addid);
+test('Enc - RV128I   - OP-IMM-64 - sraid', enc_rv128i_opimm64_sraid);
 test('Enc - Zifencei - MISC-MEM  - fence.i', enc_zifencei_miscmem_fencei);
 test('Enc - Zicsr    - SYSTEM    - csrrw', enc_zicsr_system_csrrw);
 test('Enc - Zicsr    - SYSTEM    - csrrci', enc_zicsr_system_csrrci);

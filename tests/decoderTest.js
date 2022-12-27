@@ -128,6 +128,43 @@ function dec_rv64i_opim32_slliw() {
 }
 
 /*
+ * RV128I
+ */
+// MISC-MEM
+function dec_rv128i_miscmem_lq() {
+    let inst = new Instruction('00000000110001000010010100001111');
+    assertEq(inst.asm, 'lq x10, 12(x8)');
+    assertEq(inst.isa, 'RV128I');
+}
+
+// OP-64
+function dec_rv128i_op64_subd() {
+    let inst = new Instruction('01000000011100110000001011111011');
+    assertEq(inst.asm, 'subd x5, x6, x7');
+    assertEq(inst.isa, 'RV128I');
+}
+
+// OP-IMM
+function dec_rv128i_opimm_srli_shamt101() {
+    let inst = new Instruction('00000110010100001101001110010011');
+    assertEq(inst.asm, 'srli x7, x1, 101');
+    assertEq(inst.isa, 'RV128I');
+}
+
+// OP-IMM-64
+function dec_rv128i_opimm64_addid() {
+    let inst = new Instruction('fce087db');
+    assertEq(inst.asm, 'addid x15, x1, -50');
+    assertEq(inst.isa, 'RV128I');
+}
+
+function dec_rv128i_opimm64_sraid() {
+    let inst = new Instruction('4154525b');
+    assertEq(inst.asm, 'sraid x4, x8, 21');
+    assertEq(inst.isa, 'RV128I');
+}
+
+/*
  * Zifencei
  */
 // MISC-MEM
@@ -389,6 +426,11 @@ test('Dec - RV64I    - OP-32     - addw', dec_rv64i_op32_addw);
 test('Dec - RV64I    - OP-IMM    - srai - [shamt=43]', dec_rv64i_opimm_srai_shamt43);
 test('Dec - RV64I    - OP-IMM-32 - addiw', dec_rv64i_opimm32_addiw);
 test('Dec - RV64I    - OP-IMM-32 - slliw', dec_rv64i_opim32_slliw);
+test('Dec - RV128I   - MISC-MEM  - lq', dec_rv128i_miscmem_lq);
+test('Dec - RV128I   - OP-64     - subd', dec_rv128i_op64_subd);
+test('Dec - RV128I   - OP-IMM    - srli - [shamt=101]', dec_rv128i_opimm_srli_shamt101);
+test('Dec - RV128I   - OP-IMM-64 - addid', dec_rv128i_opimm64_addid);
+test('Dec - RV128I   - OP-IMM-64 - sraid', dec_rv128i_opimm64_sraid);
 test('Dec - Zifencei - MISC-MEM  - fence.i', dec_zifencei_miscmem_fencei);
 test('Dec - Zicsr    - SYSTEM    - csrrs', dec_zicsr_system_csrrs);
 test('Dec - Zicsr    - SYSTEM    - csrrwi', dec_zicsr_system_csrrwi);
