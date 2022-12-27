@@ -26,6 +26,7 @@ If you'd like to contribute, here are the main features we'd like to add:
 
 - [x] Support for RV32I instruction set
 - [x] Support for RV64I instruction set
+- [x] Support for RV128I instruction set
 - [ ] Support for rest of GC extensions
     - [x] Zifencei instruction set
     - [x] Zicsr instruction set
