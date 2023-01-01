@@ -184,18 +184,22 @@ function renderConversion(inst, abi=false) {
   // Display binary instruction
   let idx = 0;
   let binaryData = "";
+  let bitElements = document.getElementsByClassName('binary-bit');
   inst.binFrags.forEach(frag => {
     let field = frag.field.match(/^[a-z0-9]+/);
     let color = fieldColorMap[field];
 
     [...frag.bits].forEach(bit => {
-      let bitElm = document.getElementsByClassName('binary-bit')[idx];
+      let bitElm = bitElements[idx];
       bitElm.innerText = bit;
       binaryData += bit;
       bitElm.style.color = `var(${color})`;
       idx++;
     });
   });
+  for (; idx < bitElements.length; idx++) {
+    bitElements[idx].innerText = '';
+  }
 
   // Copy button function
   let copyBtn = {
