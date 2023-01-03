@@ -60,6 +60,7 @@ export class Instruction {
   
   /* Private members */
   #config;
+  #xlens;
 
   /**
    * Creates an instruction represented in multiple formats
@@ -106,7 +107,7 @@ export class Instruction {
   // Decode instruction from binary to assembly
   #decodeAsm() {
     // Create a Decoder for the instruction
-    let decoder = new Decoder(this.bin, this.#config);
+    let decoder = new Decoder(this.bin, this.#config, this.#xlens);
 
     // Get assembly representation
     this.asm = decoder.asm;
@@ -127,6 +128,9 @@ export class Instruction {
 
     // Get binary representation
     this.bin = encoder.bin;
+
+    // Get instruction xlen
+    this.#xlens = encoder.xlens;
   }
 
 }
