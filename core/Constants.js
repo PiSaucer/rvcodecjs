@@ -15,8 +15,9 @@ export const BASE = {
 
 // Width of an integer register
 export const XLEN = {
-  rv32: 32,
-  rv64: 64
+  rv32:  32,
+  rv64:  64,
+  rv128: 128,
 }
 
 // Width of a floating-point register
@@ -68,9 +69,12 @@ export const FIELDS = {
   i_imm_11_0: { pos: [31, 12], name: 'imm[11:0]' },
 
   // I-type: shift instructions
+  i_shtyp_11_7: { pos: [31, 5], name: 'shtyp[11:7]'},
   i_shtyp_11_6: { pos: [31, 6], name: 'shtyp[11:6]'},
   i_shtyp_11_5: { pos: [31, 7], name: 'shtyp[11:5]'},
   i_shtyp:      { pos: [30, 1], name: 'shtyp' },
+  i_shamt_6:    { pos: [26, 1], name: 'shamt[6]' }, 
+  i_shamt_6_0:  { pos: [26, 7], name: 'shamt[6:0]' }, 
   i_shamt_5:    { pos: [25, 1], name: 'shamt[5]' }, 
   i_shamt_5_0:  { pos: [25, 6], name: 'shamt[5:0]' },
   i_shamt:      { pos: [24, 5], name: 'shamt[4:0]' },
@@ -131,10 +135,12 @@ export const OPCODE = {
   NMSUB:    '1001011',
   NMADD:    '1001111',
   OP_FP:    '1010011',
+  OP_IMM_64:'1011011',
   BRANCH:   '1100011',
   JALR:     '1100111',
   JAL:      '1101111',
   SYSTEM:   '1110011',
+  OP_64:    '1111011',
 }
 
 
@@ -216,6 +222,26 @@ export const ISA_RV64I = {
   sd:     { isa: 'RV64I', fmt: 'S-type', funct3: '011', opcode: OPCODE.STORE },
 }
 
+// RV6128I instruction set
+export const ISA_RV128I = {
+  addid:  { isa: 'RV128I', fmt: 'I-type', funct3: '000', opcode: OPCODE.OP_IMM_64 },
+
+  sllid:  { isa: 'RV128I', fmt: 'I-type', shtyp: '0', funct3: '001', opcode: OPCODE.OP_IMM_64 },
+  srlid:  { isa: 'RV128I', fmt: 'I-type', shtyp: '0', funct3: '101', opcode: OPCODE.OP_IMM_64 },
+  sraid:  { isa: 'RV128I', fmt: 'I-type', shtyp: '1', funct3: '101', opcode: OPCODE.OP_IMM_64 },
+  
+  addd:   { isa: 'RV128I', fmt: 'R-type', funct7: '0000000', funct3: '000', opcode: OPCODE.OP_64 },
+  subd:   { isa: 'RV128I', fmt: 'R-type', funct7: '0100000', funct3: '000', opcode: OPCODE.OP_64 },
+  slld:   { isa: 'RV128I', fmt: 'R-type', funct7: '0000000', funct3: '001', opcode: OPCODE.OP_64 },
+  srld:   { isa: 'RV128I', fmt: 'R-type', funct7: '0000000', funct3: '101', opcode: OPCODE.OP_64 },
+  srad:   { isa: 'RV128I', fmt: 'R-type', funct7: '0100000', funct3: '101', opcode: OPCODE.OP_64 },
+
+  lq:     { isa: 'RV128I', fmt: 'I-type', funct3: '010', opcode: OPCODE.MISC_MEM },
+  ldu:    { isa: 'RV128I', fmt: 'I-type', funct3: '111', opcode: OPCODE.LOAD },
+
+  sq:     { isa: 'RV128I', fmt: 'S-type', funct3: '100', opcode: OPCODE.STORE },
+}
+
 // Zifencei instruction set
 export const ISA_Zifencei = {
   'fence.i':  { isa: 'Zifencei', fmt: 'I-type', funct3: '001', opcode: OPCODE.MISC_MEM },
@@ -247,6 +273,12 @@ export const ISA_M = {
   divuw:  { isa: 'RV64M', fmt: 'R-type', funct7: '0000001', funct3: '101', opcode: OPCODE.OP_32 },
   remw:   { isa: 'RV64M', fmt: 'R-type', funct7: '0000001', funct3: '110', opcode: OPCODE.OP_32 },
   remuw:  { isa: 'RV64M', fmt: 'R-type', funct7: '0000001', funct3: '111', opcode: OPCODE.OP_32 },
+
+  muld:   { isa: 'RV128M', fmt: 'R-type', funct7: '0000001', funct3: '000', opcode: OPCODE.OP_64 },
+  divd:   { isa: 'RV128M', fmt: 'R-type', funct7: '0000001', funct3: '100', opcode: OPCODE.OP_64 },
+  divud:  { isa: 'RV128M', fmt: 'R-type', funct7: '0000001', funct3: '101', opcode: OPCODE.OP_64 },
+  remd:   { isa: 'RV128M', fmt: 'R-type', funct7: '0000001', funct3: '110', opcode: OPCODE.OP_64 },
+  remud:  { isa: 'RV128M', fmt: 'R-type', funct7: '0000001', funct3: '111', opcode: OPCODE.OP_64 },
 }
 
 // A instruction set
@@ -274,6 +306,18 @@ export const ISA_A = {
   'amomax.d':  { isa: 'RV64A', fmt: 'R-type', funct5: '10100', funct3: '011', opcode: OPCODE.AMO },
   'amominu.d': { isa: 'RV64A', fmt: 'R-type', funct5: '11000', funct3: '011', opcode: OPCODE.AMO },
   'amomaxu.d': { isa: 'RV64A', fmt: 'R-type', funct5: '11100', funct3: '011', opcode: OPCODE.AMO },
+
+  'lr.q':      { isa: 'RV128A', fmt: 'R-type', funct5: '00010', funct3: '100', opcode: OPCODE.AMO },
+  'sc.q':      { isa: 'RV128A', fmt: 'R-type', funct5: '00011', funct3: '100', opcode: OPCODE.AMO },
+  'amoswap.q': { isa: 'RV128A', fmt: 'R-type', funct5: '00001', funct3: '100', opcode: OPCODE.AMO },
+  'amoadd.q':  { isa: 'RV128A', fmt: 'R-type', funct5: '00000', funct3: '100', opcode: OPCODE.AMO },
+  'amoxor.q':  { isa: 'RV128A', fmt: 'R-type', funct5: '00100', funct3: '100', opcode: OPCODE.AMO },
+  'amoand.q':  { isa: 'RV128A', fmt: 'R-type', funct5: '01100', funct3: '100', opcode: OPCODE.AMO },
+  'amoor.q':   { isa: 'RV128A', fmt: 'R-type', funct5: '01000', funct3: '100', opcode: OPCODE.AMO },
+  'amomin.q':  { isa: 'RV128A', fmt: 'R-type', funct5: '10000', funct3: '100', opcode: OPCODE.AMO },
+  'amomax.q':  { isa: 'RV128A', fmt: 'R-type', funct5: '10100', funct3: '100', opcode: OPCODE.AMO },
+  'amominu.q': { isa: 'RV128A', fmt: 'R-type', funct5: '11000', funct3: '100', opcode: OPCODE.AMO },
+  'amomaxu.q': { isa: 'RV128A', fmt: 'R-type', funct5: '11100', funct3: '100', opcode: OPCODE.AMO },
 }
 
 // F instruction set
@@ -316,7 +360,12 @@ export const ISA_F = {
   'fcvt.l.s':  { isa: 'RV64F', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.S, rs2: '00010', opcode: OPCODE.OP_FP },
   'fcvt.lu.s': { isa: 'RV64F', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.S, rs2: '00011', opcode: OPCODE.OP_FP },
   'fcvt.s.l':  { isa: 'RV64F', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.S, rs2: '00010', opcode: OPCODE.OP_FP },
-  'fcvt.s.lu': { isa: 'RV64F', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.S, rs2: '00011', opcode: OPCODE.OP_FP },  
+  'fcvt.s.lu': { isa: 'RV64F', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.S, rs2: '00011', opcode: OPCODE.OP_FP },
+
+  'fcvt.t.s':  { isa: 'RV128F', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.S, rs2: '00100', opcode: OPCODE.OP_FP },
+  'fcvt.tu.s': { isa: 'RV128F', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.S, rs2: '00101', opcode: OPCODE.OP_FP },
+  'fcvt.s.t':  { isa: 'RV128F', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.S, rs2: '00100', opcode: OPCODE.OP_FP },
+  'fcvt.s.tu': { isa: 'RV128F', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.S, rs2: '00101', opcode: OPCODE.OP_FP },
 }
 
 // D instruction set
@@ -362,7 +411,12 @@ export const ISA_D = {
   'fcvt.l.d':  { isa: 'RV64D', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.D, rs2: '00010', opcode: OPCODE.OP_FP },
   'fcvt.lu.d': { isa: 'RV64D', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.D, rs2: '00011', opcode: OPCODE.OP_FP },
   'fcvt.d.l':  { isa: 'RV64D', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.D, rs2: '00010', opcode: OPCODE.OP_FP },
-  'fcvt.d.lu': { isa: 'RV64D', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.D, rs2: '00011', opcode: OPCODE.OP_FP },  
+  'fcvt.d.lu': { isa: 'RV64D', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.D, rs2: '00011', opcode: OPCODE.OP_FP },
+
+  'fcvt.t.d':  { isa: 'RV128D', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.D, rs2: '00100', opcode: OPCODE.OP_FP },
+  'fcvt.tu.d': { isa: 'RV128D', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.D, rs2: '00101', opcode: OPCODE.OP_FP },
+  'fcvt.d.t':  { isa: 'RV128D', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.D, rs2: '00100', opcode: OPCODE.OP_FP },
+  'fcvt.d.tu': { isa: 'RV128D', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.D, rs2: '00101', opcode: OPCODE.OP_FP },
 }
 
 // Q instruction set
@@ -407,7 +461,15 @@ export const ISA_Q = {
   'fcvt.l.q':  { isa: 'RV64Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00010', opcode: OPCODE.OP_FP },
   'fcvt.lu.q': { isa: 'RV64Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00011', opcode: OPCODE.OP_FP },
   'fcvt.q.l':  { isa: 'RV64Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00010', opcode: OPCODE.OP_FP },
-  'fcvt.q.lu': { isa: 'RV64Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00011', opcode: OPCODE.OP_FP },  
+  'fcvt.q.lu': { isa: 'RV64Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00011', opcode: OPCODE.OP_FP },
+
+  'fmv.x.q':   { isa: 'RV128Q', fmt: 'R-type', funct5: '11100', fp_fmt: FP_FMT.Q, rs2: '00000', funct3: '000', opcode: OPCODE.OP_FP },
+  'fmv.q.x':   { isa: 'RV128Q', fmt: 'R-type', funct5: '11110', fp_fmt: FP_FMT.Q, rs2: '00000', funct3: '000', opcode: OPCODE.OP_FP },
+
+  'fcvt.t.q':  { isa: 'RV128Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00100', opcode: OPCODE.OP_FP },
+  'fcvt.tu.q': { isa: 'RV128Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00101', opcode: OPCODE.OP_FP },
+  'fcvt.q.t':  { isa: 'RV128Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00100', opcode: OPCODE.OP_FP },
+  'fcvt.q.tu': { isa: 'RV128Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00101', opcode: OPCODE.OP_FP },  
 }
 
 // ISA per opcode
@@ -449,6 +511,21 @@ export const ISA_OP_32 = {
   [ISA_M['remuw'].funct7 + ISA_M['remuw'].funct3]:  'remuw',
 }
 
+export const ISA_OP_64 = {
+  // RV128I
+  [ISA_RV128I['addd'].funct7 + ISA_RV128I['addd'].funct3]: 'addd',
+  [ISA_RV128I['subd'].funct7 + ISA_RV128I['subd'].funct3]: 'subd',
+  [ISA_RV128I['slld'].funct7 + ISA_RV128I['slld'].funct3]: 'slld',
+  [ISA_RV128I['srld'].funct7 + ISA_RV128I['srld'].funct3]: 'srld',
+  [ISA_RV128I['srad'].funct7 + ISA_RV128I['srad'].funct3]: 'srad',
+  // RV128M
+  [ISA_M['muld'].funct7  + ISA_M['muld'].funct3]:   'muld',
+  [ISA_M['divd'].funct7  + ISA_M['divd'].funct3]:   'divd',
+  [ISA_M['divud'].funct7 + ISA_M['divud'].funct3]:  'divud',
+  [ISA_M['remd'].funct7  + ISA_M['remd'].funct3]:   'remd',
+  [ISA_M['remud'].funct7 + ISA_M['remud'].funct3]:  'remud',
+}
+
 export const ISA_LOAD = {
   [ISA_RV32I['lb'].funct3]:   'lb',
   [ISA_RV32I['lh'].funct3]:   'lh',
@@ -457,13 +534,15 @@ export const ISA_LOAD = {
   [ISA_RV32I['lbu'].funct3]:  'lbu',
   [ISA_RV32I['lhu'].funct3]:  'lhu',
   [ISA_RV64I['lwu'].funct3]:  'lwu',
+  [ISA_RV128I['ldu'].funct3]: 'ldu',
 }
 
 export const ISA_STORE = {
-  [ISA_RV32I['sb'].funct3]: 'sb',
-  [ISA_RV32I['sh'].funct3]: 'sh',
-  [ISA_RV32I['sw'].funct3]: 'sw',
-  [ISA_RV64I['sd'].funct3]: 'sd',
+  [ISA_RV32I['sb'].funct3]:   'sb',
+  [ISA_RV32I['sh'].funct3]:   'sh',
+  [ISA_RV32I['sw'].funct3]:   'sw',
+  [ISA_RV64I['sd'].funct3]:   'sd',
+  [ISA_RV128I['sq'].funct3]:  'sq',
 }
 
 export const ISA_OP_IMM = {
@@ -491,6 +570,16 @@ export const ISA_OP_IMM_32 = {
   }
 }
 
+export const ISA_OP_IMM_64 = {
+  [ISA_RV128I['addid'].funct3]:   'addid',
+
+  [ISA_RV128I['sllid'].funct3]:   'sllid',
+  [ISA_RV128I['srlid'].funct3]: {
+    [ISA_RV128I['srlid'].shtyp]:  'srlid',
+    [ISA_RV128I['sraid'].shtyp]:  'sraid',
+  }
+}
+
 export const ISA_BRANCH = {
   [ISA_RV32I['beq'].funct3]:  'beq',
   [ISA_RV32I['bne'].funct3]:  'bne',
@@ -503,6 +592,7 @@ export const ISA_BRANCH = {
 export const ISA_MISC_MEM = {
   [ISA_RV32I['fence'].funct3]:      'fence',
   [ISA_Zifencei['fence.i'].funct3]: 'fence.i',
+  [ISA_RV128I['lq'].funct3]:        'lq',
 }
 
 export const ISA_SYSTEM = {
@@ -542,6 +632,18 @@ export const ISA_AMO = {
   [ISA_A['amomax.d'].funct5    + ISA_A['amomax.d'].funct3]:  'amomax.d',
   [ISA_A['amominu.d'].funct5   + ISA_A['amominu.d'].funct3]: 'amominu.d',
   [ISA_A['amomaxu.d'].funct5   + ISA_A['amomaxu.d'].funct3]: 'amomaxu.d',
+
+  [ISA_A['lr.q'].funct5        + ISA_A['lr.q'].funct3]:      'lr.q',
+  [ISA_A['sc.q'].funct5        + ISA_A['sc.q'].funct3]:      'sc.q',
+  [ISA_A['amoswap.q'].funct5   + ISA_A['amoswap.q'].funct3]: 'amoswap.q',
+  [ISA_A['amoadd.q'].funct5    + ISA_A['amoadd.q'].funct3]:  'amoadd.q',
+  [ISA_A['amoxor.q'].funct5    + ISA_A['amoxor.q'].funct3]:  'amoxor.q',
+  [ISA_A['amoand.q'].funct5    + ISA_A['amoand.q'].funct3]:  'amoand.q',
+  [ISA_A['amoor.q'].funct5     + ISA_A['amoor.q'].funct3]:   'amoor.q',
+  [ISA_A['amomin.q'].funct5    + ISA_A['amomin.q'].funct3]:  'amomin.q',
+  [ISA_A['amomax.q'].funct5    + ISA_A['amomax.q'].funct3]:  'amomax.q',
+  [ISA_A['amominu.q'].funct5   + ISA_A['amominu.q'].funct3]: 'amominu.q',
+  [ISA_A['amomaxu.q'].funct5   + ISA_A['amomaxu.q'].funct3]: 'amomaxu.q',
 }
 
 export const ISA_LOAD_FP = {
@@ -609,6 +711,7 @@ export const ISA_OP_FP = {
   [ISA_F['fmv.w.x'].funct5]: {
     [FP_FMT.S]: 'fmv.w.x',
     [FP_FMT.D]: 'fmv.d.x',
+    [FP_FMT.Q]: 'fmv.q.x',
   },
   [ISA_F['fclass.s'].funct5]: {
     [FP_FMT.S]: {
@@ -621,6 +724,7 @@ export const ISA_OP_FP = {
     },
     [FP_FMT.Q]: {
       [ISA_Q['fclass.q'].funct3]:   'fclass.q',
+      [ISA_Q['fmv.x.q'].funct3]:    'fmv.x.q',
     },
   },
   [ISA_F['fsgnj.s'].funct5]: {
@@ -677,18 +781,24 @@ export const ISA_OP_FP = {
       [ISA_F['fcvt.wu.s'].rs2]:  'fcvt.wu.s',
       [ISA_F['fcvt.l.s'].rs2]:   'fcvt.l.s',
       [ISA_F['fcvt.lu.s'].rs2]:  'fcvt.lu.s',
+      [ISA_F['fcvt.t.s'].rs2]:   'fcvt.t.s',
+      [ISA_F['fcvt.tu.s'].rs2]:  'fcvt.tu.s',
     },
     [FP_FMT.D]: {
       [ISA_D['fcvt.w.d'].rs2]:   'fcvt.w.d',
       [ISA_D['fcvt.wu.d'].rs2]:  'fcvt.wu.d',
       [ISA_D['fcvt.l.d'].rs2]:   'fcvt.l.d',
       [ISA_D['fcvt.lu.d'].rs2]:  'fcvt.lu.d',
+      [ISA_D['fcvt.t.d'].rs2]:   'fcvt.t.d',
+      [ISA_D['fcvt.tu.d'].rs2]:  'fcvt.tu.d',
     },
     [FP_FMT.Q]: {
       [ISA_Q['fcvt.w.q'].rs2]:   'fcvt.w.q',
       [ISA_Q['fcvt.wu.q'].rs2]:  'fcvt.wu.q',
       [ISA_Q['fcvt.l.q'].rs2]:   'fcvt.l.q',
       [ISA_Q['fcvt.lu.q'].rs2]:  'fcvt.lu.q',
+      [ISA_Q['fcvt.t.q'].rs2]:   'fcvt.t.q',
+      [ISA_Q['fcvt.tu.q'].rs2]:  'fcvt.tu.q',
     },
   },
   [ISA_F['fcvt.s.w'].funct5]: {
@@ -697,18 +807,24 @@ export const ISA_OP_FP = {
       [ISA_F['fcvt.s.wu'].rs2]:  'fcvt.s.wu',
       [ISA_F['fcvt.s.l'].rs2]:   'fcvt.s.l',
       [ISA_F['fcvt.s.lu'].rs2]:  'fcvt.s.lu',
+      [ISA_F['fcvt.s.t'].rs2]:   'fcvt.s.t',
+      [ISA_F['fcvt.s.tu'].rs2]:  'fcvt.s.tu',
     },
     [FP_FMT.D]: {
       [ISA_D['fcvt.d.w'].rs2]:   'fcvt.d.w',
       [ISA_D['fcvt.d.wu'].rs2]:  'fcvt.d.wu',
       [ISA_D['fcvt.d.l'].rs2]:   'fcvt.d.l',
       [ISA_D['fcvt.d.lu'].rs2]:  'fcvt.d.lu',
+      [ISA_D['fcvt.d.t'].rs2]:   'fcvt.d.t',
+      [ISA_D['fcvt.d.tu'].rs2]:  'fcvt.d.tu',
     },
     [FP_FMT.Q]: {
       [ISA_Q['fcvt.q.w'].rs2]:   'fcvt.q.w',
       [ISA_Q['fcvt.q.wu'].rs2]:  'fcvt.q.wu',
       [ISA_Q['fcvt.q.l'].rs2]:   'fcvt.q.l',
       [ISA_Q['fcvt.q.lu'].rs2]:  'fcvt.q.lu',
+      [ISA_Q['fcvt.q.t'].rs2]:   'fcvt.q.t',
+      [ISA_Q['fcvt.q.tu'].rs2]:  'fcvt.q.tu',
     },
   },
   [ISA_D['fcvt.s.d'].funct5]: {
@@ -1118,5 +1234,5 @@ export const CSR = {
 
 // Entire ISA
 export const ISA = Object.assign({}, 
-  ISA_RV32I, ISA_RV64I, 
+  ISA_RV32I, ISA_RV64I, ISA_RV128I, 
   ISA_Zifencei, ISA_Zicsr, ISA_M, ISA_A, ISA_F, ISA_D, ISA_Q);

@@ -107,7 +107,7 @@ function enc_rv64i_op32_addw() {
 }
 
 // OP-IMM
-function enc_rv64i_oppimm_srai_shamt43() {
+function enc_rv64i_opimm_srai_shamt43() {
     let inst = new Instruction('srai x7, x1, 43');
     assertEq(inst.bin, '01000010101100001101001110010011');
     assertEq(inst.isa, 'RV64I');
@@ -125,6 +125,46 @@ function enc_rv64i_opimm32_slliw() {
     let inst = new Instruction('slliw x4, x8, 21');
     assertEq(inst.hex, '0154121b');
     assertEq(inst.isa, 'RV64I');
+}
+
+/*
+ * RV128I
+ */
+// MISC-MEM
+function enc_rv128i_miscmem_lq() {
+    let inst = new Instruction('lq x10, 12(x8)');
+    let abiInst = new Instruction('lq a0, 12(fp)');
+    assertEq(inst.bin, '00000000110001000010010100001111');
+    assertEq(abiInst.bin, inst.bin);
+}
+
+// OP-64
+function enc_rv128i_op64_subd() {
+    let inst = new Instruction('subd x5, x6, x7');
+    let abiInst = new Instruction('subd t0, t1, t2');
+    assertEq(inst.bin, '01000000011100110000001011111011');
+    assertEq(abiInst.bin, inst.bin);
+}
+
+// OP-IMM
+function enc_rv128i_opimm_srli_shamt101() {
+    let inst = new Instruction('srli x7, x1, 101');
+    assertEq(inst.bin, '00000110010100001101001110010011');
+    assertEq(inst.isa, 'RV128I');
+}
+
+// OP-IMM-64
+function enc_rv128i_opimm64_addid() {
+    let inst = new Instruction('addid x15, x1, -50');
+    let abiInst = new Instruction('addid a5, ra, -50');
+    assertEq(inst.hex, 'fce087db');
+    assertEq(abiInst.hex, inst.hex);
+}
+
+function enc_rv128i_opimm64_sraid() {
+    let inst = new Instruction('sraid x4, x8, 21');
+    assertEq(inst.hex, '4154525b');
+    assertEq(inst.isa, 'RV128I');
 }
 
 /*
@@ -171,6 +211,14 @@ function enc_rv64m_op32_remw() {
     assertEq(abiInst.bin, inst.bin);
 }
 
+// OP-64
+function enc_rv128m_op64_divud() {
+    let inst = new Instruction('remd x7, x19, x1');
+    let abiInst = new Instruction('remd t2, s3, ra');
+    assertEq(inst.bin, '00000010000110011110001111111011');
+    assertEq(abiInst.bin, inst.bin);
+}
+
 /*
  * A extension
  */
@@ -188,19 +236,26 @@ function enc_rv64a_amo_amoswapd() {
     assertEq(abiInst.bin, inst.bin);
 }
 
+function enc_rv128a_amo_amoorq() {
+    let inst = new Instruction('amoor.q x29, x28, (x10)');
+    let abiInst = new Instruction('amoor.q t4, t3, (a0)');
+    assertEq(inst.bin, '01000001110001010100111010101111');
+    assertEq(abiInst.bin, inst.bin);
+}
+
 /*
  * F extension
  */
 function enc_rv32f_loadfp_flw() {
     let inst = new Instruction('flw f7, 100(x8)');
-    let instAbi = new Instruction('flw f7, 100(s0)');
+    let instAbi = new Instruction('flw ft7, 100(s0)');
     assertEq(inst.bin, '00000110010001000010001110000111');
     assertEq(instAbi.bin, inst.bin);
 }
 
 function enc_rv32f_storefp_fsw() {
     let inst = new Instruction('fsw f14, 100(x9)');
-    let instAbi = new Instruction('fsw f14, 100(s1)');
+    let instAbi = new Instruction('fsw fa4, 100(s1)');
     assertEq(inst.bin, '00000110111001001010001000100111');
     assertEq(instAbi.bin, inst.bin);
 }
@@ -227,22 +282,29 @@ function enc_rv32f_opfp_fsgnjxs() {
 
 function enc_rv32f_opfp_flts() {
     let inst = new Instruction('flt.s x6, f4, f5');
-    let instAbi = new Instruction('flt.s t1, f4, f5');
+    let instAbi = new Instruction('flt.s t1, ft4, ft5');
     assertEq(inst.bin, '10100000010100100001001101010011');
     assertEq(instAbi.bin, inst.bin);
 }
 
 function enc_rv32f_opfp_fmvwx() {
     let inst = new Instruction('fmv.w.x f11, x10');
-    let instAbi = new Instruction('fmv.w.x f11, a0');
+    let instAbi = new Instruction('fmv.w.x fa1, a0');
     assertEq(inst.bin, '11110000000001010000010111010011');
     assertEq(instAbi.bin, inst.bin);
 }
 
 function enc_rv64f_opfp_fcvtlus() {
     let inst = new Instruction('fcvt.lu.s x14, f1');
-    let instAbi = new Instruction('fcvt.lu.s a4, f1');
+    let instAbi = new Instruction('fcvt.lu.s a4, ft1');
     assertEq(inst.bin, '11000000001100001111011101010011');
+    assertEq(instAbi.bin, inst.bin);
+}
+
+function enc_rv128f_opfp_fcvtst() {
+    let inst = new Instruction('fcvt.s.t f2, x15');
+    let instAbi = new Instruction('fcvt.s.t ft2, a5');
+    assertEq(inst.bin, '11010000010001111111000101010011');
     assertEq(instAbi.bin, inst.bin);
 }
 
@@ -258,7 +320,7 @@ function enc_rv32d_loadfp_fld() {
 
 function enc_rv32d_storefp_fsd() {
     let inst = new Instruction('fsd f13, 99(x8)');
-    let instAbi = new Instruction('fsd f13, 99(s0)');
+    let instAbi = new Instruction('fsd fa3, 99(s0)');
     assertEq(inst.bin, '00000110110101000011000110100111');
     assertEq(instAbi.bin, inst.bin);
 }
@@ -280,14 +342,14 @@ function enc_rv32d_opfp_fsgnjnd() {
 
 function enc_rv32d_opfp_feqd() {
     let inst = new Instruction('feq.d x7, f5, f4');
-    let instAbi = new Instruction('feq.d t2, f5, f4');
+    let instAbi = new Instruction('feq.d t2, ft5, ft4');
     assertEq(inst.bin, '10100010010000101010001111010011');
     assertEq(instAbi.bin, inst.bin);
 }
 
 function enc_rv32d_opfp_fcvtdw() {
     let inst = new Instruction('fcvt.d.w f3, x20');
-    let instAbi = new Instruction('fcvt.d.w f3, s4');
+    let instAbi = new Instruction('fcvt.d.w ft3, s4');
     assertEq(inst.bin, '11010010000010100111000111010011');
     assertEq(instAbi.bin, inst.bin);
 }
@@ -296,6 +358,13 @@ function enc_rv64d_opfp_fmvxd() {
     let inst = new Instruction('fmv.x.d x12, f9');
     let instAbi = new Instruction('fmv.x.d a2, f9');
     assertEq(inst.bin, '11100010000001001000011001010011');
+    assertEq(instAbi.bin, inst.bin);
+}
+
+function enc_rv128d_opfp_fcvttud() {
+    let inst = new Instruction('fcvt.tu.d x10, f8');
+    let instAbi = new Instruction('fcvt.tu.d a0, fs0');
+    assertEq(inst.bin, '11000010010101000111010101010011');
     assertEq(instAbi.bin, inst.bin);
 }
 
@@ -348,6 +417,13 @@ function enc_rv32q_opfp_fcvtsq() {
     assertEq(inst.bin, '01000000001101001111001101010011');
 }
 
+function enc_rv128q_opfp_fmvxq() {
+    let inst = new Instruction('fmv.x.q x9, f19');
+    let instAbi = new Instruction('fmv.x.q s1, fs3');
+    assertEq(inst.bin, '11100110000010011000010011010011');
+    assertEq(instAbi.bin, inst.bin);
+}
+
 test('Enc - RV32I    - LUI       - lui', enc_rv32i_lui_lui);
 test('Enc - RV32I    - AUIPC     - auipc', enc_rv32i_auipc_auipc);
 test('Enc - RV32I    - JAL       - jal', enc_rv32i_jal_jal);
@@ -361,16 +437,23 @@ test('Enc - RV32I    - OP        - add', enc_rv32i_op_add);
 test('Enc - RV32I    - MISC-MEM  - fence', enc_rv32i_miscmem_fence);
 test('Enc - RV32I    - SYSTEM    - ecall', enc_rv32i_system_ecall);
 test('Enc - RV64I    - OP-32     - addw', enc_rv64i_op32_addw);
-test('Enc - RV64I    - OP-IMM    - srai - [shamt=43]', enc_rv64i_oppimm_srai_shamt43);
+test('Enc - RV64I    - OP-IMM    - srai - [shamt=43]', enc_rv64i_opimm_srai_shamt43);
 test('Enc - RV64I    - OP-IMM-32 - addiw', enc_rv64i_opimm32_addiw);
 test('Enc - RV64I    - OP-IMM-32 - slliw', enc_rv64i_opimm32_slliw);
+test('Enc - RV128I   - MISC-MEM  - lq', enc_rv128i_miscmem_lq);
+test('Enc - RV128I   - OP-64     - subd', enc_rv128i_op64_subd);
+test('Enc - RV128I   - OP-IMM    - srli - [shamt=101]', enc_rv128i_opimm_srli_shamt101);
+test('Enc - RV128I   - OP-IMM-64 - addid', enc_rv128i_opimm64_addid);
+test('Enc - RV128I   - OP-IMM-64 - sraid', enc_rv128i_opimm64_sraid);
 test('Enc - Zifencei - MISC-MEM  - fence.i', enc_zifencei_miscmem_fencei);
 test('Enc - Zicsr    - SYSTEM    - csrrw', enc_zicsr_system_csrrw);
 test('Enc - Zicsr    - SYSTEM    - csrrci', enc_zicsr_system_csrrci);
 test('Enc - RV32M    - OP        - mulhsu', enc_rv32m_op_mulhsu);
 test('Enc - RV64M    - OP-32     - remw', enc_rv64m_op32_remw);
+test('Enc - RV128M   - OP-64     - divud', enc_rv128m_op64_divud);
 test('Enc - RV32A    - AMO       - lr.w', enc_rv32a_amo_lrw);
 test('Enc - RV64A    - AMO       - amoswap.d', enc_rv64a_amo_amoswapd);
+test('Enc - RV128A   - AMO       - amoor.q', enc_rv128a_amo_amoorq);
 test('Enc - RV32F    - LOAD-FP   - flw', enc_rv32f_loadfp_flw);
 test('Enc - RV32F    - STORE-FP  - fsw', enc_rv32f_storefp_fsw);
 test('Enc - RV32F    - MADD      - fmadd.s', enc_rv32f_madd_fmadds);
@@ -380,6 +463,7 @@ test('Enc - RV32F    - OP-FP     - fsgnjx.s', enc_rv32f_opfp_fsgnjxs);
 test('Enc - RV32F    - OP-FP     - flt.s', enc_rv32f_opfp_flts);
 test('Enc - RV32F    - OP-FP     - fmv.w.x', enc_rv32f_opfp_fmvwx);
 test('Enc - RV64F    - OP-FP     - fcvt.lu.s', enc_rv64f_opfp_fcvtlus);
+test('Enc - RV128F   - OP-FP     - fcvt.s.t', enc_rv128f_opfp_fcvtst);
 test('Enc - RV32D    - LOAD-FP   - fld', enc_rv32d_loadfp_fld);
 test('Enc - RV32D    - STORE-FP  - fsd', enc_rv32d_storefp_fsd);
 test('Enc - RV32D    - MSUB      - fmsub.d', enc_rv32d_msub_fmsubd);
@@ -387,6 +471,7 @@ test('Enc - RV32D    - OP-FP     - fsub.d', enc_rv32d_opfp_fsubd);
 test('Enc - RV32D    - OP-FP     - fsgnjn.d', enc_rv32d_opfp_fsgnjnd);
 test('Enc - RV32D    - OP-FP     - feq.d', enc_rv32d_opfp_feqd);
 test('Enc - RV64D    - OP-FP     - fcvt.d.w', enc_rv32d_opfp_fcvtdw);
+test('Enc - RV128D   - OP-FP     - fcvt.tu.d', enc_rv128d_opfp_fcvttud);
 test('Enc - RV32D    - OP-FP     - fmv.x.d', enc_rv64d_opfp_fmvxd);
 test('Enc - RV32Q    - LOAD-FP   - flq', enc_rv32q_loadfp_flq);
 test('Enc - RV32Q    - STORE-FP  - fsq', enc_rv32q_storefp_fsq);
@@ -396,6 +481,7 @@ test('Enc - RV32Q    - OP-FP     - fmax.q', enc_rv32q_opfp_fmaxq);
 test('Enc - RV32Q    - OP-FP     - fclass.q', enc_rv32q_opfp_fclassq);
 test('Enc - RV32Q    - OP-FP     - fcvt.q.d', enc_rv32q_opfp_fcvtqd);
 test('Enc - RV32Q    - OP-FP     - fcvt.s.q', enc_rv32q_opfp_fcvtsq);
+test('Enc - RV128Q   - OP-FP     - fmv.x.q', enc_rv128q_opfp_fmvxq);
 
 // Newline
 console.log('');

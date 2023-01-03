@@ -8,8 +8,8 @@
 
 import { BASE,
   FIELDS, OPCODE, REGISTER, FLOAT_REGISTER, CSR,
-  ISA_OP, ISA_OP_32, ISA_LOAD, ISA_STORE, ISA_OP_IMM, ISA_OP_IMM_32, 
-  ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA_AMO, 
+  ISA_OP, ISA_OP_32, ISA_OP_64, ISA_OP_IMM, ISA_OP_IMM_32, ISA_OP_IMM_64, 
+  ISA_LOAD, ISA_STORE, ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA_AMO, 
   ISA_LOAD_FP, ISA_STORE_FP, ISA_OP_FP, 
   ISA_MADD, ISA_MSUB, ISA_NMADD, ISA_NMSUB,
   ISA,
@@ -78,6 +78,7 @@ export class Decoder {
         // R-type
       case OPCODE.OP:
       case OPCODE.OP_32:
+      case OPCODE.OP_64:
         this.#decodeOP();
         break;
       case OPCODE.OP_FP:
@@ -97,6 +98,7 @@ export class Decoder {
         break;
       case OPCODE.OP_IMM:
       case OPCODE.OP_IMM_32:
+      case OPCODE.OP_IMM_64:
         this.#decodeOP_IMM();
         break;
       case OPCODE.MISC_MEM:
@@ -150,8 +152,10 @@ export class Decoder {
     this.isa = this.isa ?? ISA[this.#mne].isa;
     
     // Detect mismatch between ISA and configuration
-    if (this.#config.ISA === COPTS_ISA.RV32I && /^RV64.$/.test(this.isa)) {
+    if (this.#config.ISA === COPTS_ISA.RV32I && /^RV(?:64|128)/.test(this.isa)) {
       throw `Detected ${this.isa} instruction but configuration ISA set to RV32I`;
+    } else if ((this.#config.ISA === COPTS_ISA.RV64I && /^RV128/.test(this.isa))) {
+      throw `Detected ${this.isa} instruction but configuration ISA set to RV64I`;
     }
 
     // Render ASM insturction string (mainly for testing)
@@ -172,8 +176,11 @@ export class Decoder {
 
     // Find instruction - check opcode for RV32I vs RV64I
     let opcodeName;
-    let op_32 = this.#opcode === OPCODE.OP_32;
-    if(op_32) {
+    if (this.#opcode === OPCODE.OP_64) {
+      // RV128I double-word-sized instructions
+      this.#mne = ISA_OP_64[funct7 + funct3];
+      opcodeName = "OP-64";
+    } else if (this.#opcode === OPCODE.OP_32) {
       // RV64I word-sized instructions
       this.#mne = ISA_OP_32[funct7 + funct3];
       opcodeName = "OP-32";
@@ -365,8 +372,13 @@ export class Decoder {
 
     // Find instruction - check opcode for RV32I vs RV64I
     let opcodeName;
-    let op_imm_32 = this.#opcode === OPCODE.OP_IMM_32;
-    if(op_imm_32) {
+    const op_imm_32 = this.#opcode === OPCODE.OP_IMM_32;
+    const op_imm_64 = this.#opcode === OPCODE.OP_IMM_64;
+    if(op_imm_64) {
+      // RV128I double-word-sized instructions
+      this.#mne = ISA_OP_IMM_64[funct3];
+      opcodeName = "OP-IMM-64";
+    } else if(op_imm_32) {
       // RV64I word-sized instructions
       this.#mne = ISA_OP_IMM_32[funct3];
       opcodeName = "OP-IMM-32";
@@ -404,44 +416,79 @@ export class Decoder {
 
     if (shift) {
       const shtyp = fields['shtyp'];
-      const shamt_4_0 = fields['shamt'];
+      const shamt_6 = fields['shamt_6'];
       const shamt_5 = fields['shamt_5'];
+      const shamt_4_0 = fields['shamt'];
+      const shamt_5_0 = shamt_5 + shamt_4_0;
+      const shamt_6_0 = shamt_6 + shamt_5_0;
+      
 
-      const imm_11_6 = '0' + shtyp + '0000';
+      const imm_11_7 = '0' + shtyp + '000';
+      const imm_11_6 = imm_11_7 + '0';
       const imm_11_5 = imm_11_6 + '0';
 
-      // Decode shamt and shtyp
-      // - 5bit (RV32I) or 6bit (RV64I) shamt based on opcode, config, and value
-      let shamt;
-      let shamt_64 = !op_imm_32 && (this.#config.ISA === COPTS_ISA.RV64I || shamt_5 === '1');
-      if (shamt_64) {
-        // Decode 6bit shamt
-        const shamt_5_0 = shamt_5 + shamt_4_0;
-        shamt = decImm(shamt_5_0, false);
+      // Decode shamt
+      const shamt = decImm(shamt_6_0, false);
 
-        // Detect config ISA mismatch
-        if (this.#config.ISA === COPTS_ISA.RV32I) {
-          throw `Detected ${opcodeName} but invalid shamt field for RV32I (out of range): ${shamt}`;
-        }
+      // Determine shamtWidth (5, 6, or 7 bits) based on opcode, ISA, and value
+      // - First, opcode based determination
+      // - Then, ISA and value based determination
+      let shamtWidth;
+      if (op_imm_32) {
+        shamtWidth = 5;
+      } else if (op_imm_64) {
+        shamtWidth = 6;
+        this.isa = 'RV128I';  // Set ISA here to avoid assumed ISA of RV64I below
+      } else if (this.#config.ISA === COPTS_ISA.RV32I || (shamt_6 === '0' && shamt_5 === '0')) {
+        shamtWidth = 5;
+      } else if (this.#config.ISA === COPTS_ISA.RV64I || shamt_6 === '0') {
+        shamtWidth = 6;
+      } else {
+        shamtWidth = 7;
+      }
+
+      // Detect shamt out of range
+      if (shamt >= 32 && shamtWidth === 5) {
+        throw `Invalid shamt field: ${shamt} (out of range for opcode or ISA config)`;
+      } else if (shamt >= 64 && shamtWidth === 6) {
+        throw `Invalid shamt field: ${shamt} (out of range for opcode or ISA config)`;
+      }
+
+      // Create frags for shamt and shtyp
+      if (shamtWidth === 7) {
+        // Create frags for 7bit shamt with shtyp
+        const shamt_6_0 = shamt_6 + shamt_5 + shamt_4_0;
+
+        // Create frags for shamt and shtyp
+        f['imm'] = new Frag(shamt, shamt_6_0, FIELDS.i_shamt_6_0.name);
+        f['shift'] = new Frag(this.#mne, imm_11_7, FIELDS.i_shtyp_11_7.name);
+
+        // Set output ISA to RV64I 
+        this.isa = 'RV128I';
+
+      } else if (shamtWidth === 6) {
+        // Create frags for 6bit shamt with shtyp
+        const shamt_5_0 = shamt_5 + shamt_4_0;
 
         // Create frags for shamt and shtyp
         f['imm'] = new Frag(shamt, shamt_5_0, FIELDS.i_shamt_5_0.name);
         f['shift'] = new Frag(this.#mne, imm_11_6, FIELDS.i_shtyp_11_6.name);
 
         // Set output ISA to RV64I 
-        this.isa = 'RV64I';
+        this.isa = this.isa ?? 'RV64I';
+
       } else {
-        // Decode and frag 5bit shamt and shtyp
-        shamt = decImm(shamt_4_0, false);
+        // Create frags for 5bit shamt with shtyp
         f['imm'] = new Frag(shamt, shamt_4_0, FIELDS.i_shamt.name);
         f['shift'] = new Frag(this.#mne, imm_11_5, FIELDS.i_shtyp_11_5.name);
       }
 
       // Validate upper bits of immediate field to ensure
       //   they match expected value for shift type
-      if((!shamt_64 && imm_11_5 !== imm.substring(0,7))
-          || (shamt_64 && imm_11_6 !== imm.substring(0,6))) {
-        throw `Detected ${opcodeName} shift instruction but invalid shtyp field`;
+      if((shamtWidth === 5 && imm_11_5 !== imm.substring(0,7))
+          || (shamtWidth === 6 && imm_11_6 !== imm.substring(0,6))
+          || (shamtWidth === 7 && imm_11_7 !== imm.substring(0,5))) {
+        throw `Detected ${this.isa} shift immediate instruction but invalid shtyp field`;
       }
 
       // Binary fragments from MSB to LSB
@@ -479,29 +526,54 @@ export class Decoder {
     // Find instruction
     this.#mne = ISA_MISC_MEM[funct3];
     if (this.#mne === undefined) {
-      throw "Detected LOAD instruction but invalid funct3 field";
+      throw "Detected MISC-MEM instruction but invalid funct3 field";
     }
+    // Signals when MISC-MEM used as extended encoding space for load operations
+    let loadExt = this.#mne === 'lq';
 
     // Check registers
-    if (rd !== '00000' || rs1 !== '00000') {
+    if (!loadExt && (rd !== '00000' || rs1 !== '00000')) {
       throw "Registers rd and rs1 should be 0";
     }
 
-    // Create fragments
+    // Create common fragments
     const f = {
       opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
       funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      rd:     new Frag(this.#mne, rd, FIELDS.rd.name),
-      rs1:    new Frag(this.#mne, rs1, FIELDS.rs1.name),
     };
 
-    if (this.#mne === 'fence') {
+    // Create specific fragments
+    if (loadExt) {
+      // Load extension instructions
+
+      // Convert fields to string representations
+      const offset = decImm(imm),
+            base = decReg(rs1),
+            dest = decReg(rd);
+            
+
+      f['imm'] = new Frag(offset, imm, FIELDS.i_imm_11_0.name);
+      f['rs1'] = new Frag(base, rs1, FIELDS.rs1.name, true);
+      f['rd']  = new Frag(dest, rd, FIELDS.rd.name);  
+
+      // Assembly fragments in order of instruction
+      this.asmFrags.push(f['opcode'], f['rd'], f['imm'], f['rs1']);
+
+      // Binary fragments from MSB to LSB
+      this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
+
+    } else if (this.#mne === 'fence') {
+      // FENCE instruction
+
+      // Convert fields to string representations
       let predecessor = decMem(pred);
       let successor = decMem(succ);
 
-      f['fm'] = new Frag(this.#mne, fm, FIELDS.i_fm.name);
-      f['pred'] =  new Frag(predecessor, pred, FIELDS.i_pred.name);
+      f['fm']   = new Frag(this.#mne, fm, FIELDS.i_fm.name);
+      f['pred'] = new Frag(predecessor, pred, FIELDS.i_pred.name);
       f['succ'] = new Frag(successor, succ, FIELDS.i_succ.name);
+      f['rd']  = new Frag(this.#mne, rd, FIELDS.rd.name);
+      f['rs1'] = new Frag(this.#mne, rs1, FIELDS.rs1.name, loadExt);
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode'], f['pred'], f['succ']);
@@ -510,17 +582,19 @@ export class Decoder {
       this.binFrags.push(f['fm'], f['pred'], f['succ'], f['rs1'], f['funct3'],
         f['rd'], f['opcode']);
 
-    } else  {
-      // FENCE.I case
+    } else if (this.#mne === 'fence.i') {
+      // FENCE.I instruction
 
       f['imm'] = new Frag(this.#mne, imm, FIELDS.i_imm_11_0.name);
+      f['rs1'] = new Frag(this.#mne, rs1, FIELDS.rs1.name);
+      f['rd']  = new Frag(this.#mne, rd, FIELDS.rd.name);      
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode']);
 
       // Binary fragments from MSB to LSB
       this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
-    }
+    } 
   }
 
   /**
@@ -906,6 +980,7 @@ function extractIFields(binary) {
     'shtyp': getBits(binary, FIELDS.i_shtyp.pos),
     'shamt': getBits(binary, FIELDS.i_shamt.pos),
     'shamt_5': getBits(binary, FIELDS.i_shamt_5.pos),
+    'shamt_6': getBits(binary, FIELDS.i_shamt_6.pos),
     /* System instructions */
     'funct12': getBits(binary, FIELDS.i_funct12.pos),
     /* Fence insructions */
