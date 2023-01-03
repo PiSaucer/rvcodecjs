@@ -25,22 +25,35 @@ const colors = [
 const fieldColorMap = {
   /* Operation */
   'opcode':  '--color-orange',
+  'funct2':  '--color-orange',
   'funct3':  '--color-orange',
+  'funct4':  '--color-orange',
   'funct5':  '--color-orange',
+  'funct6':  '--color-orange',
   'funct7':  '--color-orange',
   'funct12': '--color-orange',
   'fmt':     '--color-orange',
+  'static':  '--color-orange',
 
   /* Registers */
   'rs1': '--color-cyan',
   'rs2': '--color-violet',
   'rs3': '--color-blue',
   'rd':  '--color-yellow',
+  'rd/rs1':  '--color-yellow',
+  'rs1\'': '--color-cyan',
+  'rs2\'': '--color-violet',
+  'rd\'':  '--color-yellow',
+  'rd\'/rs1\'':  '--color-yellow',
 
   /* Immediate */
   'imm': '--color-blue',
+  'uimm': '--color-blue',
+  'nzimm': '--color-blue',
+  'nzuimm': '--color-blue',
   'shamt': '--color-blue',
   'shtyp': '--color-orange',
+  'jump target': '--color-blue',
 
   /* Fence */
   'fm': '--color-green',
@@ -156,7 +169,7 @@ function renderConversion(inst, abi=false) {
   let asmInst;
   let asmTokens = inst.asmFrags.map(frag => {
     let asm = abi ? convertRegToAbi(frag.asm) : frag.asm;
-    let field = frag.field.match(/^[a-z0-9]+/);
+    let field = frag.field.match(/^[a-z0-9\s]+/);
     let color = fieldColorMap[field];
 
     if (frag.mem) {
@@ -172,7 +185,7 @@ function renderConversion(inst, abi=false) {
     if (i === 1) {
       asmInst += ' ';
     }
-    else if (!inst.asmFrags[i].mem || !/^imm/.test(inst.asmFrags[i-1].field)) {
+    else if (!inst.asmFrags[i].mem || !/^(?:nz)?(?:u)?imm/.test(inst.asmFrags[i-1].field)) {
       asmInst += ', ';
     }
 
@@ -186,7 +199,7 @@ function renderConversion(inst, abi=false) {
   let binaryData = "";
   let bitElements = document.getElementsByClassName('binary-bit');
   inst.binFrags.forEach(frag => {
-    let field = frag.field.match(/^[a-z0-9]+/);
+    let field = frag.field.match(/^[a-z0-9\s]+/);
     let color = fieldColorMap[field];
 
     [...frag.bits].forEach(bit => {
