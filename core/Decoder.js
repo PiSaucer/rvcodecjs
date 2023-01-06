@@ -1034,7 +1034,7 @@ function getBits(binary, pos) {
 function decImm(immediate, signExtend = true) {
   // Sign extension requested and sign bit set
   if (signExtend && immediate[0] === '1') {
-    return parseInt(immediate, BASE.bin) - parseInt('1' << immediate.length);
+    return parseInt(immediate, BASE.bin) - Number('0b1' + ''.padStart(immediate.length, '0'));
   }
   return parseInt(immediate, BASE.bin);
 }
