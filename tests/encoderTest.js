@@ -6,17 +6,17 @@ import { Instruction } from '../core/Instruction.js';
  */
 // LUI
 function enc_rv32i_lui_lui() {
-    let inst = new Instruction('lui x17, 4892');
-    let abiInst = new Instruction('lui a7, 4892');
+    let inst = new Instruction('lui x17, 20037632');
+    let abiInst = new Instruction('lui a7, 0x0131c000');
     assertEq(inst.hex, '0131c8b7');
     assertEq(abiInst.hex, inst.hex);
 }
 
 // AUIPC
 function enc_rv32i_auipc_auipc() {
-    let inst = new Instruction('auipc x3, 30');
-    let abiInst = new Instruction('auipc gp, 30');
-    assertEq(inst.bin, '00000000000000011110000110010111');
+    let inst = new Instruction('auipc x3, -1352077312');
+    let abiInst = new Instruction('auipc gp, 0xaf68f000');
+    assertEq(inst.bin, '10101111011010001111000110010111');
     assertEq(abiInst.bin, inst.bin);
 }
 
@@ -38,9 +38,9 @@ function enc_rv32i_jalr_jalr() {
 
 // BRANCH
 function enc_rv32i_branch_bne() {
-    let inst = new Instruction('bne x19, x11, 16');
-    let abiInst = new Instruction('bne s3, a1, 16');
-    assertEq(inst.bin, '00000000101110011001100001100011');
+    let inst = new Instruction('bne x19, x11, -3308');
+    let abiInst = new Instruction('bne s3, a1, 0xf314');
+    assertEq(inst.bin, '10110000101110011001101001100011');
     assertEq(abiInst.bin, inst.bin);
 }
 
