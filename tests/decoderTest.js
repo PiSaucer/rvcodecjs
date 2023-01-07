@@ -6,18 +6,18 @@ import { Instruction } from '../core/Instruction.js';
  */
 // LUI
 function dec_rv32i_lui_lui() {
-    let inst = new Instruction('0001e1B7');
-    let instAbi = new Instruction('0001e1B7', { ABI:true });
-    assertEq(inst.asm, 'lui x3, 30');
-    assertEq(instAbi.asm, 'lui gp, 30');
+    let inst = new Instruction('876541B7');
+    let instAbi = new Instruction('876541B7', { ABI:true });
+    assertEq(inst.asm, 'lui x3, -2023407616');
+    assertEq(instAbi.asm, 'lui gp, -2023407616');
 }
 
 // AUIPC
 function dec_rv32i_auipc_auipc() {
     let inst = new Instruction('00000000000000011110001010010111');
     let instAbi = new Instruction('00000000000000011110001010010111', { ABI:true });
-    assertEq(inst.asm, 'auipc x5, 30');
-    assertEq(instAbi.asm, 'auipc t0, 30');
+    assertEq(inst.asm, 'auipc x5, 122880');
+    assertEq(instAbi.asm, 'auipc t0, 122880');
 }
 
 // JAL
@@ -38,10 +38,10 @@ function dec_rv32i_jalr_jalr() {
 
 // BRANCH
 function dec_rv32i_branch_beq() {
-    let inst = new Instruction('00000000101010011000100001100011');
-    let instAbi = new Instruction('00000000101010011000100001100011', { ABI:true });
-    assertEq(inst.asm, 'beq x19, x10, 16');
-    assertEq(instAbi.asm, 'beq s3, a0, 16');
+    let inst = new Instruction('10110000101010011000101001100011');
+    let instAbi = new Instruction('10110000101010011000101001100011', { ABI:true });
+    assertEq(inst.asm, 'beq x19, x10, -3308');
+    assertEq(instAbi.asm, 'beq s3, a0, -3308');
 }
 
 // LOAD

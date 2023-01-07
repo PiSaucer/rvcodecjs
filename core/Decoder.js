@@ -772,8 +772,8 @@ export class Decoder {
     this.asmFrags.push(f['opcode'], f['rs1'], f['rs2'], f['imm']);
 
     // Binary fragments from MSB to LSB
-    this.binFrags.push(f['imm_10_5'], f['rs2'], f['rs1'], f['funct3'],
-      f['imm_4_1'], f['opcode']);
+    this.binFrags.push(f['imm_12'], f['imm_10_5'], f['rs2'], f['rs1'],
+      f['funct3'], f['imm_4_1'], f['imm_11'], f['opcode']);
   }
 
   /**
@@ -781,8 +781,13 @@ export class Decoder {
    */
   #decodeUType() {
     // Get fields
-    const imm = getBits(this.#bin, FIELDS.u_imm_31_12.pos);
+    const imm_31_12 = getBits(this.#bin, FIELDS.u_imm_31_12.pos);
     const rd = getBits(this.#bin, FIELDS.rd.pos);
+
+    // Construct full 32-bit immediate value
+    // - Upper 20 bits of encoded as immediate field in instruction
+    // - Lower 12 bits set to 0
+    const imm = imm_31_12 + ''.padStart(12, '0');
 
     // Convert fields to string representations
     const immediate = decImm(imm), dest = decReg(rd);
@@ -792,16 +797,17 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      imm:    new Frag(immediate, imm, FIELDS.u_imm_31_12.name),
-      rd:     new Frag(dest, rd, FIELDS.rd.name),
+      opcode:     new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
+      rd:         new Frag(dest, rd, FIELDS.rd.name),
+      imm_31_12:  new Frag(immediate, imm_31_12, FIELDS.u_imm_31_12.name),
+      imm:        new Frag(immediate, imm, FIELDS.u_imm_31_12.name),
     };
 
     // Assembly fragments in order of instruction
     this.asmFrags.push(f['opcode'], f['rd'], f['imm']);
 
     // Binary fragments from MSB to LSB
-    this.binFrags.push(f['imm'], f['rd'], f['opcode']);
+    this.binFrags.push(f['imm_31_12'], f['rd'], f['opcode']);
   }
 
   /**
@@ -1034,7 +1040,7 @@ function getBits(binary, pos) {
 function decImm(immediate, signExtend = true) {
   // Sign extension requested and sign bit set
   if (signExtend && immediate[0] === '1') {
-    return parseInt(immediate, BASE.bin) - parseInt('1' << immediate.length);
+    return parseInt(immediate, BASE.bin) - Number('0b1' + ''.padStart(immediate.length, '0'));
   }
   return parseInt(immediate, BASE.bin);
 }

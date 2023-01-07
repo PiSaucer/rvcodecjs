@@ -379,11 +379,16 @@ export class Encoder {
     const dest = this.#opr[0], immediate = this.#opr[1];
 
     // Convert to binary representation
-    const rd = encReg(dest),
-      imm = encImm(immediate, FIELDS.u_imm_31_12.pos[1]);
+    const rd = encReg(dest);
+    // U-type immediate value range requires 32 bits for initial binary representation
+    const imm = encImm(immediate, 32);
+
+    // Grab the upper 20 bits of the 32-bit encoded value
+    // - Lower 12 bits not encoded, inferred/forced to be 0s
+    const imm_31_12 = imm.substring(0, FIELDS.u_imm_31_12.pos[1]);
 
     // Construct binary instruction
-    this.bin = imm + rd + this.#inst.opcode;
+    this.bin = imm_31_12 + rd + this.#inst.opcode;
   }
 
   /**
