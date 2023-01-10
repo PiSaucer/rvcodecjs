@@ -27,7 +27,7 @@ If you'd like to contribute, here are the main features we'd like to add:
 - [x] Support for RV32I instruction set
 - [x] Support for RV64I instruction set
 - [x] Support for RV128I instruction set
-- [ ] Support for rest of GC extensions
+- [x] Support for rest of GC extensions
     - [x] Zifencei instruction set
     - [x] Zicsr instruction set
     - [x] M (multiplication/division) instruction set
@@ -35,7 +35,7 @@ If you'd like to contribute, here are the main features we'd like to add:
     - [x] F (single-precision floating point) instruction set
     - [x] D (double-precision floating point) instruction set
     - [x] Q (quad-precision floating point) instruction set
-    - [ ] C (compressed) instruction set
+    - [x] C (compressed) instruction set
 
 ## Credit and license
 
