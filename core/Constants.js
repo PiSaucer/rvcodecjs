@@ -20,6 +20,13 @@ export const XLEN = {
   rv128: 128,
 }
 
+export const XLEN_MASK = {
+  rv32:  0b001,
+  rv64:  0b010,
+  rv128: 0b100,
+  all:   0b111,
+}
+
 // Width of a floating-point register
 // export const FLEN = {
 //   F: 32,
@@ -109,6 +116,40 @@ export const FIELDS = {
   j_imm_10_1:   { pos: [30, 10], name: 'imm[10:1]' },
   j_imm_11:     { pos: [20, 1],  name: 'imm[11]' },
   j_imm_19_12:  { pos: [19, 8],  name: 'imm[19:12]' },
+
+  // ISA_C: general
+  c_opcode:     { pos: [1, 2],   name: 'opcode' },
+  c_funct6:     { pos: [15, 6],  name: 'funct6' },
+  c_funct4:     { pos: [15, 4],  name: 'funct4' },
+  c_funct3:     { pos: [15, 3],  name: 'funct3' },
+  c_funct2:     { pos: [6, 2],   name: 'funct2' },
+  c_funct2_cb:  { pos: [11, 2],  name: 'funct2' },
+
+  // ISA_C: registers
+  c_rd:             { pos: [11, 5],  name: 'rd' },
+  c_rs1:            { pos: [11, 5],  name: 'rs1' },
+  c_rd_rs1:         { pos: [11, 5],  name: 'rd/rs1' },
+  c_rs2:            { pos: [6, 5],   name: 'rs2' },
+  c_rd_prime:       { pos: [4, 3],   name: 'rd\'' },
+  c_rs2_prime:      { pos: [4, 3],   name: 'rs2\'' },
+  c_rs1_prime:      { pos: [9, 3],   name: 'rs1\'' },
+  c_rd_rs1_prime:   { pos: [9, 3],   name: 'rd\'/rs1\'' },
+
+  // ISA_C: immediates 
+  // - referenced by inst format type and index starting from MSB
+  c_imm_ci_0:   { pos: [12, 1],  name: 'imm' },
+  c_imm_ci_1:   { pos: [6, 5],   name: 'imm' },
+  c_imm_css:    { pos: [12, 6],  name: 'imm' },
+  c_imm_ciw:    { pos: [12, 8],  name: 'imm' },
+  c_imm_cl_0:   { pos: [12, 3],  name: 'imm' },
+  c_imm_cl_1:   { pos: [6, 2],   name: 'imm' },
+  c_imm_cs_0:   { pos: [12, 3],  name: 'imm' },
+  c_imm_cs_1:   { pos: [6, 2],   name: 'imm' },
+  c_imm_cb_0:   { pos: [12, 3],  name: 'imm' },
+  c_imm_cb_1:   { pos: [6, 5],   name: 'imm' },
+  c_imm_cj:     { pos: [12, 11], name: 'imm' },
+  c_shamt_0:    { pos: [12, 1],  name: 'shamt' },
+  c_shamt_1:    { pos: [6, 5],   name: 'shamt' },
 }
 
 
@@ -141,6 +182,13 @@ export const OPCODE = {
   JAL:      '1101111',
   SYSTEM:   '1110011',
   OP_64:    '1111011',
+}
+
+// RVC base opcode map (assuming inst[1:0] =/= '11')
+export const C_OPCODE = {
+  C0:   '00',
+  C1:   '01',
+  C2:   '10',
 }
 
 
@@ -470,6 +518,82 @@ export const ISA_Q = {
   'fcvt.tu.q': { isa: 'RV128Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00101', opcode: OPCODE.OP_FP },
   'fcvt.q.t':  { isa: 'RV128Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00100', opcode: OPCODE.OP_FP },
   'fcvt.q.tu': { isa: 'RV128Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00101', opcode: OPCODE.OP_FP },  
+}
+
+// C instruction set
+export const ISA_C = {
+// Load and Store Instructions
+  // Stack-Pointer Based Loads and Stores
+  'c.lwsp':   { isa: 'C',  xlens: 0b111, fmt: 'CI-type', funct3: '010', rdRs1Mask: 0b10, rdRs1Excl: [0], uimm: true, immBits: [[5], [[4,2],[7,6]]], opcode: C_OPCODE.C2 },
+  'c.ldsp':   { isa: 'C',  xlens: 0b110, fmt: 'CI-type', funct3: '011', rdRs1Mask: 0b10, rdRs1Excl: [0], uimm: true, immBits: [[5], [[4,3],[8,6]]], opcode: C_OPCODE.C2 },
+  'c.lqsp':   { isa: 'C',  xlens: 0b100, fmt: 'CI-type', funct3: '001', rdRs1Mask: 0b10, rdRs1Excl: [0], uimm: true, immBits: [[5], [4,[9,6]]],     opcode: C_OPCODE.C2 },
+  'c.flwsp':  { isa: 'FC', xlens: 0b001, fmt: 'CI-type', funct3: '011', rdRs1Mask: 0b10,                 uimm: true, immBits: [[5], [[4,2],[7,6]]], opcode: C_OPCODE.C2 },
+  'c.fldsp':  { isa: 'DC', xlens: 0b011, fmt: 'CI-type', funct3: '001', rdRs1Mask: 0b10,                 uimm: true, immBits: [[5], [[4,3],[8,6]]], opcode: C_OPCODE.C2 },
+
+  'c.swsp':   { isa: 'C',  xlens: 0b111, fmt: 'CSS-type', funct3: '110', uimm: true, immBits: [[5,2],[7,6]], opcode: C_OPCODE.C2 },
+  'c.sdsp':   { isa: 'C',  xlens: 0b110, fmt: 'CSS-type', funct3: '111', uimm: true, immBits: [[5,3],[8,6]], opcode: C_OPCODE.C2 },
+  'c.sqsp':   { isa: 'C',  xlens: 0b100, fmt: 'CSS-type', funct3: '101', uimm: true, immBits: [[5,4],[9,6]], opcode: C_OPCODE.C2 },
+  'c.fswsp':  { isa: 'FC', xlens: 0b001, fmt: 'CSS-type', funct3: '111', uimm: true, immBits: [[5,2],[7,6]], opcode: C_OPCODE.C2 },
+  'c.fsdsp':  { isa: 'DC', xlens: 0b011, fmt: 'CSS-type', funct3: '101', uimm: true, immBits: [[5,3],[8,6]], opcode: C_OPCODE.C2 },
+
+  // Register Based Loads and Stores
+  'c.lw':     { isa: 'C',  xlens: 0b111, fmt: 'CL-type', funct3: '010', uimm: true, immBits: [[[5,3]],   [2,6]],   opcode: C_OPCODE.C0 },
+  'c.ld':     { isa: 'C',  xlens: 0b110, fmt: 'CL-type', funct3: '011', uimm: true, immBits: [[[5,3]],   [[7,6]]], opcode: C_OPCODE.C0 },
+  'c.lq':     { isa: 'C',  xlens: 0b100, fmt: 'CL-type', funct3: '001', uimm: true, immBits: [[[5,4],8], [[7,6]]], opcode: C_OPCODE.C0 },
+  'c.flw':    { isa: 'FC', xlens: 0b001, fmt: 'CL-type', funct3: '011', uimm: true, immBits: [[[5,3]],   [2,6]],   opcode: C_OPCODE.C0 },
+  'c.fld':    { isa: 'DC', xlens: 0b011, fmt: 'CL-type', funct3: '001', uimm: true, immBits: [[[5,3]],   [[7,6]]], opcode: C_OPCODE.C0 },
+
+  'c.sw':     { isa: 'C',  xlens: 0b111, fmt: 'CS-type', funct3: '110', uimm: true, immBits: [[[5,3]],   [2,6]],   opcode: C_OPCODE.C0 },
+  'c.sd':     { isa: 'C',  xlens: 0b110, fmt: 'CS-type', funct3: '111', uimm: true, immBits: [[[5,3]],   [[7,6]]], opcode: C_OPCODE.C0 },
+  'c.sq':     { isa: 'C',  xlens: 0b100, fmt: 'CS-type', funct3: '101', uimm: true, immBits: [[[5,4],8], [[7,6]]], opcode: C_OPCODE.C0 },
+  'c.fsw':    { isa: 'FC', xlens: 0b001, fmt: 'CS-type', funct3: '111', uimm: true, immBits: [[[5,3]],   [2,6]],   opcode: C_OPCODE.C0 },
+  'c.fsd':    { isa: 'DC', xlens: 0b011, fmt: 'CS-type', funct3: '101', uimm: true, immBits: [[[5,3]],   [[7,6]]], opcode: C_OPCODE.C0 },
+
+// Control Transfer Instructions
+  'c.j':      { isa: 'C', xlens: 0b101, fmt: 'CJ-type', funct3: '101', immBits: [11,4,[9,8],10,6,7,[3,1],5], opcode: C_OPCODE.C1 },
+  'c.jal':    { isa: 'C', xlens: 0b001, fmt: 'CJ-type', funct3: '001', immBits: [11,4,[9,8],10,6,7,[3,1],5], opcode: C_OPCODE.C1 },
+
+  'c.jr':     { isa: 'C', xlens: 0b111, fmt: 'CR-type', funct4: '1000', rdRs1Mask: 0b01, rdRs1Excl: [0], rs2Val: 0, opcode: C_OPCODE.C2 },
+  'c.jalr':   { isa: 'C', xlens: 0b111, fmt: 'CR-type', funct4: '1001', rdRs1Mask: 0b01, rdRs1Excl: [0], rs2Val: 0, opcode: C_OPCODE.C2 },
+
+  'c.beqz':   { isa: 'C', xlens: 0b111, fmt: 'CB-type', funct3: '110', immBits: [[8,[4,3]], [[7,6],[2,1],5]], opcode: C_OPCODE.C1 },
+  'c.bnez':   { isa: 'C', xlens: 0b111, fmt: 'CB-type', funct3: '111', immBits: [[8,[4,3]], [[7,6],[2,1],5]], opcode: C_OPCODE.C1 },
+
+// Integer Computational Instructions
+  // Integer Constant-Generator Instructions
+  'c.li':       { isa: 'C', xlens: 0b111, fmt: 'CI-type', funct3: '010', rdRs1Mask: 0b10, rdRs1Excl: [0],                immBits: [[5],  [[4,0]]],   opcode: C_OPCODE.C1 },
+  'c.lui':      { isa: 'C', xlens: 0b111, fmt: 'CI-type', funct3: '011', rdRs1Mask: 0b10, rdRs1Excl: [0,2], nzimm: true, immBits: [[17], [[16,12]]], opcode: C_OPCODE.C1 },
+
+  // Integer Register-Immediate Operations
+  'c.addi':     { isa: 'C', xlens: 0b111, fmt: 'CI-type', funct3: '000', rdRs1Mask: 0b11, rdRs1Excl: [0], nzimm: true,             immBits: [[5], [[4,0]]],       opcode: C_OPCODE.C1 },
+  'c.addiw':    { isa: 'C', xlens: 0b110, fmt: 'CI-type', funct3: '001', rdRs1Mask: 0b11, rdRs1Excl: [0],                          immBits: [[5], [[4,0]]],       opcode: C_OPCODE.C1 },
+  'c.addi16sp': { isa: 'C', xlens: 0b111, fmt: 'CI-type', funct3: '011', rdRs1Mask: 0b00, rdRs1Val: 2,    nzimm: true,             immBits: [[9], [4,6,[8,7],5]], opcode: C_OPCODE.C1 },
+  'c.slli':     { isa: 'C', xlens: 0b111, fmt: 'CI-type', funct3: '000', rdRs1Mask: 0b11, rdRs1Excl: [0], nzimm: true, uimm: true, immBits: [[5], [[4,0]]],       opcode: C_OPCODE.C2 },
+  'c.slli64':   { isa: 'C', xlens: 0b100, fmt: 'CI-type', funct3: '000', rdRs1Mask: 0b11, rdRs1Excl: [0], immVal: 0,               immBits: [[5], [[4,0]]],       opcode: C_OPCODE.C2 },
+
+  'c.addi4spn': { isa: 'C', xlens: 0b111, fmt: 'CIW-type', funct3: '000', uimm: true, nzimm: true, immBits: [[5,4],[9,6],2,3], opcode: C_OPCODE.C0 },
+
+  'c.srli':     { isa: 'C', xlens: 0b111, fmt: 'CB-type', funct3: '100', funct2: '00', nzimm: true, uimm: true, immBits: [[5], [[4,0]]], opcode: C_OPCODE.C1 },
+  'c.srli64':   { isa: 'C', xlens: 0b100, fmt: 'CB-type', funct3: '100', funct2: '00', immVal: 0,               immBits: [[5], [[4,0]]], opcode: C_OPCODE.C1 },
+  'c.srai':     { isa: 'C', xlens: 0b111, fmt: 'CB-type', funct3: '100', funct2: '01', nzimm: true, uimm: true, immBits: [[5], [[4,0]]], opcode: C_OPCODE.C1 },
+  'c.srai64':   { isa: 'C', xlens: 0b100, fmt: 'CB-type', funct3: '100', funct2: '01', immVal: 0,               immBits: [[5], [[4,0]]], opcode: C_OPCODE.C1 },
+  'c.andi':     { isa: 'C', xlens: 0b111, fmt: 'CB-type', funct3: '100', funct2: '10',                          immBits: [[5], [[4,0]]], opcode: C_OPCODE.C1 },
+
+  // Integer Register-Register Operations
+  'c.mv':     { isa: 'C', xlens: 0b111, fmt: 'CR-type', funct4: '1000', rdRs1Mask: 0b10, rdRs1Excl: [0], rs2Excl: [0], opcode: C_OPCODE.C2 },
+  'c.add':    { isa: 'C', xlens: 0b111, fmt: 'CR-type', funct4: '1001', rdRs1Mask: 0b11, rdRs1Excl: [0], rs2Excl: [0], opcode: C_OPCODE.C2 },
+
+  'c.and':    { isa: 'C', xlens: 0b111, fmt: 'CA-type', funct6: '100011', funct2: '11', opcode: C_OPCODE.C1 },
+  'c.or':     { isa: 'C', xlens: 0b111, fmt: 'CA-type', funct6: '100011', funct2: '10', opcode: C_OPCODE.C1 },
+  'c.xor':    { isa: 'C', xlens: 0b111, fmt: 'CA-type', funct6: '100011', funct2: '01', opcode: C_OPCODE.C1 },
+  'c.sub':    { isa: 'C', xlens: 0b111, fmt: 'CA-type', funct6: '100011', funct2: '00', opcode: C_OPCODE.C1 },
+  'c.subw':   { isa: 'C', xlens: 0b110, fmt: 'CA-type', funct6: '100111', funct2: '00', opcode: C_OPCODE.C1 },
+  'c.addw':   { isa: 'C', xlens: 0b110, fmt: 'CA-type', funct6: '100111', funct2: '01', opcode: C_OPCODE.C1 },
+
+// Other Instructions
+  'c.nop':    { isa: 'C', xlens: 0b111, fmt: 'CI-type', funct3: '000', rdRs1Mask: 0b00, rdRs1Val: 0, immVal: 0, immBits: [[5], [[4,0]]], opcode: C_OPCODE.C1 },
+
+  'c.ebreak': { isa: 'C', xlens: 0b111, fmt: 'CR-type', funct4: '1001', rdRs1Mask: 0b00, rdRs1Val: 0, rs2Val: 0, opcode: C_OPCODE.C2 },
 }
 
 // ISA per opcode
@@ -841,6 +965,97 @@ export const ISA_OP_FP = {
       [ISA_Q['fcvt.q.d'].rs2]:   'fcvt.q.d',
     },
   },
+}
+
+// ISA_C xlen lookup generator
+function xlenLookupGen(...instNames) {
+  let lookup = {};
+  for (const name of instNames) {
+    const inst = ISA_C[name];
+    for (let xlen = XLEN_MASK.rv32; xlen <= XLEN_MASK.all; xlen <<= 1) {
+      if (inst.xlens & xlen) {
+        lookup[xlen] = name;
+      }
+    }
+  }
+  return lookup;
+}
+
+// C0 Instruction order of lookup
+// - funct3
+// - xlen
+export const ISA_C0 = {
+  [ISA_C['c.addi4spn'].funct3]: 'c.addi4spn',
+  [ISA_C['c.fld'].funct3]:  xlenLookupGen('c.fld', 'c.lq'),
+  [ISA_C['c.lw'].funct3]:   'c.lw',
+  [ISA_C['c.flw'].funct3]:  xlenLookupGen('c.flw', 'c.ld'),
+  [ISA_C['c.fsd'].funct3]:  xlenLookupGen('c.fsd', 'c.sq'),
+  [ISA_C['c.sw'].funct3]:   'c.sw',
+  [ISA_C['c.fsw'].funct3]:  xlenLookupGen('c.fsw', 'c.sd'),
+}
+
+// C1 Instruction order of lookup
+// - funct3
+// - xlen
+// - rdRs1Val
+// - funct2_cb
+// - funct6[3]+funct2
+export const ISA_C1 = {
+  [ISA_C['c.nop'].funct3]: { [XLEN_MASK.all]: {
+    [ISA_C['c.nop'].rdRs1Val]:  'c.nop',
+                    'default':  'c.addi', 
+  }},
+  [ISA_C['c.jal'].funct3]:      xlenLookupGen('c.jal', 'c.addiw'),
+  [ISA_C['c.li'].funct3]:       'c.li',
+  [ISA_C['c.addi16sp'].funct3]: { [XLEN_MASK.all]: {
+    [ISA_C['c.addi16sp'].rdRs1Val]: 'c.addi16sp',
+                         'default': 'c.lui', 
+  }},
+  [ISA_C['c.srli'].funct3]: { [XLEN_MASK.all]: { 'default': {
+    [ISA_C['c.srli'].funct2]:   'c.srli',
+    [ISA_C['c.srai'].funct2]:   'c.srai',
+    [ISA_C['c.andi'].funct2]:   'c.andi',
+                        '11': {
+      [ISA_C['c.sub'].funct6[3] +ISA_C['c.sub'].funct2]:  'c.sub',
+      [ISA_C['c.xor'].funct6[3] +ISA_C['c.xor'].funct2]:  'c.xor',
+      [ISA_C['c.or'].funct6[3]  +ISA_C['c.or'].funct2]:   'c.or',
+      [ISA_C['c.and'].funct6[3] +ISA_C['c.and'].funct2]:  'c.and',
+      [ISA_C['c.subw'].funct6[3]+ISA_C['c.subw'].funct2]: 'c.subw',
+      [ISA_C['c.addw'].funct6[3]+ISA_C['c.addw'].funct2]: 'c.addw',
+    }
+  }}},
+  [ISA_C['c.j'].funct3]:        'c.j',
+  [ISA_C['c.beqz'].funct3]:     'c.beqz',
+  [ISA_C['c.bnez'].funct3]:     'c.bnez',
+}
+
+// C2 Instruction order of lookup
+// - funct3
+// - xlen
+// - funct4[3]
+// - rs2Val
+// - rdRs1Val
+export const ISA_C2 = {
+  [ISA_C['c.slli'].funct3]:   'c.slli',
+  [ISA_C['c.fldsp'].funct3]:  xlenLookupGen('c.fldsp', 'c.lqsp'),
+  [ISA_C['c.lwsp'].funct3]:   'c.lwsp',
+  [ISA_C['c.flwsp'].funct3]:  xlenLookupGen('c.flwsp', 'c.ldsp'),
+  [ISA_C['c.jr'].funct4.substring(0,3)]: { [XLEN_MASK.all]: {
+    [ISA_C['c.jr'].funct4[3]]: {
+      [ISA_C['c.jr'].rs2Val]:   'c.jr',
+                   'default':   'c.mv',
+    },
+    [ISA_C['c.ebreak'].funct4[3]]: {
+      [ISA_C['c.ebreak'].rs2Val]: {
+        [ISA_C['c.ebreak'].rdRs1Val]: 'c.ebreak',
+                           'default': 'c.jalr',
+      },
+                       'default':   'c.add',
+    },
+  }},
+  [ISA_C['c.fsdsp'].funct3]:  xlenLookupGen('c.fsdsp', 'c.sqsp'),
+  [ISA_C['c.swsp'].funct3]:   'c.swsp',
+  [ISA_C['c.fswsp'].funct3]:  xlenLookupGen('c.fswsp', 'c.sdsp'),
 }
 
 export const REGISTER = {
@@ -1235,4 +1450,5 @@ export const CSR = {
 // Entire ISA
 export const ISA = Object.assign({}, 
   ISA_RV32I, ISA_RV64I, ISA_RV128I, 
-  ISA_Zifencei, ISA_Zicsr, ISA_M, ISA_A, ISA_F, ISA_D, ISA_Q);
+  ISA_Zifencei, ISA_Zicsr, 
+  ISA_M, ISA_A, ISA_F, ISA_D, ISA_Q, ISA_C);
