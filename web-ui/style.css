@@ -112,25 +112,63 @@ body {
     border: 1px solid var(--color-fg);
     height: 3.5ch;
     display: grid;
+    position: relative;
     grid-template-columns: minmax(27ch, 37ch) 2ch;
 }
 
-#search-input {
+#search-input-wrapper {
+    position: relative;
     border: none;
-    padding: 0px;
     font-size: 1rem;
 
     height: 100%;
     width: 100%;
-    padding:0% 4% 0% 4%;
+    box-sizing: border-box;
 
     background-color: transparent;
     color: var(--color-em);
     font-family: inherit;
 }
 
+#search-input {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    padding:0% 4% 0% 4%;
+
+    border: none;
+    background-color: transparent;
+
+    font-size: inherit;
+    color: inherit;
+    font-family: inherit;
+}
+
 #search-input:focus-visible {
     outline:none;
+}
+
+/* Dyanimc placeholder */
+#search-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    font-size: inherit;
+    color: inherit;
+    font-family: inherit;
+
+    opacity: 0.5;
+    pointer-events: none;
+
+    /* Copied to match #search-input */
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 0% 4% 0% 4%;
+    line-height: 3.5ch;
+    border: none;
+    background-color: transparent;
 }
 
 /* Result area */
