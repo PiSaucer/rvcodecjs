@@ -968,7 +968,7 @@ export class Decoder {
     }
 
     // Check if 'lr' instruction
-    const lr = /^lr\.[wd]$/.test(this.#mne);
+    const lr = /^lr\./.test(this.#mne);
 
     // Convert fields to string representations
     const dest = decReg(rd);

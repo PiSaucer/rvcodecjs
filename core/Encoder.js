@@ -512,7 +512,7 @@ export class Encoder {
     let dest, addr, src;
 
     // Get operands, separately for 'lr' instruction
-    if (/^lr\.[wd]$/.test(this.#mne)) {
+    if (/^lr\./.test(this.#mne)) {
       dest = this.#opr[0];
       addr = this.#opr[1];
       src  = 'x0'; // converts to '00000'
