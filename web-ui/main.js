@@ -7,7 +7,7 @@
  */
 
 import { Instruction, convertRegToAbi } from "../core/Instruction.js";
-import { COPTS_ISA } from "../core/Config.js";
+import { configDefault, COPTS_ISA } from "../core/Config.js";
 
 /* Import colors from CSS */
 const colors = [
@@ -102,7 +102,7 @@ window.onload = function () {
   abiParameter.checked = (params.abi === "true");
 
   // Set ISA parameter
-  isaParameter.value = params.isa || "auto";
+  isaParameter.value = params.isa || configDefault.ISA.description;
 
   // Trigger input event to run conversion
   let event = new Event('keydown');
