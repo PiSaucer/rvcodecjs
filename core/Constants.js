@@ -672,7 +672,7 @@ export const ISA_STORE = {
 export const ISA_OP_IMM = {
   [ISA_RV32I['addi'].funct3]:   'addi',
   [ISA_RV32I['slti'].funct3]:   'slti',
-  [ISA_RV32I['sltiu'].funct3]:  'stliu',
+  [ISA_RV32I['sltiu'].funct3]:  'sltiu',
   [ISA_RV32I['xori'].funct3]:   'xori',
   [ISA_RV32I['ori'].funct3]:    'ori',
   [ISA_RV32I['andi'].funct3]:   'andi',
