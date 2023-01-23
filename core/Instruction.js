@@ -57,7 +57,7 @@ export class Instruction {
    * @type Array
    */
   binFrags;
-  
+
   /* Private members */
   #config;
   #xlens;

@@ -8,9 +8,9 @@
 
 import { BASE, XLEN_MASK,
   FIELDS, OPCODE, C_OPCODE, REGISTER, FLOAT_REGISTER, CSR,
-  ISA_OP, ISA_OP_32, ISA_OP_64, ISA_OP_IMM, ISA_OP_IMM_32, ISA_OP_IMM_64, 
-  ISA_LOAD, ISA_STORE, ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA_AMO, 
-  ISA_LOAD_FP, ISA_STORE_FP, ISA_OP_FP, 
+  ISA_OP, ISA_OP_32, ISA_OP_64, ISA_OP_IMM, ISA_OP_IMM_32, ISA_OP_IMM_64,
+  ISA_LOAD, ISA_STORE, ISA_BRANCH, ISA_MISC_MEM, ISA_SYSTEM, ISA_AMO,
+  ISA_LOAD_FP, ISA_STORE_FP, ISA_OP_FP,
   ISA_MADD, ISA_MSUB, ISA_NMADD, ISA_NMSUB,
   ISA_C0, ISA_C1, ISA_C2,
   ISA,
@@ -175,7 +175,7 @@ export class Decoder {
 
       // Use opcode to determine C quadrant
       let inst, quadrant;
-      this.#opcode = getBits(this.#bin, FIELDS.c_opcode.pos); 
+      this.#opcode = getBits(this.#bin, FIELDS.c_opcode.pos);
       switch (this.#opcode) {
         case C_OPCODE.C0:
           inst = this.#mneLookupC0();
@@ -198,7 +198,7 @@ export class Decoder {
 
       // Build ISA string from found instruction
       if (inst.xlens & XLEN_MASK.rv32) {
-        this.isa = 'RV32'; 
+        this.isa = 'RV32';
       } else if (inst.xlens & XLEN_MASK.rv64) {
         this.isa = 'RV64';
       } else {
@@ -248,7 +248,7 @@ export class Decoder {
     // Set instruction's format and ISA
     this.fmt = ISA[this.#mne].fmt;
     this.isa = this.isa ?? ISA[this.#mne].isa;
-    
+
     // Detect mismatch between ISA and configuration
     if (this.#config.ISA === COPTS_ISA.RV32I && /^RV(?:64|128)/.test(this.isa)) {
       throw `Detected ${this.isa} instruction but configuration ISA set to RV32I`;
@@ -519,7 +519,7 @@ export class Decoder {
       const shamt_4_0 = fields['shamt'];
       const shamt_5_0 = shamt_5 + shamt_4_0;
       const shamt_6_0 = shamt_6 + shamt_5_0;
-      
+
 
       const imm_11_7 = '0' + shtyp + '000';
       const imm_11_6 = imm_11_7 + '0';
@@ -561,7 +561,7 @@ export class Decoder {
         f['imm'] = new Frag(shamt, shamt_6_0, FIELDS.i_shamt_6_0.name);
         f['shift'] = new Frag(this.#mne, imm_11_7, FIELDS.i_shtyp_11_7.name);
 
-        // Set output ISA to RV64I 
+        // Set output ISA to RV64I
         this.isa = 'RV128I';
 
       } else if (shamtWidth === 6) {
@@ -572,7 +572,7 @@ export class Decoder {
         f['imm'] = new Frag(shamt, shamt_5_0, FIELDS.i_shamt_5_0.name);
         f['shift'] = new Frag(this.#mne, imm_11_6, FIELDS.i_shtyp_11_6.name);
 
-        // Set output ISA to RV64I 
+        // Set output ISA to RV64I
         this.isa = this.isa ?? 'RV64I';
 
       } else {
@@ -648,11 +648,11 @@ export class Decoder {
       const offset = decImm(imm),
             base = decReg(rs1),
             dest = decReg(rd);
-            
+
 
       f['imm'] = new Frag(offset, imm, FIELDS.i_imm_11_0.name);
       f['rs1'] = new Frag(base, rs1, FIELDS.rs1.name, true);
-      f['rd']  = new Frag(dest, rd, FIELDS.rd.name);  
+      f['rd']  = new Frag(dest, rd, FIELDS.rd.name);
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode'], f['rd'], f['imm'], f['rs1']);
@@ -685,14 +685,14 @@ export class Decoder {
 
       f['imm'] = new Frag(this.#mne, imm, FIELDS.i_imm_11_0.name);
       f['rs1'] = new Frag(this.#mne, rs1, FIELDS.rs1.name);
-      f['rd']  = new Frag(this.#mne, rd, FIELDS.rd.name);      
+      f['rd']  = new Frag(this.#mne, rd, FIELDS.rd.name);
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode']);
 
       // Binary fragments from MSB to LSB
       this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
-    } 
+    }
   }
 
   /**
@@ -731,7 +731,7 @@ export class Decoder {
       funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
     };
 
-    // Trap instructions - create specific fragments and render  
+    // Trap instructions - create specific fragments and render
     if (trap) {
       // Create remaining fragments
       f['rd'] = new Frag(this.#mne, rd, FIELDS.rd.name);
@@ -744,7 +744,7 @@ export class Decoder {
       // Binary fragments from MSB to LSB
       this.binFrags.push(f['funct12'], f['rs1'], f['funct3'], f['rd'],
         f['opcode']);
-    
+
     } else {
       // Zicsr instructions
 
@@ -849,7 +849,7 @@ export class Decoder {
     }
 
     // Convert fields to string representations
-    const offset = decImm(imm), 
+    const offset = decImm(imm),
           src2 = decReg(rs2),
           src1 = decReg(rs1);
 
@@ -995,7 +995,7 @@ export class Decoder {
     this.asmFrags.push(f['rs1']);
 
     // Binary fragments from MSB to LSB
-    this.binFrags.push(f['funct5'], f['aq'], f['rl'], f['rs2'], 
+    this.binFrags.push(f['funct5'], f['aq'], f['rl'], f['rs2'],
       f['rs1'], f['funct3'], f['rd'], f['opcode']);
   }
 
@@ -1293,8 +1293,8 @@ export class Decoder {
         immName += 'u';
       }
     }
-    immName += shiftInst 
-      ? FIELDS.c_shamt_0.name 
+    immName += shiftInst
+      ? FIELDS.c_shamt_0.name
       : FIELDS.c_imm_ci_0.name;
 
     // Create common fragments
@@ -1462,7 +1462,7 @@ export class Decoder {
     this.asmFrags.push(f['opcode'], f['rd_prime'], f['imm0'], f['rs1_prime']);
 
     // Binary fragments from MSB to LSB
-    this.binFrags.push(f['funct3'], f['imm0'], f['rs1_prime'], 
+    this.binFrags.push(f['funct3'], f['imm0'], f['rs1_prime'],
       f['imm1'], f['rd_prime'], f['opcode']);
   }
 
@@ -1511,7 +1511,7 @@ export class Decoder {
     this.asmFrags.push(f['opcode'], f['rs2_prime'], f['imm0'], f['rs1_prime']);
 
     // Binary fragments from MSB to LSB
-    this.binFrags.push(f['funct3'], f['imm0'], f['rs1_prime'], 
+    this.binFrags.push(f['funct3'], f['imm0'], f['rs1_prime'],
       f['imm1'], f['rs2_prime'], f['opcode']);
   }
 
@@ -1547,7 +1547,7 @@ export class Decoder {
     this.asmFrags.push(f['opcode'], f['rd_rs1_prime'], f['rs2_prime']);
 
     // Binary fragments from MSB to LSB
-    this.binFrags.push(f['funct6'], f['rd_rs1_prime'], 
+    this.binFrags.push(f['funct6'], f['rd_rs1_prime'],
       f['funct2'], f['rs2_prime'], f['opcode']);
   }
 
@@ -1609,8 +1609,8 @@ export class Decoder {
         immName += 'u';
       }
     }
-    immName += shiftInst 
-      ? FIELDS.c_shamt_0.name 
+    immName += shiftInst
+      ? FIELDS.c_shamt_0.name
       : (branchInst ? FIELDS.c_imm_cb_0.name : FIELDS.c_imm_ci_0.name);
 
     // Create common fragments
@@ -1623,10 +1623,10 @@ export class Decoder {
 
     // Create custom fragments and build fragment arrays
     if (branchInst) {
-      // Shift instruction, use shamt and funct2 
+      // Shift instruction, use shamt and funct2
       f['imm0'] = new Frag(immVal, imm0, immName + immBitsToString(inst.immBits[0]));
       f['imm1'] = new Frag(immVal, imm1, immName + immBitsToString(inst.immBits[1]));
-      
+
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode'], f['rd_rs1_prime'], f['imm0']);
       // Binary fragments from MSB to LSB
@@ -1642,7 +1642,7 @@ export class Decoder {
         f['imm0'] = new Frag(this.#mne, shamt0, 'static-' + immName + immBitsToString(inst.immBits[0]));
         f['imm1'] = new Frag(this.#mne, shamt1, 'static-' + immName + immBitsToString(inst.immBits[1]));
       }
-      
+
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode'], f['rd_rs1_prime']);
       if (dynamicImm) {
@@ -1783,7 +1783,7 @@ function decImm(immediate, signExtend = true) {
 function decImmBits(immFields, immBits, uimm = false) {
   // Construct full immediate binary to decode
   // - Start with 18 as length since that supports the widest compressed immediate value
-  //     Specifically, `c.lui` provides imm[17:12], so there's 6 encoded bits in the upper-portion, 
+  //     Specifically, `c.lui` provides imm[17:12], so there's 6 encoded bits in the upper-portion,
   //     While the 12 LSBs are assumed to be 0, for a total of 18 bits (hence, len = 18)
   const len = 18;
   let binArray = ''.padStart(len, '0').split('');
@@ -1817,7 +1817,7 @@ function decImmBits(immFields, immBits, uimm = false) {
         const bitStart = bit[0];
         const bitSpan = bitStart - bit[1] + 1;
         for (let l = 0; l < bitSpan; l++, k++) {
-          binArray[len - 1 - bitStart + l] = fieldBin[k]; 
+          binArray[len - 1 - bitStart + l] = fieldBin[k];
         }
       }
     }
@@ -1879,8 +1879,8 @@ function decCSR(binStr) {
 
   // Get CSR name if it exists,
   //   otherwise construct an immediate hex string
-  let csr = entry 
-    ? entry[0] 
+  let csr = entry
+    ? entry[0]
     : ('0x' + val.toString(16).padStart(3, '0'));
 
   return csr;

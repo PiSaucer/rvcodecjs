@@ -80,9 +80,9 @@ export const FIELDS = {
   i_shtyp_11_6: { pos: [31, 6], name: 'shtyp[11:6]'},
   i_shtyp_11_5: { pos: [31, 7], name: 'shtyp[11:5]'},
   i_shtyp:      { pos: [30, 1], name: 'shtyp' },
-  i_shamt_6:    { pos: [26, 1], name: 'shamt[6]' }, 
-  i_shamt_6_0:  { pos: [26, 7], name: 'shamt[6:0]' }, 
-  i_shamt_5:    { pos: [25, 1], name: 'shamt[5]' }, 
+  i_shamt_6:    { pos: [26, 1], name: 'shamt[6]' },
+  i_shamt_6_0:  { pos: [26, 7], name: 'shamt[6:0]' },
+  i_shamt_5:    { pos: [25, 1], name: 'shamt[5]' },
   i_shamt_5_0:  { pos: [25, 6], name: 'shamt[5:0]' },
   i_shamt:      { pos: [24, 5], name: 'shamt[4:0]' },
 
@@ -135,7 +135,7 @@ export const FIELDS = {
   c_rs1_prime:      { pos: [9, 3],   name: 'rs1\'' },
   c_rd_rs1_prime:   { pos: [9, 3],   name: 'rd\'/rs1\'' },
 
-  // ISA_C: immediates 
+  // ISA_C: immediates
   // - referenced by inst format type and index starting from MSB
   c_imm_ci_0:   { pos: [12, 1],  name: 'imm' },
   c_imm_ci_1:   { pos: [6, 5],   name: 'imm' },
@@ -257,7 +257,7 @@ export const ISA_RV64I = {
   slliw:  { isa: 'RV64I', fmt: 'I-type', shtyp: '0', funct3: '001', opcode: OPCODE.OP_IMM_32 },
   srliw:  { isa: 'RV64I', fmt: 'I-type', shtyp: '0', funct3: '101', opcode: OPCODE.OP_IMM_32 },
   sraiw:  { isa: 'RV64I', fmt: 'I-type', shtyp: '1', funct3: '101', opcode: OPCODE.OP_IMM_32 },
-  
+
   addw:   { isa: 'RV64I', fmt: 'R-type', funct7: '0000000', funct3: '000', opcode: OPCODE.OP_32 },
   subw:   { isa: 'RV64I', fmt: 'R-type', funct7: '0100000', funct3: '000', opcode: OPCODE.OP_32 },
   sllw:   { isa: 'RV64I', fmt: 'R-type', funct7: '0000000', funct3: '001', opcode: OPCODE.OP_32 },
@@ -277,7 +277,7 @@ export const ISA_RV128I = {
   sllid:  { isa: 'RV128I', fmt: 'I-type', shtyp: '0', funct3: '001', opcode: OPCODE.OP_IMM_64 },
   srlid:  { isa: 'RV128I', fmt: 'I-type', shtyp: '0', funct3: '101', opcode: OPCODE.OP_IMM_64 },
   sraid:  { isa: 'RV128I', fmt: 'I-type', shtyp: '1', funct3: '101', opcode: OPCODE.OP_IMM_64 },
-  
+
   addd:   { isa: 'RV128I', fmt: 'R-type', funct7: '0000000', funct3: '000', opcode: OPCODE.OP_64 },
   subd:   { isa: 'RV128I', fmt: 'R-type', funct7: '0100000', funct3: '000', opcode: OPCODE.OP_64 },
   slld:   { isa: 'RV128I', fmt: 'R-type', funct7: '0000000', funct3: '001', opcode: OPCODE.OP_64 },
@@ -517,7 +517,7 @@ export const ISA_Q = {
   'fcvt.t.q':  { isa: 'RV128Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00100', opcode: OPCODE.OP_FP },
   'fcvt.tu.q': { isa: 'RV128Q', fmt: 'R-type', funct5: '11000', fp_fmt: FP_FMT.Q, rs2: '00101', opcode: OPCODE.OP_FP },
   'fcvt.q.t':  { isa: 'RV128Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00100', opcode: OPCODE.OP_FP },
-  'fcvt.q.tu': { isa: 'RV128Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00101', opcode: OPCODE.OP_FP },  
+  'fcvt.q.tu': { isa: 'RV128Q', fmt: 'R-type', funct5: '11010', fp_fmt: FP_FMT.Q, rs2: '00101', opcode: OPCODE.OP_FP },
 }
 
 // C instruction set
@@ -1003,13 +1003,13 @@ export const ISA_C0 = {
 export const ISA_C1 = {
   [ISA_C['c.nop'].funct3]: { [XLEN_MASK.all]: {
     [ISA_C['c.nop'].rdRs1Val]:  'c.nop',
-                    'default':  'c.addi', 
+                    'default':  'c.addi',
   }},
   [ISA_C['c.jal'].funct3]:      xlenLookupGen('c.jal', 'c.addiw'),
   [ISA_C['c.li'].funct3]:       'c.li',
   [ISA_C['c.addi16sp'].funct3]: { [XLEN_MASK.all]: {
     [ISA_C['c.addi16sp'].rdRs1Val]: 'c.addi16sp',
-                         'default': 'c.lui', 
+                         'default': 'c.lui',
   }},
   [ISA_C['c.srli'].funct3]: { [XLEN_MASK.all]: { 'default': {
     [ISA_C['c.srli'].funct2]:   'c.srli',
@@ -1448,7 +1448,7 @@ export const CSR = {
 }
 
 // Entire ISA
-export const ISA = Object.assign({}, 
-  ISA_RV32I, ISA_RV64I, ISA_RV128I, 
-  ISA_Zifencei, ISA_Zicsr, 
+export const ISA = Object.assign({},
+  ISA_RV32I, ISA_RV64I, ISA_RV128I,
+  ISA_Zifencei, ISA_Zicsr,
   ISA_M, ISA_A, ISA_F, ISA_D, ISA_Q, ISA_C);

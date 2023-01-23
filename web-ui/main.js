@@ -175,7 +175,7 @@ function renderConversion(inst, abi=false) {
     if (frag.mem) {
       asm = '(' + asm + ')';
     }
-    
+
     return `<span style='color:var(${color})'>${asm}<span/>`;
   });
 

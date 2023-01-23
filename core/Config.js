@@ -9,8 +9,8 @@
 // creates an enum object from an array of string names
 function makeEnum(names) {
   return Object.freeze(
-    names.reduce((o, n) => { 
-      o[n] = Symbol(n); 
+    names.reduce((o, n) => {
+      o[n] = Symbol(n);
       return o;
     }, {})
   );
@@ -45,7 +45,7 @@ export const configFields = {
 
 /**
  * Default configuration
- * - if no default defined, then constructed 
+ * - if no default defined, then constructed
  *   from the first option in `opts`
  */
 export const configDefault = Object.freeze(

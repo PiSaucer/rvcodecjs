@@ -21,7 +21,7 @@ export class Encoder {
 
   /**
    * Value from XLEN_MASK for passing the expected xlen to the decoder
-   * - Only matters for C instructions, 
+   * - Only matters for C instructions,
    *   set to `XLEN_MASK.all` for all standard 32-bit instructions
    * @type Integer
    */
@@ -251,8 +251,8 @@ export class Encoder {
         floatRd = false;
       }
     }
-    const rd = encReg(dest, floatRd), 
-      rs1 = encReg(src1, floatRs1), 
+    const rd = encReg(dest, floatRd),
+      rs1 = encReg(src1, floatRs1),
       rs2 = this.#inst.rs2 ?? encReg(src2, true),
       rm = this.#inst.funct3 ?? '111'; // funct3 or dynamic rounding mode
 
@@ -392,7 +392,7 @@ export class Encoder {
       rs1 = (this.#inst.funct3[0] === '0')
         ? encReg(src)
         : encImm(src, FIELDS.rs1.pos[1]);
-    
+
     } else {
       // Trap instructions
       rs1 = ''.padStart(FIELDS.rs1.pos[1], '0');
@@ -417,7 +417,7 @@ export class Encoder {
 
     // Convert to binary representation
     const floatInst = this.#inst.opcode === OPCODE.STORE_FP;
-    const rs2 = encReg(src, floatInst), 
+    const rs2 = encReg(src, floatInst),
       rs1 = encReg(base),
       imm = encImm(offset, len_11_5 + len_4_0),
       imm_11_5 = imm.substring(0, len_11_5),
@@ -511,7 +511,7 @@ export class Encoder {
     // Declare operands
     let dest, addr, src;
 
-    // Get operands, separately for 'lr' instruction  
+    // Get operands, separately for 'lr' instruction
     if (/^lr\.[wd]$/.test(this.#mne)) {
       dest = this.#opr[0];
       addr = this.#opr[1];
@@ -528,7 +528,7 @@ export class Encoder {
       aq = '0', rl = '0';
 
     // Construct binary instruction
-    this.bin = this.#inst.funct5 + aq + rl + rs2 + rs1 + 
+    this.bin = this.#inst.funct5 + aq + rl + rs2 + rs1 +
       this.#inst.funct3 + rd + this.#inst.opcode;
   }
 
@@ -537,11 +537,11 @@ export class Encoder {
    */
   #encodeR4() {
     // Get operands
-    const dest = this.#opr[0], src1 = this.#opr[1], 
+    const dest = this.#opr[0], src1 = this.#opr[1],
       src2 = this.#opr[2], src3 = this.#opr[3];
 
     // Convert to binary representation
-    const rd = encReg(dest, true), rs1 = encReg(src1, true), 
+    const rd = encReg(dest, true), rs1 = encReg(src1, true),
       rs2 = encReg(src2, true), rs3 = encReg(src3, true),
       fmt = this.#inst.fp_fmt, rm = '111'; // dynamic rounding mode
 
