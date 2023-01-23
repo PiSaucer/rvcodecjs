@@ -8,6 +8,7 @@
 
 import { Instruction, convertRegToAbi } from "../core/Instruction.js";
 import { configDefault, COPTS_ISA } from "../core/Config.js";
+import { buildSearchResults, clearSearchResults, renderSearchResults, iterateSearchResults, getSelectedMnemonic, buildPlaceholder, getPlaceholderString } from "./completion.js";
 
 /* Import colors from CSS */
 const colors = [
@@ -73,8 +74,10 @@ const fieldColorMap = {
 
 /* Fast access to selected document elements */
 const input = document.getElementById('search-input');
+const inputPlaceholder = document.getElementById('search-placeholder');
 const abiParameter = document.getElementById('abi');
 const isaParameter = document.getElementById('isa');
+const searchResults = document.getElementById('search-result-list');
 
 /**
  * Upon loading page, trigger conversion if hash params exist
@@ -82,6 +85,7 @@ const isaParameter = document.getElementById('isa');
 window.onload = function () {
   // No hash params
   if (!window.location.hash) {
+    // Exit
     return;
   }
 
@@ -111,17 +115,83 @@ window.onload = function () {
 }
 
 /**
- * Conversion upon input event
+ * Input callbacks
  */
-input.onkeydown = function (event) {
-  // Run conversion when getting 'Enter'
-  if (event.key !== 'Enter') {
+function inputChange() {
+  buildSearchResults();
+}
+input.addEventListener('input', function (event) {
+  inputChange();
+});
+
+input.addEventListener('keydown', function (event) {
+  if (event.key === 'Tab' || event.key === 'Enter') {
+    // Complete input with placeholder value on 'Tab' or 'Enter'
+    const selectedMne = getSelectedMnemonic();
+    const inputMne = input.value.trimStart().split(' ')[0]?.toLowerCase();
+    if (selectedMne !== undefined && inputMne !== selectedMne) {
+      input.value += getPlaceholderString() + ' ';
+      event.preventDefault(); // Prevent tab-indexing to next element
+      inputChange();
+
+    } else if (event.key === 'Enter') {
+      // Run conversion when getting 'Enter'
+      runResult();
+      // Clear placeholder
+      if (input.value.length > 0) {
+        searchResults.toggleAttribute('hidden', true);
+      }
+    }
+
+  } else if (event.key === 'ArrowDown') {
+    // Next search result when 'ArrowDown'
+    iterateSearchResults(true);
+    buildPlaceholder();
+    event.preventDefault(); // Prevent jumping to back of input
+
+  } else if (event.key === 'ArrowUp') {
+    // Prev search result when 'ArrowUp'
+    iterateSearchResults(false);
+    buildPlaceholder();
+    event.preventDefault(); // Prevent jumping to front of input
+
+  } else if (event.key === 'Escape') {
+    // Invalidate iterator in case someone wants to force a bad instruction
+    clearSearchResults();
+    event.preventDefault();
+  }
+});
+
+/**
+ * Search results callbacks
+ */
+searchResults.addEventListener('click', function(event) {
+  // Get mne from clicked search result
+  const mne = event.srcElement.mne;
+
+  // No mne, exit early
+  if (mne === undefined) {
     return;
   }
 
-  runResult();
-}
+  // Choose whether to autocomplete or run result
+  const inputMne = input.value.trimStart().split(' ')[0]?.toLowerCase();
+  if (inputMne !== mne) {
+    // Complete input mne
+    input.value = mne + ' ';
+    buildSearchResults();
+  } else {
+    // Otherwise, run result
+    runResult();
+  }
 
+  // Refocus on input
+  input.focus();
+});
+
+/**
+ * Execute instruction encoding and decoding
+ */
 function runResult() {
   // Get the instruction from input box
   let q = input.value;
@@ -297,6 +367,7 @@ parameterBtn.addEventListener("click", () => {
 // When user clicks the close button or outside the modal div, close the div and update the result
 function updateParameter() {
   modalDiv.style.display = "none";
+  inputChange();
   runResult();
 }
 
