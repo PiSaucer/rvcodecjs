@@ -6,7 +6,7 @@
  * Copyright (c) 2021-2022 LupLab @ UC Davis
  */
 
-import { BASE } from './Constants.js';
+import { BASE, ISA } from './Constants.js';
 import { configDefault } from './Config.js';
 
 import { Decoder, decRegAbi } from './Decoder.js';
@@ -57,7 +57,7 @@ export class Instruction {
    * @type Array
    */
   binFrags;
-  
+
   /* Private members */
   #config;
   #xlens;
@@ -82,16 +82,19 @@ export class Instruction {
     // Regular expression for alphabetic character (first letter of opcode)
     const asmRegEx = /^[a-zA-Z]$/;
 
-    // Binary instruction
-    if (binRegEx.test(instruction)) {
+    // Test for valid mnemonic input before interpreting as value
+    const validMne = instruction.trimStart().split(' ')[0] in ISA;
+    if (validMne) {
+      // Shortcircuit to assembly instruction when valid mnemonic detected
+      this.#encodeBin(instruction);
+    } else if (binRegEx.test(instruction)) {
+      // Binary instruction
       this.bin = convertBase(instruction, BASE.bin, BASE.bin, 32);
-    }
-    // Hexadecimal instruction
-    else if (hexRegEx.test(instruction)) {
+    } else if (hexRegEx.test(instruction)) {
+      // Hexadecimal instruction
       this.bin = convertBase(instruction, BASE.hex, BASE.bin, 32);
-    }
-    // Assembly instruction (first character is a letter)
-    else if (asmRegEx.test(instruction[0])) {
+    } else if (asmRegEx.test(instruction[0])) {
+      // Assembly instruction (first character is a letter)
       this.#encodeBin(instruction);
     }
 

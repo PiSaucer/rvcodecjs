@@ -21,7 +21,7 @@ export class Encoder {
 
   /**
    * Value from XLEN_MASK for passing the expected xlen to the decoder
-   * - Only matters for C instructions, 
+   * - Only matters for C instructions,
    *   set to `XLEN_MASK.all` for all standard 32-bit instructions
    * @type Integer
    */
@@ -251,8 +251,8 @@ export class Encoder {
         floatRd = false;
       }
     }
-    const rd = encReg(dest, floatRd), 
-      rs1 = encReg(src1, floatRs1), 
+    const rd = encReg(dest, floatRd),
+      rs1 = encReg(src1, floatRs1),
       rs2 = this.#inst.rs2 ?? encReg(src2, true),
       rm = this.#inst.funct3 ?? '111'; // funct3 or dynamic rounding mode
 
@@ -392,7 +392,7 @@ export class Encoder {
       rs1 = (this.#inst.funct3[0] === '0')
         ? encReg(src)
         : encImm(src, FIELDS.rs1.pos[1]);
-    
+
     } else {
       // Trap instructions
       rs1 = ''.padStart(FIELDS.rs1.pos[1], '0');
@@ -417,7 +417,7 @@ export class Encoder {
 
     // Convert to binary representation
     const floatInst = this.#inst.opcode === OPCODE.STORE_FP;
-    const rs2 = encReg(src, floatInst), 
+    const rs2 = encReg(src, floatInst),
       rs1 = encReg(base),
       imm = encImm(offset, len_11_5 + len_4_0),
       imm_11_5 = imm.substring(0, len_11_5),
@@ -511,8 +511,8 @@ export class Encoder {
     // Declare operands
     let dest, addr, src;
 
-    // Get operands, separately for 'lr' instruction  
-    if (/^lr\.[wd]$/.test(this.#mne)) {
+    // Get operands, separately for 'lr' instruction
+    if (/^lr\./.test(this.#mne)) {
       dest = this.#opr[0];
       addr = this.#opr[1];
       src  = 'x0'; // converts to '00000'
@@ -528,7 +528,7 @@ export class Encoder {
       aq = '0', rl = '0';
 
     // Construct binary instruction
-    this.bin = this.#inst.funct5 + aq + rl + rs2 + rs1 + 
+    this.bin = this.#inst.funct5 + aq + rl + rs2 + rs1 +
       this.#inst.funct3 + rd + this.#inst.opcode;
   }
 
@@ -537,11 +537,11 @@ export class Encoder {
    */
   #encodeR4() {
     // Get operands
-    const dest = this.#opr[0], src1 = this.#opr[1], 
+    const dest = this.#opr[0], src1 = this.#opr[1],
       src2 = this.#opr[2], src3 = this.#opr[3];
 
     // Convert to binary representation
-    const rd = encReg(dest, true), rs1 = encReg(src1, true), 
+    const rd = encReg(dest, true), rs1 = encReg(src1, true),
       rs2 = encReg(src2, true), rs3 = encReg(src3, true),
       fmt = this.#inst.fp_fmt, rm = '111'; // dynamic rounding mode
 
@@ -560,10 +560,10 @@ export class Encoder {
     // Encode registers, but overwite with static values if present
     const rdRs1 = this.#inst.rdRs1Val !== undefined
       ? encImm(this.#inst.rdRs1Val, FIELDS.c_rd_rs1.pos[1])
-      : encReg(destSrc1);
+      : (destSrc1 === undefined ? '01000' : encReg(destSrc1));
     const rs2 = this.#inst.rs2Val !== undefined
       ? encImm(this.#inst.rs2Val, FIELDS.c_rs2.pos[1])
-      : encReg(src2);
+      : (src2 === undefined ? '01000' : encReg(src2));
 
     // Validate operands
     if (this.#inst.rdRs1Excl !== undefined) {
@@ -604,8 +604,8 @@ export class Encoder {
     // Encode operands, but overwite with static values if present
     const rdRs1 = skipRdRs1
       ? encImm(this.#inst.rdRs1Val, FIELDS.c_rd_rs1.pos[1])
-      : encReg(destSrc1, floatRdRs1);
-    const immVal = this.#inst.immVal ?? Number(immediate);
+      : (destSrc1 === undefined ? '01000' : encReg(destSrc1, floatRdRs1));
+    let immVal = this.#inst.immVal ?? Number(immediate);
 
     // Validate operands
     if (this.#inst.rdRs1Excl !== undefined) {
@@ -616,8 +616,13 @@ export class Encoder {
         }
       }
     }
-    if (this.#inst.nzimm && immVal === 0) {
-      throw `Invalid immediate "${immediate}", ${this.#mne} instruction expects non-zero value`;
+    if (this.#inst.nzimm && (immVal === 0 || isNaN(immVal))) {
+      // If missing immediate, generate lowest non-zero immediate value
+      if (immediate === undefined) {
+        immVal = minImmFromBits(this.#inst.immBits);
+      } else {
+        throw `Invalid immediate "${immediate}", ${this.#mne} instruction expects non-zero value`;
+      }
     }
     if (this.#inst.uimm && immVal < 0) {
       throw `Invalid immediate "${immediate}", ${this.#mne} instruction expects non-negative value`;
@@ -643,7 +648,7 @@ export class Encoder {
 
     // Encode operands and parse immediate for validation
     const rs2 = encReg(src, floatRs2);
-    const immVal = Number(offset);
+    let immVal = Number(offset);
 
     // Validate operands
     if (this.#inst.uimm && immVal < 0) {
@@ -666,11 +671,16 @@ export class Encoder {
 
     // Encode operands and parse immediate for validation
     const rdPrime = encRegPrime(dest);
-    const immVal = Number(immediate);
+    let immVal = Number(immediate);
 
     // Validate operands
-    if (this.#inst.nzimm && immVal === 0) {
-      throw `Invalid immediate "${immediate}", ${this.#mne} instruction expects non-zero value`;
+    if (this.#inst.nzimm && (immVal === 0 || isNaN(immVal))) {
+      // If missing immediate, generate lowest non-zero immediate value
+      if (immediate === undefined) {
+        immVal = minImmFromBits(this.#inst.immBits);
+      } else {
+        throw `Invalid immediate "${immediate}", ${this.#mne} instruction expects non-zero value`;
+      }
     }
     if (this.#inst.uimm && immVal < 0) {
       throw `Invalid immediate "${immediate}", ${this.#mne} instruction expects non-negative value`;
@@ -696,7 +706,7 @@ export class Encoder {
     // Encode operands and parse immediate for validation
     const rdPrime = encRegPrime(dest, floatRd);
     const rs1Prime = encRegPrime(base);
-    const immVal = Number(offset);
+    let immVal = Number(offset);
 
     // Validate operands
     if (this.#inst.uimm && immVal < 0) {
@@ -724,7 +734,7 @@ export class Encoder {
     // Encode operands and parse immediate for validation
     const rs2Prime = encRegPrime(src, floatRs2);
     const rs1Prime = encRegPrime(base);
-    const immVal = Number(immediate);
+    let immVal = Number(immediate);
 
     // Validate operands
     if (this.#inst.uimm && immVal < 0) {
@@ -763,11 +773,16 @@ export class Encoder {
 
     // Encode operands, but overwite with static values if present
     const rdRs1Prime = encRegPrime(destSrc1);
-    const immVal = this.#inst.immVal ?? Number(immediate);
+    let immVal = this.#inst.immVal ?? Number(immediate);
 
     // Validate operands
-    if (this.#inst.nzimm && immVal === 0) {
-      throw `Invalid immediate "${immediate}", ${this.#mne} instruction expects non-zero value`;
+    if (this.#inst.nzimm && (immVal === 0 || isNaN(immVal))) {
+      // If missing immediate, generate lowest non-zero immediate value
+      if (immediate === undefined) {
+        immVal = minImmFromBits(this.#inst.immBits);
+      } else {
+        throw `Invalid immediate "${immediate}", ${this.#mne} instruction expects non-zero value`;
+      }
     }
     if (this.#inst.uimm && immVal < 0) {
       throw `Invalid immediate "${immediate}", ${this.#mne} instruction expects non-negative value`;
@@ -823,17 +838,36 @@ function encImmBits(immediate, immBits) {
   return bin;
 }
 
+// Get the lowest possible non-zero value from an immBits configuration
+function minImmFromBits(immBits) {
+  // Local recursive function for finding mininum value from arbitrarily nested arrays
+  function deepMin(numOrArr) {
+    let minVal = Infinity;
+    if (typeof numOrArr === 'number') {
+      return numOrArr;
+    }
+    for (let e of numOrArr) {
+      minVal = Math.min(minVal, deepMin(e));
+    }
+    return minVal;
+  }
+  return Number('0b1' + ''.padStart(deepMin(immBits), '0'));
+}
+
 // Convert register numbers to binary
 function encReg(reg, floatReg=false) {
   // Attempt to convert from ABI name to x<num> or f<num>, depending on `floatReg`
   reg = (floatReg ? FLOAT_REGISTER[reg] : REGISTER[reg]) ?? reg;
   // Validate using register file prefix determined from `floatReg` parameter
   let regFile = floatReg ? 'f' : 'x';
-  if ((reg?.length > 0 && reg[0] !== regFile) || !(/^[fx]\d+/.test(reg))) {
+  if (reg === undefined || reg.length === 0) {
+    // Missing operand, helpfully return 'x0' or 'f0' by default
+    return '00000';
+  } else if (reg[0] !== regFile || !(/^[fx]\d+/.test(reg))) {
     throw `Invalid or unknown ${floatReg ? 'float ' : ''}register format: "${reg}"`;
   }
   // Attempt to parse the decimal register address, set to 0 on failed parse
-  let dec = parseInt(reg?.substring(1));
+  let dec = parseInt(reg.substring(1));
   if (isNaN(dec)) {
     dec = 0;
   } else if (dec < 0 || dec > 31) {
@@ -844,6 +878,12 @@ function encReg(reg, floatReg=false) {
 
 // Convert compressed register numbers to binary
 function encRegPrime(reg, floatReg=false) {
+  // Missing operand, use x8 or f8
+  if (reg === undefined) {
+    return '000';
+  }
+
+  // Encode register
   const encoded = encReg(reg, floatReg);
   // Make sure that compressed register belongs to x8-x15/f8-15 range
   // - Full 5-bit encoded register should conform to '01xxx', use the 'xxx' in the encoded instruction
