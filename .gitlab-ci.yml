@@ -8,6 +8,7 @@ pages:
     - cp -r web-ui/* public
     # change js file paths according to changed folder structure
     - sed -i -e 's/\.\.\/core\//\.\/core\//g' ./public/main.js
+    - sed -i -e 's/\.\.\/core\//\.\/core\//g' ./public/completion.js
   artifacts:
     paths:
       - public
