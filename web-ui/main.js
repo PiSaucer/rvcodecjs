@@ -367,7 +367,17 @@ parameterBtn.addEventListener("click", () => {
 // When user clicks the close button or outside the modal div, close the div and update the result
 function updateParameter() {
   modalDiv.style.display = "none";
+
+  // Update input and search results
+  const hidingSearchResults = searchResults.hasAttribute('hidden');
   inputChange();
+
+  // Continue hiding search results if previously hidden
+  if (hidingSearchResults) {
+    searchResults.toggleAttribute('hidden', true);
+  }
+
+  // Run the input using the new settings
   runResult();
 }
 
