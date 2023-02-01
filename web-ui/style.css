@@ -213,7 +213,7 @@ body {
 #results-container-box{
     border: 1px solid var(--color-fg);
     margin: 0ch 1ch 1ch 1ch;
-    padding-right: 1.5ch;
+    padding-right: 0.75ch;
     /* Results are hidden by default and dynamically shown on search*/
     display: none;
 }
@@ -232,7 +232,7 @@ body {
 .rows-container{
     display: grid;
     align-items: stretch;
-    column-gap: 5ch;
+    column-gap: 3ch;
     row-gap: 1ch;
 
     /* Labels (on left) will shrink when data needs more space */
@@ -265,23 +265,22 @@ body {
 #binary-data {
     height: fit-content;
     width: max-content;
-
-    /* Increased padding to give users a wider area to select */
-    padding: 1ch 1ch;
-
-    /* Move left to compensate for left padding */
-    margin-left: -1ch;
-
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 1rem;
-
     transition: background-color 400ms linear;
+}
+
+/* No separate between every 16 bits when the screen is wide */
+.binary-break {
+    display: none;
 }
 
 @media (max-width: 700px) {
     #binary-data {
         grid-template-columns: 1fr 1fr;
+    }
+
+    /* Separate between every 16 bits when the screen is smaller */
+    .binary-break {
+        display: block;
     }
 }
 
@@ -291,30 +290,34 @@ body {
     }
 }
 
-/* Groups of 8 bits that wrap together depending on
- * #binary-data's grid-template-columns */
-.binary-byte {
-    display: grid;
-    grid-auto-flow: column;
-    gap: 1rem;
-}
-
-/* Groups of 4 bits with more space around them */
-.binary-nibble {
-    display: grid;
-    grid-auto-flow: column;
-    gap: 0.45rem;
-}
-
 .binary-bit {
-    width: 0.3rem;
     height: 0.9rem;
 
     /* --bit-color defined dynamically by script */
     color: var(--bit-color);
+    margin-right: 0.12rem;
+}
 
-    display: grid;
-    place-content: center;
+.binary-fragment {
+    position: relative;
+}
+
+/* Binary tooltip conversion */
+.binary-tooltip {
+    visibility: hidden;
+    width: max-content;
+    background-color: var(--color-fg);
+    color: var(--color-bg);
+    text-align: center;
+    border-radius: 5px;
+    padding: 3px;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+    top: 110%;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 /*css the copy-button and the row-data*/
