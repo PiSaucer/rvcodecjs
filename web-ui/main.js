@@ -246,7 +246,7 @@ function renderConversion(inst, abi=false) {
       asm = '(' + asm + ')';
     }
 
-    return `<span style='color:var(${color})'>${asm}<span/>`;
+    return `<span class='${"asm-" + frag.asm}' style='color:var(${color})'>${asm}</span>`;
   });
 
   asmInst = asmTokens[0];
@@ -267,21 +267,148 @@ function renderConversion(inst, abi=false) {
   // Display binary instruction
   let idx = 0;
   let binaryData = "";
-  let bitElements = document.getElementsByClassName('binary-bit');
+  let binaryDiv = document.getElementById('binary-data');
+  binaryDiv.innerHTML = "";
+
+  // Map assembly to the list of binary fields
+  let asmMap = {};
+
   inst.binFrags.forEach(frag => {
     let field = frag.field.match(/^[a-z0-9\s]+/);
     let color = fieldColorMap[field];
 
+    let fieldClass = "bin-" + frag.field;
+    let asmClass = "asm-" + frag.asm;
+    if (asmClass in asmMap) {
+      asmMap["asm-" + frag.asm].push(fieldClass);
+    }
+    else {
+      asmMap["asm-" + frag.asm] = [fieldClass];
+    }
+
+    // Separate bits into binary fragments
+    let binaryFragment = document.createElement("span");
+    binaryFragment.classList.add("binary-fragment");
+    binaryFragment.classList.add(fieldClass);
+    binaryDiv.appendChild(binaryFragment);
+
+    // Create tooltip for each fragment
+    let tooltipFragment = document.createElement("span");
+    tooltipFragment.textContent = frag.field;
+    tooltipFragment.classList.add("binary-tooltip");
+    binaryFragment.appendChild(tooltipFragment);
+
+    // Add bits into each fragment
+    let fragEndPosition = idx + frag.bits.length;
     [...frag.bits].forEach(bit => {
-      let bitElm = bitElements[idx];
-      bitElm.innerText = bit;
+      let bitElm = `<span class='binary-bit' style='color: var(${color})'>${bit}</span>`;
+      binaryFragment.innerHTML += bitElm;
       binaryData += bit;
-      bitElm.style.color = `var(${color})`;
       idx++;
+
+      // Separate between every 4 bits
+      if (idx%4 === 0) {
+        if (idx === fragEndPosition) {
+          binaryDiv.innerHTML += ' ';
+        }
+        else {
+          binaryFragment.innerHTML += ' ';
+        }
+      }
+
+      // A responsive break for every 16 bits
+      if (idx%16 === 0) {
+        if (idx === fragEndPosition) {
+          binaryDiv.innerHTML += "<br class='binary-break'>";
+        }
+        else {
+          binaryFragment.innerHTML += "<br class='binary-break'>";
+        }
+      }
     });
   });
-  for (; idx < bitElements.length; idx++) {
-    bitElements[idx].innerText = '';
+
+  // Highlight feature
+  let superHighlight = "yellow";
+  let subHighlight = "#ebebeb";
+
+  // Handle tooltip highlight for binary fragment. Info label only appears when showLabel is set true
+  let tooltipBinaryDisplay = (binDiv, isDisplay, showLabel = false) => {
+    // Set the options based on isDisplay
+    let visibility = (isDisplay && showLabel)?"visible":"hidden";
+    let backgroundColor = (isDisplay)?((showLabel)?superHighlight:subHighlight):"inherit";
+
+    binDiv.childNodes.forEach(child => {
+      if (child.classList) {
+        // Handle binary bits
+        if (child.classList.contains("binary-bit")) {
+          child.style.backgroundColor = backgroundColor;
+        }
+        // Handle binary tooltip
+        else if (child.classList.contains("binary-tooltip")) {
+          child.style.visibility = visibility;
+        }
+      }
+    });
+  }
+
+  // Handle tooltip highlight for assembly fragment
+  let tooltipAsmDisplay = (asmDiv, isDisplay, isSuper = false) => {
+    asmDiv.style.backgroundColor = (isDisplay)?(isSuper?superHighlight:subHighlight):"inherit";
+  }
+
+  for (let asmKey in asmMap) {
+    // Add mouse over for each assembly fragment
+    let asmDiv = document.getElementsByClassName(asmKey)[0];
+    asmDiv.addEventListener("mouseover", () => {
+      tooltipAsmDisplay(asmDiv, true, true);
+      asmMap[asmKey].forEach(binItem => {
+        let binDiv = document.getElementsByClassName(binItem)[0];
+
+        // Only highlight bits, but not show info label
+        tooltipBinaryDisplay(binDiv, true);
+      });
+    });
+
+    // When the mouse stop pointing to assembly fragments
+    asmDiv.addEventListener("mouseout", () => {
+      tooltipAsmDisplay(asmDiv, false);
+      // Stop highlighted for other corresponding binary fragments
+      asmMap[asmKey].forEach(binItem => {
+        let binDiv = document.getElementsByClassName(binItem)[0];
+        tooltipBinaryDisplay(binDiv, false);
+      });
+    });
+
+    // Handle tooltip pointing to binary fragments
+    asmMap[asmKey].forEach(binItem => {
+      let binDiv = document.getElementsByClassName(binItem)[0];
+      // Add mousehover for binary fragments
+      binDiv.addEventListener("mouseover", () => {
+        tooltipAsmDisplay(asmDiv, true);
+
+        // Highlight bits and show info labels
+        tooltipBinaryDisplay(binDiv, true, true);
+
+        // Ligher highlighted for other corresponding binary fragments
+        asmMap[asmKey].forEach(otherBin => {
+          if (otherBin !== binItem)
+            tooltipBinaryDisplay(document.getElementsByClassName(otherBin)[0], true, false);
+        });
+      });
+
+      // When the mouse stop pointing to binary fragment
+      binDiv.addEventListener("mouseout", () => {
+        tooltipAsmDisplay(asmDiv, false);
+        tooltipBinaryDisplay(binDiv, false);
+
+        // Stop highlighted for other corresponding binary fragments
+        asmMap[asmKey].forEach(otherBin => {
+          if (otherBin !== binItem)
+            tooltipBinaryDisplay(document.getElementsByClassName(otherBin)[0], false);
+        });
+      });
+    });
   }
 
   // Copy button function
