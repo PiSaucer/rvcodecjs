@@ -12,14 +12,27 @@
     --color-base2:   #eee8d5;
     --color-base3:   #fdf6e3;
 
-    --color-yellow:  #b58900;
+    /* --color-yellow:  #b58900;
     --color-orange:  #cb4b16;
     --color-red:     #dc322f;
     --color-magenta: #d33682;
     --color-violet:  #6c71c4;
     --color-blue:    #268bd2;
     --color-cyan:    #2aa198;
-    --color-green:   #859900;
+    --color-green:   #859900; */
+    /*
+        https://personal.sron.nl/~pault/#sec:qualitative
+        https://personal.sron.nl/~pault/images/scheme_vibrant.png
+    */
+    --color-yellow:  #000000; /* black - I made this up */
+    --color-orange:  #ee7733;
+    --color-red:     #bbbbbb; /* grey */
+    --color-magenta: #ee3377;
+    --color-violet:  #cc3311;
+    --color-blue:    #0077bb;
+    --color-cyan:    #33bbee;
+    --color-green:   #009988; /* teal */
+
 }
 
 /* Light colorscheme by default */
