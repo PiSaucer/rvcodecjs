@@ -20,6 +20,19 @@
     --color-blue:    #268bd2;
     --color-cyan:    #2aa198;
     --color-green:   #859900;
+
+    /*
+        https://jfly.uni-koeln.de/color/
+        https://jfly.uni-koeln.de/color/image/pallete.jpg
+    */
+    --color-violet:  #000000; /* black */
+    --color-orange:    #E69F00;
+    --color-cyan:    #56B4E9; /* sky-blue */
+    --color-green: #009E73;
+    --color-yellow:  #F0E442;
+    --color-blue:   #0072B2;
+    --color-red:  #D55E00; /* vermilion */
+    --color-magnenta:   #CC79A7; /* purple */
 }
 
 /* Light colorscheme by default */
