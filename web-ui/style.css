@@ -12,14 +12,27 @@
     --color-base2:   #eee8d5;
     --color-base3:   #fdf6e3;
 
-    --color-yellow:  #b58900;
+    /* --color-yellow:  #b58900;
     --color-orange:  #cb4b16;
     --color-red:     #dc322f;
     --color-magenta: #d33682;
     --color-violet:  #6c71c4;
     --color-blue:    #268bd2;
     --color-cyan:    #2aa198;
-    --color-green:   #859900;
+    --color-green:   #859900; */
+
+    /*
+        https://personal.sron.nl/~pault/#sec:qualitative
+        https://personal.sron.nl/~pault/images/scheme_bright.png
+    */
+    --color-yellow:  #ccbb44;
+    --color-orange:  #aa3377; /* purple */
+    --color-red:     #bbbbbb; /* grey */
+    --color-magenta: #ee6677; /* red */
+    --color-violet:  #000000; /* black - I made this up */
+    --color-blue:    #4477aa;
+    --color-cyan:    #66ccee;
+    --color-green:   #228833;
 }
 
 /* Light colorscheme by default */
