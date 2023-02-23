@@ -13,16 +13,16 @@ import { buildSearchResults, clearSearchResults, renderSearchResults, iterateSea
 
 /* Define colors per frag ID */
 const fragColorMap = {
-  [FRAG.UNSD]: '--color-violet',
-  [FRAG.CSR]: '--color-green',
+  [FRAG.UNSD]: '--color-fg',
+  [FRAG.CSR]: '--color-magenta',
   [FRAG.IMM]: '--color-blue',
-  [FRAG.OPC]: '--color-orange',
+  [FRAG.OPC]: '--color-red',
   [FRAG.PRED]: '--color-blue',
-  [FRAG.RD]: '--color-yellow',
-  [FRAG.RS1]: '--color-cyan',
-  [FRAG.RS2]: '--color-violet',
+  [FRAG.RD]: '--color-green',
+  [FRAG.RS1]: '--color-yellow',
+  [FRAG.RS2]: '--color-magenta',
   [FRAG.RS3]: '--color-blue',
-  [FRAG.SUCC]: '--color-cyan',
+  [FRAG.SUCC]: '--color-magenta',
 }
 
 /* Fast access to selected document elements */
