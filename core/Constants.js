@@ -1447,6 +1447,20 @@ export const CSR = {
   vstvec:         0x205,
 }
 
+// Frag ID
+export const FRAG = {
+  UNSD: 1, // UNUSED fragments display bits with no significance  
+  CSR: 2,
+  IMM: 3,
+  OPC: 4, // OPCODE includes opcode, funct3/4/5/12, fmt, etc
+  PRED: 5,
+  RD: 6,
+  RS1: 7,
+  RS2: 8,
+  RS3: 9,
+  SUCC: 10,
+}
+
 // Entire ISA
 export const ISA = Object.assign({},
   ISA_RV32I, ISA_RV64I, ISA_RV128I,
