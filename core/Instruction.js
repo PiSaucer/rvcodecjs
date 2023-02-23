@@ -168,7 +168,11 @@ export function convertRegToAbi(reg) {
  * @class
  */
 export class Frag {
-  constructor(asm, bits, field, mem = false) {
+  constructor(id, asm, bits, field, mem = false) {
+    /** Fragment ID (e.g. FRAG.OPC, FRAG.RS1, etc.)
+     * @type {Number}
+     */
+    this.id = id;
     /** Assembly fragment (e.g., 'addi', 'x5', etc.)
      * @type {String}
      */

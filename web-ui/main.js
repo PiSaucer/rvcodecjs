@@ -7,69 +7,22 @@
  */
 
 import { Instruction, convertRegToAbi } from "../core/Instruction.js";
+import { FRAG } from "../core/Constants.js";
 import { configDefault, COPTS_ISA } from "../core/Config.js";
 import { buildSearchResults, clearSearchResults, renderSearchResults, iterateSearchResults, getSelectedMnemonic, buildPlaceholder, getPlaceholderString } from "./completion.js";
 
-/* Import colors from CSS */
-const colors = [
-  '--color-yellow',
-  '--color-orange',
-  '--color-red',
-  '--color-magenta',
-  '--color-violet',
-  '--color-blue',
-  '--color-cyan',
-  '--color-green',
-]
-
-/* Define colors per field type */
-const fieldColorMap = {
-  /* Operation */
-  'opcode':  '--color-orange',
-  'funct2':  '--color-orange',
-  'funct3':  '--color-orange',
-  'funct4':  '--color-orange',
-  'funct5':  '--color-orange',
-  'funct6':  '--color-orange',
-  'funct7':  '--color-orange',
-  'funct12': '--color-orange',
-  'fmt':     '--color-orange',
-  'static':  '--color-orange',
-
-  /* Registers */
-  'rs1': '--color-cyan',
-  'rs2': '--color-violet',
-  'rs3': '--color-blue',
-  'rd':  '--color-yellow',
-  'rd/rs1':  '--color-yellow',
-  'rs1\'': '--color-cyan',
-  'rs2\'': '--color-violet',
-  'rd\'':  '--color-yellow',
-  'rd\'/rs1\'':  '--color-yellow',
-
-  /* Immediate */
-  'imm': '--color-blue',
-  'uimm': '--color-blue',
-  'nzimm': '--color-blue',
-  'nzuimm': '--color-blue',
-  'shamt': '--color-blue',
-  'shtyp': '--color-orange',
-  'jump target': '--color-blue',
-
-  /* Fence */
-  'fm': '--color-green',
-  'pred': '--color-blue',
-  'succ': '--color-cyan',
-
-  /* CSR */
-  'csr': '--color-green',
-
-  /* AMO */
-  'aq': '--color-green',
-  'rl': '--color-green',
-
-  /* FP */
-  'rm': '--color-magenta',
+/* Define colors per frag ID */
+const fragColorMap = {
+  [FRAG.UNSD]: '--color-fg',
+  [FRAG.CSR]: '--color-magenta',
+  [FRAG.IMM]: '--color-blue',
+  [FRAG.OPC]: '--color-red',
+  [FRAG.PRED]: '--color-blue',
+  [FRAG.RD]: '--color-green',
+  [FRAG.RS1]: '--color-yellow',
+  [FRAG.RS2]: '--color-magenta',
+  [FRAG.RS3]: '--color-blue',
+  [FRAG.SUCC]: '--color-magenta',
 }
 
 /* Fast access to selected document elements */
@@ -239,14 +192,12 @@ function renderConversion(inst, abi=false) {
   let asmInst;
   let asmTokens = inst.asmFrags.map(frag => {
     let asm = abi ? convertRegToAbi(frag.asm) : frag.asm;
-    let field = frag.field.match(/^[a-z0-9\s]+/);
-    let color = fieldColorMap[field];
+    let color = fragColorMap[frag.id];
 
     if (frag.mem) {
       asm = '(' + asm + ')';
     }
-
-    return `<span style='color:var(${color})'>${asm}<span/>`;
+    return `<span class='${"fragId-" + frag.id}' style='color:var(${color})'>${asm}</span>`;
   });
 
   asmInst = asmTokens[0];
@@ -267,22 +218,144 @@ function renderConversion(inst, abi=false) {
   // Display binary instruction
   let idx = 0;
   let binaryData = "";
-  let bitElements = document.getElementsByClassName('binary-bit');
+  let binaryDiv = document.getElementById('binary-data');
+  binaryDiv.innerHTML = "";
+  let fragIdList = new Set();
   inst.binFrags.forEach(frag => {
-    let field = frag.field.match(/^[a-z0-9\s]+/);
-    let color = fieldColorMap[field];
+    let color = fragColorMap[frag.id];
 
+    // Separate bits into binary fragments
+    let binaryFragment = document.createElement("span");
+    binaryFragment.classList.add("binary-fragment");
+    // Add fragID for each binary fragments
+    binaryFragment.classList.add("fragId-" + frag.id);
+    fragIdList.add("fragId-" + frag.id);
+    binaryDiv.appendChild(binaryFragment);
+
+    // Create tooltip for each fragment
+    let tooltipFragment = document.createElement("span");
+    tooltipFragment.textContent = frag.field + ((frag.id === FRAG.UNSD) ? " (unused)" : "");
+    tooltipFragment.classList.add("binary-tooltip");
+    binaryFragment.appendChild(tooltipFragment);
+
+    // Add bits into each fragment
+    let fragEndPosition = idx + frag.bits.length;
     [...frag.bits].forEach(bit => {
-      let bitElm = bitElements[idx];
-      bitElm.innerText = bit;
+      let bitElm = `<span class='binary-bit' style='color: var(${color})'>${bit}</span>`;
+      binaryFragment.innerHTML += bitElm;
       binaryData += bit;
-      bitElm.style.color = `var(${color})`;
       idx++;
+
+      // Separate between every 4 bits
+      if (idx%4 === 0) {
+        if (idx === fragEndPosition) {
+          binaryDiv.innerHTML += ' ';
+        }
+        else {
+          binaryFragment.innerHTML += ' ';
+        }
+      }
+
+      // A responsive break for every 16 bits
+      if (idx%16 === 0) {
+        if (idx === fragEndPosition) {
+          binaryDiv.innerHTML += "<br class='binary-break'>";
+        }
+        else {
+          binaryFragment.innerHTML += "<br class='binary-break'>";
+        }
+      }
     });
   });
-  for (; idx < bitElements.length; idx++) {
-    bitElements[idx].innerText = '';
+
+  // Highlight feature
+  let superHighlight = "yellow";
+  let subHighlight = "var(--color-hl)";
+
+  // Handle tooltip highlight for binary fragment. Info label only appears when showLabel is set true
+  let tooltipBinaryDisplay = (binDiv, isDisplay, showLabel = false) => {
+    // Set the options based on isDisplay
+    let visibility = (isDisplay && showLabel)?"visible":"hidden";
+    let backgroundColor = (isDisplay)?((showLabel)?superHighlight:subHighlight):"inherit";
+    binDiv.childNodes.forEach(child => {
+      if (child.classList) {
+        // Handle binary bits
+        if (child.classList.contains("binary-bit")) {
+          child.style.backgroundColor = backgroundColor;
+        }
+        // Handle binary tooltip
+        else if (child.classList.contains("binary-tooltip")) {
+          child.style.visibility = visibility;
+        }
+      }
+    });
   }
+
+  let binDivMouseHandle = (binDiv, binDivList, isMouseOver, asmDiv = null) => {
+    // Super highlighted for binary div
+    tooltipBinaryDisplay(binDiv, isMouseOver, true);
+
+    // Light highlighted for ASM div and other binary div
+    if (asmDiv !== null)
+      tooltipAsmDisplay(asmDiv, isMouseOver);
+
+    for (let otherKey in binDivList) {
+      let otherBinDiv = binDivList[otherKey];
+      if (otherBinDiv !== binDiv) {
+        tooltipBinaryDisplay(otherBinDiv, isMouseOver, false);
+      }
+    }
+  }
+
+  // Handle tooltip highlight for assembly fragment
+  let tooltipAsmDisplay = (asmDiv, isDisplay, isSuper = false) => {
+    asmDiv.style.backgroundColor = (isDisplay)?(isSuper?superHighlight:subHighlight):"inherit";
+  }
+
+  // Handle the tooltip function for each fragID
+  fragIdList.forEach(id => {
+    let fragList = document.getElementsByClassName(id);
+
+    let asmDiv = null;
+    let binDivList = {...fragList};
+    if (id !== "fragId-" + FRAG.UNSD) {
+      // ASM div is the first div in fragList
+      asmDiv = fragList[0];
+      // The rest is BIN fragments, so remove the first element (which is ASM)
+      delete binDivList[0];
+
+      // Handle tooltip for ASM div
+      asmDiv.addEventListener("mouseover", () => {
+        tooltipAsmDisplay(asmDiv, true, true);
+        // Only highlight binary bits, but not show info label
+        for (let key in binDivList) {
+          tooltipBinaryDisplay(binDivList[key], true);
+        }
+      });
+
+      // Remove highlight if hover out
+      asmDiv.addEventListener("mouseout", () => {
+        tooltipAsmDisplay(asmDiv, false);
+        // Stop highlighted for other corresponding binary fragments
+        for (let key in binDivList) {
+          tooltipBinaryDisplay(binDivList[key], false);
+        }
+      });
+    }
+
+    // Handle tooltip for binary div
+    for (let key in binDivList) {
+      let binDiv = binDivList[key];
+      binDiv.addEventListener("mouseover", () => {        
+        binDivMouseHandle(binDiv, binDivList, true, asmDiv);
+      })
+
+      // Remove highlight if hover out
+      binDiv.addEventListener("mouseout", () => {        
+        binDivMouseHandle(binDiv, binDivList, false, asmDiv);
+      });
+    }
+  })
 
   // Copy button function
   let copyBtn = {

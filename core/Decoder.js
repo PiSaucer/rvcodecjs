@@ -13,7 +13,7 @@ import { BASE, XLEN_MASK,
   ISA_LOAD_FP, ISA_STORE_FP, ISA_OP_FP,
   ISA_MADD, ISA_MSUB, ISA_NMADD, ISA_NMSUB,
   ISA_C0, ISA_C1, ISA_C2,
-  ISA,
+  ISA, FRAG
 } from './Constants.js'
 
 import { COPTS_ISA } from './Config.js'
@@ -298,12 +298,12 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      funct7: new Frag(this.#mne, funct7, FIELDS.r_funct7.name),
-      rd:     new Frag(dest, rd, FIELDS.rd.name),
-      rs1:    new Frag(src1, rs1, FIELDS.rs1.name),
-      rs2:    new Frag(src2, rs2, FIELDS.rs2.name),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.funct3.name),
+      funct7: new Frag(FRAG.OPC, this.#mne, funct7, FIELDS.r_funct7.name),
+      rd:     new Frag(FRAG.RD, dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(FRAG.RS1, src1, rs1, FIELDS.rs1.name),
+      rs2:    new Frag(FRAG.RS2, src2, rs2, FIELDS.rs2.name),
     };
 
     // Assembly fragments in order of instruction
@@ -363,18 +363,19 @@ export class Decoder {
     // Create fragments
     const useRm = inst.funct3 === undefined;
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      funct3: new Frag(this.#mne, funct3, useRm ? 'rm' : FIELDS.funct3.name),
-      funct5: new Frag(this.#mne, funct5, FIELDS.r_funct5.name),
-      fmt:    new Frag(this.#mne, fmt, FIELDS.r_fp_fmt.name),
-      rd:     new Frag(dest, rd, FIELDS.rd.name),
-      rs1:    new Frag(src1, rs1, FIELDS.rs1.name),
-      rs2:    new Frag(src2, rs2, FIELDS.rs2.name),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(FRAG.OPC, this.#mne, funct3, useRm ? 'rm' : FIELDS.funct3.name),
+      funct5: new Frag(FRAG.OPC, this.#mne, funct5, FIELDS.r_funct5.name),
+      fmt:    new Frag(FRAG.OPC, this.#mne, fmt, FIELDS.r_fp_fmt.name),
+      rd:     new Frag(FRAG.RD, dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(FRAG.RS1, src1, rs1, FIELDS.rs1.name),
+      rs2:    new Frag(FRAG.OPC, src2, rs2, FIELDS.rs2.name),
     };
 
     // Assembly fragments in order of instruction
     this.asmFrags.push(f['opcode'], f['rd'], f['rs1']);
     if (useRs2) {
+      f['rs2'].id = FRAG.RS2;
       this.asmFrags.push(f['rs2']);
     }
 
@@ -403,11 +404,11 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      rd:     new Frag(dest, rd, FIELDS.rd.name),
-      rs1:    new Frag(base, rs1, FIELDS.rs1.name),
-      imm:    new Frag(offset, imm, FIELDS.i_imm_11_0.name),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.funct3.name),
+      rd:     new Frag(FRAG.RD, dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(FRAG.RS1, base, rs1, FIELDS.rs1.name),
+      imm:    new Frag(FRAG.IMM, offset, imm, FIELDS.i_imm_11_0.name),
     };
 
     // Assembly fragments in order of instruction
@@ -443,11 +444,11 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      rd:     new Frag(dest, rd, FIELDS.rd.name),
-      rs1:    new Frag(base, rs1, FIELDS.rs1.name, true),
-      imm:    new Frag(offset, imm, FIELDS.i_imm_11_0.name),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.funct3.name),
+      rd:     new Frag(FRAG.RD, dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(FRAG.RS1, base, rs1, FIELDS.rs1.name, true),
+      imm:    new Frag(FRAG.IMM, offset, imm, FIELDS.i_imm_11_0.name),
     };
 
     // Assembly fragments in order of instruction
@@ -506,10 +507,10 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      rd:     new Frag(dest, rd, FIELDS.rd.name),
-      rs1:    new Frag(src, rs1, FIELDS.rs1.name),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.funct3.name),
+      rd:     new Frag(FRAG.RD, dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(FRAG.RS1, src, rs1, FIELDS.rs1.name),
     };
 
     if (shift) {
@@ -558,8 +559,8 @@ export class Decoder {
         const shamt_6_0 = shamt_6 + shamt_5 + shamt_4_0;
 
         // Create frags for shamt and shtyp
-        f['imm'] = new Frag(shamt, shamt_6_0, FIELDS.i_shamt_6_0.name);
-        f['shift'] = new Frag(this.#mne, imm_11_7, FIELDS.i_shtyp_11_7.name);
+        f['imm'] = new Frag(FRAG.IMM, shamt, shamt_6_0, FIELDS.i_shamt_6_0.name);
+        f['shift'] = new Frag(FRAG.OPC, this.#mne, imm_11_7, FIELDS.i_shtyp_11_7.name);
 
         // Set output ISA to RV64I
         this.isa = 'RV128I';
@@ -569,16 +570,16 @@ export class Decoder {
         const shamt_5_0 = shamt_5 + shamt_4_0;
 
         // Create frags for shamt and shtyp
-        f['imm'] = new Frag(shamt, shamt_5_0, FIELDS.i_shamt_5_0.name);
-        f['shift'] = new Frag(this.#mne, imm_11_6, FIELDS.i_shtyp_11_6.name);
+        f['imm'] = new Frag(FRAG.IMM, shamt, shamt_5_0, FIELDS.i_shamt_5_0.name);
+        f['shift'] = new Frag(FRAG.OPC, this.#mne, imm_11_6, FIELDS.i_shtyp_11_6.name);
 
         // Set output ISA to RV64I
         this.isa = this.isa ?? 'RV64I';
 
       } else {
         // Create frags for 5bit shamt with shtyp
-        f['imm'] = new Frag(shamt, shamt_4_0, FIELDS.i_shamt.name);
-        f['shift'] = new Frag(this.#mne, imm_11_5, FIELDS.i_shtyp_11_5.name);
+        f['imm'] = new Frag(FRAG.IMM, shamt, shamt_4_0, FIELDS.i_shamt.name);
+        f['shift'] = new Frag(FRAG.OPC, this.#mne, imm_11_5, FIELDS.i_shtyp_11_5.name);
       }
 
       // Validate upper bits of immediate field to ensure
@@ -597,7 +598,7 @@ export class Decoder {
       const imm = fields['imm'];
       const immediate = decImm(imm);
 
-      f['imm'] = new Frag(immediate, imm, FIELDS.i_imm_11_0.name);
+      f['imm'] = new Frag(FRAG.IMM, immediate, imm, FIELDS.i_imm_11_0.name);
 
       // Binary fragments from MSB to LSB
       this.binFrags.push(f['imm'], f['rs1'], f['funct3'], f['rd'], f['opcode']);
@@ -636,8 +637,8 @@ export class Decoder {
 
     // Create common fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.funct3.name),
     };
 
     // Create specific fragments
@@ -650,9 +651,9 @@ export class Decoder {
             dest = decReg(rd);
 
 
-      f['imm'] = new Frag(offset, imm, FIELDS.i_imm_11_0.name);
-      f['rs1'] = new Frag(base, rs1, FIELDS.rs1.name, true);
-      f['rd']  = new Frag(dest, rd, FIELDS.rd.name);
+      f['imm'] = new Frag(FRAG.IMM, offset, imm, FIELDS.i_imm_11_0.name);
+      f['rs1'] = new Frag(FRAG.RS1, base, rs1, FIELDS.rs1.name, true);
+      f['rd']  = new Frag(FRAG.RD, dest, rd, FIELDS.rd.name);
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode'], f['rd'], f['imm'], f['rs1']);
@@ -667,11 +668,11 @@ export class Decoder {
       let predecessor = decMem(pred);
       let successor = decMem(succ);
 
-      f['fm']   = new Frag(this.#mne, fm, FIELDS.i_fm.name);
-      f['pred'] = new Frag(predecessor, pred, FIELDS.i_pred.name);
-      f['succ'] = new Frag(successor, succ, FIELDS.i_succ.name);
-      f['rd']  = new Frag(this.#mne, rd, FIELDS.rd.name);
-      f['rs1'] = new Frag(this.#mne, rs1, FIELDS.rs1.name, loadExt);
+      f['fm']   = new Frag(FRAG.OPC, this.#mne, fm, FIELDS.i_fm.name);
+      f['pred'] = new Frag(FRAG.PRED, predecessor, pred, FIELDS.i_pred.name);
+      f['succ'] = new Frag(FRAG.SUCC, successor, succ, FIELDS.i_succ.name);
+      f['rd']  = new Frag(FRAG.OPC, this.#mne, rd, FIELDS.rd.name);
+      f['rs1'] = new Frag(FRAG.OPC, this.#mne, rs1, FIELDS.rs1.name, loadExt);
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode'], f['pred'], f['succ']);
@@ -683,9 +684,9 @@ export class Decoder {
     } else if (this.#mne === 'fence.i') {
       // FENCE.I instruction
 
-      f['imm'] = new Frag(this.#mne, imm, FIELDS.i_imm_11_0.name);
-      f['rs1'] = new Frag(this.#mne, rs1, FIELDS.rs1.name);
-      f['rd']  = new Frag(this.#mne, rd, FIELDS.rd.name);
+      f['imm'] = new Frag(FRAG.UNSD, this.#mne, imm, FIELDS.i_imm_11_0.name);
+      f['rs1'] = new Frag(FRAG.UNSD, this.#mne, rs1, FIELDS.rs1.name);
+      f['rd']  = new Frag(FRAG.UNSD, this.#mne, rd, FIELDS.rd.name);
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode']);
@@ -727,16 +728,16 @@ export class Decoder {
 
     // Create common fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      funct3: new Frag(this.#mne, funct3, FIELDS.funct3.name),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3: new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.funct3.name),
     };
 
     // Trap instructions - create specific fragments and render
     if (trap) {
       // Create remaining fragments
-      f['rd'] = new Frag(this.#mne, rd, FIELDS.rd.name);
-      f['rs1'] = new Frag(this.#mne, rs1, FIELDS.rs1.name);
-      f['funct12'] = new Frag(this.#mne, funct12, FIELDS.i_funct12.name);
+      f['rd'] = new Frag(FRAG.OPC, this.#mne, rd, FIELDS.rd.name);
+      f['rs1'] = new Frag(FRAG.OPC, this.#mne, rs1, FIELDS.rs1.name);
+      f['funct12'] = new Frag(FRAG.OPC, this.#mne, funct12, FIELDS.i_funct12.name);
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode']);
@@ -767,9 +768,9 @@ export class Decoder {
       }
 
       // Create remaining fragments
-      f['rd'] = new Frag(dest, rd, FIELDS.rd.name);
-      f['csr'] = new Frag(csr, csrBin, FIELDS.i_csr.name);
-      f['rs1'] = new Frag(src, rs1, srcFieldName);
+      f['rd'] = new Frag(FRAG.RD, dest, rd, FIELDS.rd.name);
+      f['csr'] = new Frag(FRAG.CSR, csr, csrBin, FIELDS.i_csr.name);
+      f['rs1'] = new Frag(FRAG.RS1, src, rs1, srcFieldName);
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode'], f['rd'], f['csr'], f['rs1']);
@@ -808,13 +809,13 @@ export class Decoder {
 
     // Create common fragments
     const f = {
-      opcode:   new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      funct3:   new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      rs1:      new Frag(base, rs1, FIELDS.rs1.name, true),
-      rs2:      new Frag(src, rs2, FIELDS.rs2.name),
-      imm_4_0:  new Frag(offset, imm_4_0, FIELDS.s_imm_4_0.name),
-      imm_11_5: new Frag(offset, imm_11_5, FIELDS.s_imm_11_5.name),
-      imm:      new Frag(offset, imm, 'imm'),
+      opcode:   new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3:   new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.funct3.name),
+      rs1:      new Frag(FRAG.RS1, base, rs1, FIELDS.rs1.name, true),
+      rs2:      new Frag(FRAG.RS2, src, rs2, FIELDS.rs2.name),
+      imm_4_0:  new Frag(FRAG.IMM, offset, imm_4_0, FIELDS.s_imm_4_0.name),
+      imm_11_5: new Frag(FRAG.IMM, offset, imm_11_5, FIELDS.s_imm_11_5.name),
+      imm:      new Frag(FRAG.IMM, offset, imm, 'imm'),
     };
 
     // Assembly fragments in order of instruction
@@ -855,15 +856,15 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode:   new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      funct3:   new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      rs1:      new Frag(src1, rs1, FIELDS.rs1.name),
-      rs2:      new Frag(src2, rs2, FIELDS.rs2.name),
-      imm_12:   new Frag(offset, imm_12, FIELDS.b_imm_12.name),
-      imm_11:   new Frag(offset, imm_11, FIELDS.b_imm_11.name),
-      imm_10_5: new Frag(offset, imm_10_5, FIELDS.b_imm_10_5.name),
-      imm_4_1:  new Frag(offset, imm_4_1, FIELDS.b_imm_4_1.name),
-      imm:      new Frag(offset, imm, 'imm'),
+      opcode:   new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      funct3:   new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.funct3.name),
+      rs1:      new Frag(FRAG.RS1, src1, rs1, FIELDS.rs1.name),
+      rs2:      new Frag(FRAG.RS2, src2, rs2, FIELDS.rs2.name),
+      imm_12:   new Frag(FRAG.IMM, offset, imm_12, FIELDS.b_imm_12.name),
+      imm_11:   new Frag(FRAG.IMM, offset, imm_11, FIELDS.b_imm_11.name),
+      imm_10_5: new Frag(FRAG.IMM, offset, imm_10_5, FIELDS.b_imm_10_5.name),
+      imm_4_1:  new Frag(FRAG.IMM, offset, imm_4_1, FIELDS.b_imm_4_1.name),
+      imm:      new Frag(FRAG.IMM, offset, imm, 'imm'),
     };
 
     // Assembly fragments in order of instruction
@@ -895,10 +896,10 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode:     new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      rd:         new Frag(dest, rd, FIELDS.rd.name),
-      imm_31_12:  new Frag(immediate, imm_31_12, FIELDS.u_imm_31_12.name),
-      imm:        new Frag(immediate, imm, FIELDS.u_imm_31_12.name),
+      opcode:     new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      rd:         new Frag(FRAG.RD, dest, rd, FIELDS.rd.name),
+      imm_31_12:  new Frag(FRAG.IMM, immediate, imm_31_12, FIELDS.u_imm_31_12.name),
+      imm:        new Frag(FRAG.IMM, immediate, imm, FIELDS.u_imm_31_12.name),
     };
 
     // Assembly fragments in order of instruction
@@ -930,13 +931,13 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode:     new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      rd:         new Frag(dest, rd, FIELDS.rd.name),
-      imm_20:     new Frag(offset, imm_20, FIELDS.j_imm_20.name),
-      imm_10_1:   new Frag(offset, imm_10_1, FIELDS.j_imm_10_1.name),
-      imm_11:     new Frag(offset, imm_11, FIELDS.j_imm_11.name),
-      imm_19_12:  new Frag(offset, imm_19_12, FIELDS.j_imm_19_12.name),
-      imm:        new Frag(offset, imm, 'imm'),
+      opcode:     new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      rd:         new Frag(FRAG.RD, dest, rd, FIELDS.rd.name),
+      imm_20:     new Frag(FRAG.IMM, offset, imm_20, FIELDS.j_imm_20.name),
+      imm_10_1:   new Frag(FRAG.IMM, offset, imm_10_1, FIELDS.j_imm_10_1.name),
+      imm_11:     new Frag(FRAG.IMM, offset, imm_11, FIELDS.j_imm_11.name),
+      imm_19_12:  new Frag(FRAG.IMM, offset, imm_19_12, FIELDS.j_imm_19_12.name),
+      imm:        new Frag(FRAG.IMM, offset, imm, 'imm'),
     };
 
     // Assembly fragments in order of instruction
@@ -977,19 +978,20 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode:   new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      rd:       new Frag(dest, rd, FIELDS.rd.name),
-      funct3:   new Frag(this.#mne, funct3, FIELDS.funct3.name),
-      rs1:      new Frag(addr, rs1, FIELDS.rs1.name, true),
-      rs2:      new Frag(src, rs2, FIELDS.rs2.name),
-      rl:       new Frag(this.#mne, rl, FIELDS.r_rl.name),
-      aq:       new Frag(this.#mne, aq, FIELDS.r_aq.name),
-      funct5:   new Frag(this.#mne, funct5, FIELDS.r_funct5.name),
+      opcode:   new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      rd:       new Frag(FRAG.RD, dest, rd, FIELDS.rd.name),
+      funct3:   new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.funct3.name),
+      rs1:      new Frag(FRAG.RS1, addr, rs1, FIELDS.rs1.name, true),
+      rs2:      new Frag(FRAG.OPC, src, rs2, FIELDS.rs2.name),
+      rl:       new Frag(FRAG.OPC, this.#mne, rl, FIELDS.r_rl.name),
+      aq:       new Frag(FRAG.OPC, this.#mne, aq, FIELDS.r_aq.name),
+      funct5:   new Frag(FRAG.OPC, this.#mne, funct5, FIELDS.r_funct5.name),
     };
 
     // Assembly fragments in order of instruction
     this.asmFrags.push(f['opcode'], f['rd']);
     if (!lr) {
+      f['rs2'].id = FRAG.RS2;
       this.asmFrags.push(f['rs2']);
     }
     this.asmFrags.push(f['rs1']);
@@ -1039,13 +1041,13 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.opcode.name),
-      fmt:    new Frag(this.#mne, fmt, FIELDS.r_fp_fmt.name),
-      rm:     new Frag(this.#mne, rm, 'rm'),
-      rd:     new Frag(dest, rd, FIELDS.rd.name),
-      rs1:    new Frag(src1, rs1, FIELDS.rs1.name),
-      rs2:    new Frag(src2, rs2, FIELDS.rs2.name),
-      rs3:    new Frag(src3, rs3, 'rs3'),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.opcode.name),
+      fmt:    new Frag(FRAG.OPC, this.#mne, fmt, FIELDS.r_fp_fmt.name),
+      rm:     new Frag(FRAG.OPC, this.#mne, rm, 'rm'),
+      rd:     new Frag(FRAG.RD, dest, rd, FIELDS.rd.name),
+      rs1:    new Frag(FRAG.RS1, src1, rs1, FIELDS.rs1.name),
+      rs2:    new Frag(FRAG.RS2, src2, rs2, FIELDS.rs2.name),
+      rs3:    new Frag(FRAG.RS3, src3, rs3, 'rs3'),
     };
 
     // Assembly fragments in order of instruction
@@ -1188,22 +1190,22 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.c_opcode.name),
-      funct4: new Frag(this.#mne, funct4, FIELDS.c_funct4.name),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.c_opcode.name),
+      funct4: new Frag(FRAG.OPC, this.#mne, funct4, FIELDS.c_funct4.name),
     };
 
     // Create custom fragments
     const dynamicRdRs1 = inst.rdRs1Val === undefined;
     if (dynamicRdRs1) {
-      f['rd_rs1'] = new Frag(destSrc1, rdRs1, destSrc1Name);
+      f['rd_rs1'] = new Frag(FRAG.RD, destSrc1, rdRs1, destSrc1Name);
     } else {
-      f['rd_rs1'] = new Frag(this.#mne, rdRs1, 'static-' + destSrc1Name);
+      f['rd_rs1'] = new Frag(FRAG.OPC, this.#mne, rdRs1, 'static-' + destSrc1Name);
     }
     const dynamicRs2 = inst.rs2Val === undefined;
     if (dynamicRs2) {
-      f['rs2'] = new Frag(src2, rs2, src2Name);
+      f['rs2'] = new Frag(FRAG.RS2, src2, rs2, src2Name);
     } else {
-      f['rs2'] = new Frag(this.#mne, rs2, 'static-' + src2Name);
+      f['rs2'] = new Frag(FRAG.OPC, this.#mne, rs2, 'static-' + src2Name);
     }
 
     // Assembly fragments in order of instruction
@@ -1299,24 +1301,24 @@ export class Decoder {
 
     // Create common fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.c_opcode.name),
-      funct3: new Frag(this.#mne, funct3, FIELDS.c_funct3.name),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.c_opcode.name),
+      funct3: new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.c_funct3.name),
     };
 
     // Create and append custom fragments
     const dynamicRdRs1 = inst.rdRs1Val === undefined;
     const dynamicImm = inst.immVal === undefined;
     if (dynamicRdRs1) {
-      f['rd_rs1'] = new Frag(destSrc1, rdRs1, destSrc1Name);
+      f['rd_rs1'] = new Frag(FRAG.RD, destSrc1, rdRs1, destSrc1Name);
     } else {
-      f['rd_rs1'] = new Frag(this.#mne, rdRs1, 'static-' + destSrc1Name);
+      f['rd_rs1'] = new Frag(FRAG.OPC, this.#mne, rdRs1, 'static-' + destSrc1Name);
     }
     if (dynamicImm) {
-      f['imm0'] = new Frag(immVal, imm0, immName + immBitsToString(inst.immBits[0]));
-      f['imm1'] = new Frag(immVal, imm1, immName + immBitsToString(inst.immBits[1]));
+      f['imm0'] = new Frag(FRAG.IMM, immVal, imm0, immName + immBitsToString(inst.immBits[0]));
+      f['imm1'] = new Frag(FRAG.IMM, immVal, imm1, immName + immBitsToString(inst.immBits[1]));
     } else {
-      f['imm0'] = new Frag(this.#mne, imm0, 'static-' + immName + immBitsToString(inst.immBits[0]));
-      f['imm1'] = new Frag(this.#mne, imm1, 'static-' + immName + immBitsToString(inst.immBits[1]));
+      f['imm0'] = new Frag(FRAG.OPC, this.#mne, imm0, 'static-' + immName + immBitsToString(inst.immBits[0]));
+      f['imm1'] = new Frag(FRAG.OPC, this.#mne, imm1, 'static-' + immName + immBitsToString(inst.immBits[1]));
     }
 
     // Assembly fragments in order of instruction
@@ -1357,10 +1359,10 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode: new Frag(this.#mne, this.#opcode, FIELDS.c_opcode.name),
-      funct3: new Frag(this.#mne, funct3, FIELDS.c_funct3.name),
-      rs2:    new Frag(src, rs2, FIELDS.c_rs2.name),
-      imm: new Frag(offset, imm, immName + immBitsToString(inst.immBits)),
+      opcode: new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.c_opcode.name),
+      funct3: new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.c_funct3.name),
+      rs2:    new Frag(FRAG.RS2, src, rs2, FIELDS.c_rs2.name),
+      imm: new Frag(FRAG.IMM, offset, imm, immName + immBitsToString(inst.immBits)),
     };
 
     // Assembly fragments in order of instruction
@@ -1404,10 +1406,10 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode:   new Frag(this.#mne, this.#opcode, FIELDS.c_opcode.name),
-      funct3:   new Frag(this.#mne, funct3, FIELDS.c_funct3.name),
-      rd_prime: new Frag(dest, rdPrime, FIELDS.c_rd_prime.name),
-      imm: new Frag(immVal, imm, immName + immBitsToString(inst.immBits)),
+      opcode:   new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.c_opcode.name),
+      funct3:   new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.c_funct3.name),
+      rd_prime: new Frag(FRAG.RD, dest, rdPrime, FIELDS.c_rd_prime.name),
+      imm: new Frag(FRAG.IMM, immVal, imm, immName + immBitsToString(inst.immBits)),
     };
 
     // Assembly fragments in order of instruction
@@ -1450,12 +1452,12 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode:    new Frag(this.#mne, this.#opcode, FIELDS.c_opcode.name),
-      funct3:    new Frag(this.#mne, funct3, FIELDS.c_funct3.name),
-      rd_prime:  new Frag(dest, rdPrime, FIELDS.c_rd_prime.name),
-      rs1_prime: new Frag(base, rs1Prime, FIELDS.c_rs1_prime.name, true),
-      imm0: new Frag(offset, imm0, immName + immBitsToString(inst.immBits[0])),
-      imm1: new Frag(offset, imm1, immName + immBitsToString(inst.immBits[1])),
+      opcode:    new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.c_opcode.name),
+      funct3:    new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.c_funct3.name),
+      rd_prime:  new Frag(FRAG.RD, dest, rdPrime, FIELDS.c_rd_prime.name),
+      rs1_prime: new Frag(FRAG.RS1, base, rs1Prime, FIELDS.c_rs1_prime.name, true),
+      imm0: new Frag(FRAG.IMM, offset, imm0, immName + immBitsToString(inst.immBits[0])),
+      imm1: new Frag(FRAG.IMM, offset, imm1, immName + immBitsToString(inst.immBits[1])),
     };
 
     // Assembly fragments in order of instruction
@@ -1499,12 +1501,12 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode:    new Frag(this.#mne, this.#opcode, FIELDS.c_opcode.name),
-      funct3:    new Frag(this.#mne, funct3, FIELDS.c_funct3.name),
-      rs2_prime: new Frag(src, rs2Prime, FIELDS.c_rs2_prime.name),
-      rs1_prime: new Frag(base, rs1Prime, FIELDS.c_rs1_prime.name, true),
-      imm0: new Frag(offset, imm0, immName + immBitsToString(inst.immBits[0])),
-      imm1: new Frag(offset, imm1, immName + immBitsToString(inst.immBits[1])),
+      opcode:    new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.c_opcode.name),
+      funct3:    new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.c_funct3.name),
+      rs2_prime: new Frag(FRAG.RS2, src, rs2Prime, FIELDS.c_rs2_prime.name),
+      rs1_prime: new Frag(FRAG.RS1, base, rs1Prime, FIELDS.c_rs1_prime.name, true),
+      imm0: new Frag(FRAG.IMM, offset, imm0, immName + immBitsToString(inst.immBits[0])),
+      imm1: new Frag(FRAG.IMM, offset, imm1, immName + immBitsToString(inst.immBits[1])),
     };
 
     // Assembly fragments in order of instruction
@@ -1536,11 +1538,11 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode:       new Frag(this.#mne, this.#opcode, FIELDS.c_opcode.name),
-      funct6:       new Frag(this.#mne, funct6, FIELDS.c_funct6.name),
-      funct2:       new Frag(this.#mne, funct2, FIELDS.c_funct2.name),
-      rd_rs1_prime: new Frag(destSrc1, rdRs1Prime, FIELDS.c_rs2_prime.name),
-      rs2_prime:    new Frag(src2, rs2Prime, FIELDS.c_rs1_prime.name),
+      opcode:       new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.c_opcode.name),
+      funct6:       new Frag(FRAG.OPC, this.#mne, funct6, FIELDS.c_funct6.name),
+      funct2:       new Frag(FRAG.OPC, this.#mne, funct2, FIELDS.c_funct2.name),
+      rd_rs1_prime: new Frag(FRAG.RD, destSrc1, rdRs1Prime, FIELDS.c_rs2_prime.name),
+      rs2_prime:    new Frag(FRAG.RS2, src2, rs2Prime, FIELDS.c_rs1_prime.name),
     };
 
     // Assembly fragments in order of instruction
@@ -1615,17 +1617,17 @@ export class Decoder {
 
     // Create common fragments
     const f = {
-      opcode:       new Frag(this.#mne, this.#opcode, FIELDS.c_opcode.name),
-      funct3:       new Frag(this.#mne, funct3, FIELDS.c_funct3.name),
-      funct2:       new Frag(this.#mne, funct2, FIELDS.c_funct2.name),
-      rd_rs1_prime: new Frag(destSrc1, rdRs1Prime, FIELDS.c_rs2_prime.name),
+      opcode:       new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.c_opcode.name),
+      funct3:       new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.c_funct3.name),
+      funct2:       new Frag(FRAG.OPC, this.#mne, funct2, FIELDS.c_funct2.name),
+      rd_rs1_prime: new Frag(FRAG.RD, destSrc1, rdRs1Prime, FIELDS.c_rs2_prime.name),
     };
 
     // Create custom fragments and build fragment arrays
     if (branchInst) {
       // Shift instruction, use shamt and funct2
-      f['imm0'] = new Frag(immVal, imm0, immName + immBitsToString(inst.immBits[0]));
-      f['imm1'] = new Frag(immVal, imm1, immName + immBitsToString(inst.immBits[1]));
+      f['imm0'] = new Frag(FRAG.IMM, immVal, imm0, immName + immBitsToString(inst.immBits[0]));
+      f['imm1'] = new Frag(FRAG.IMM, immVal, imm1, immName + immBitsToString(inst.immBits[1]));
 
       // Assembly fragments in order of instruction
       this.asmFrags.push(f['opcode'], f['rd_rs1_prime'], f['imm0']);
@@ -1636,11 +1638,11 @@ export class Decoder {
       // Shift instruction and `c.andi`, use shamt and funct2
       const dynamicImm = inst.immVal === undefined;
       if (dynamicImm) {
-        f['imm0'] = new Frag(immVal, shamt0, immName + immBitsToString(inst.immBits[0]));
-        f['imm1'] = new Frag(immVal, shamt1, immName + immBitsToString(inst.immBits[1]));
+        f['imm0'] = new Frag(FRAG.IMM, immVal, shamt0, immName + immBitsToString(inst.immBits[0]));
+        f['imm1'] = new Frag(FRAG.IMM, immVal, shamt1, immName + immBitsToString(inst.immBits[1]));
       } else {
-        f['imm0'] = new Frag(this.#mne, shamt0, 'static-' + immName + immBitsToString(inst.immBits[0]));
-        f['imm1'] = new Frag(this.#mne, shamt1, 'static-' + immName + immBitsToString(inst.immBits[1]));
+        f['imm0'] = new Frag(FRAG.OPC, this.#mne, shamt0, 'static-' + immName + immBitsToString(inst.immBits[0]));
+        f['imm1'] = new Frag(FRAG.OPC, this.#mne, shamt1, 'static-' + immName + immBitsToString(inst.immBits[1]));
       }
 
       // Assembly fragments in order of instruction
@@ -1667,9 +1669,9 @@ export class Decoder {
 
     // Create fragments
     const f = {
-      opcode:   new Frag(this.#mne, this.#opcode, FIELDS.c_opcode.name),
-      funct3:   new Frag(this.#mne, funct3, FIELDS.c_funct3.name),
-      imm: new Frag(jumpTarget, imm, FIELDS.c_imm_cj.name + immBitsToString(inst.immBits)),
+      opcode:   new Frag(FRAG.OPC, this.#mne, this.#opcode, FIELDS.c_opcode.name),
+      funct3:   new Frag(FRAG.OPC, this.#mne, funct3, FIELDS.c_funct3.name),
+      imm: new Frag(FRAG.IMM, jumpTarget, imm, FIELDS.c_imm_cj.name + immBitsToString(inst.immBits)),
     };
 
     // Assembly fragments in order of instruction
