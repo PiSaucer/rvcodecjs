@@ -33,38 +33,49 @@ const isaParameter = document.getElementById('isa');
 const searchResults = document.getElementById('search-result-list');
 
 /**
- * Upon loading page, trigger conversion if hash params exist
+ * Upon loading page or changing history, trigger conversion from hash paramters
  */
-window.onload = function () {
-  // No hash params
-  if (!window.location.hash) {
-    // Exit
-    return;
+window.addEventListener('load', (e) => {
+  hashChange(e.target.location.hash);
+});
+window.addEventListener('popstate', (e) => {
+  hashChange(e.target.location.hash);
+});
+
+function hashChange(hash) {
+  if (!hash) {
+    // No hash params
+    // Set input field
+    input.value = "";
+    // Set ABI parameter
+    abiParameter.checked = configDefault.ABI;
+    // Set ISA parameter
+    isaParameter.value = configDefault.ISA.description;
+
+  } else {
+    // Hash params present
+    // Get hash parameters as a map
+    let hash = window.location.hash.substring(1);
+    let params = hash
+      .split('&')
+      .map(kv => kv.split('=', 2))
+      .reduce((res, [k, v]) =>
+        ({ ...res, [k]: v.replace(/\+/g, ' ') }),
+        {}
+      );
+
+    // Set input field
+    input.value = params.q;
+    // Set ABI parameter
+    abiParameter.checked = (params.abi === "true");
+    // Set ISA parameter
+    isaParameter.value = params.isa || configDefault.ISA.description;
   }
 
-  // Get hash parameters as a map
-  let hash = window.location.hash.substring(1);
-  let params = hash
-    .split('&')
-    .map(kv => kv.split('=', 2))
-    .reduce((res, [k, v]) =>
-      ({ ...res, [k]: v.replace(/\+/g, ' ') }),
-      {}
-    );
-
-  // Set input field
-  input.value = params.q;
-
-  // Set ABI parameter
-  abiParameter.checked = (params.abi === "true");
-
-  // Set ISA parameter
-  isaParameter.value = params.isa || configDefault.ISA.description;
-
-  // Trigger input event to run conversion
-  let event = new Event('keydown');
-  event.key = 'Enter';
-  input.dispatchEvent(event);
+  // Close search results and config popup, then execute the input
+  searchResults.toggleAttribute('hidden', true);
+  modalDiv.style.display = "none";
+  runResult(false);
 }
 
 /**
@@ -145,18 +156,29 @@ searchResults.addEventListener('click', function(event) {
 /**
  * Execute instruction encoding and decoding
  */
-function runResult() {
+function runResult(addToHistory = true) {
   // Get the instruction from input box
-  let q = input.value;
-  // Reset UI if query is empty
-  if (q === "") {
-    document.getElementById('results-container-box').style.display = 'none';
-    history.pushState(null, null, ' ');
-    return;
+  let q = input.value.trim();
+  const emptyQuery = q === "";
+
+  // Push history state and set hash
+  if (addToHistory) {
+    // Build hash, but make it empty if input is empty
+    const hash = emptyQuery ? ' ' : '#'
+                                  + 'q='    + q.replace(/\s/g, '+')
+                                  + '&abi=' + abiParameter.checked
+                                  + '&isa=' + isaParameter.value;
+    // Only push state if hash has changed
+    if (hash.trimStart() !== window.location.hash) {
+      history.pushState(null, null, hash);
+    }
   }
 
-  // Set hash
-  window.location.hash = 'q=' + q.replace(/\s/g, '+') + '&abi=' + abiParameter.checked + '&isa=' + isaParameter.value;
+  // Reset UI and exit early if query is empty
+  if (q === "") {
+    document.getElementById('results-container-box').style.display = 'none';
+    return;
+  }
 
   // Convert instruction
   try {
