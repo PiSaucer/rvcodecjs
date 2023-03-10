@@ -351,7 +351,8 @@ export class Trie {
   }
 
   contains(str) {
-    return this.#root.lookupNode(str, 0) !== undefined;
+    const node = this.#root.lookupNode(str, 0);
+    return node !== undefined && node.endOfWord;
   }
 
   /**
