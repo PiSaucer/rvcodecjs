@@ -35,7 +35,11 @@ const searchResults = document.getElementById('search-result-list');
 /**
  * Upon loading page or changing history, trigger conversion from hash paramters
  */
+let originalDocumentTitle = '';
+let titleSuffix = '';
 window.addEventListener('load', (e) => {
+  originalDocumentTitle = document.title;
+  titleSuffix = ' - ' + originalDocumentTitle.split(' ')[0];
   hashChange(e.target.location.hash);
 });
 window.addEventListener('popstate', (e) => {
@@ -173,6 +177,9 @@ function runResult(addToHistory = true) {
       history.pushState(null, null, hash);
     }
   }
+
+  // Set title
+  document.title = emptyQuery ? originalDocumentTitle : q + titleSuffix;
 
   // Reset UI and exit early if query is empty
   if (q === "") {
