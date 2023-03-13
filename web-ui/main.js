@@ -422,7 +422,7 @@ function renderError(error) {
   errorTitle.textContent = 'Error = '
 
   let errorData = document.createElement('div')
-  errorData.classList.add('result-row');
+  errorData.id = "error-row";
   errorData.style.color = 'var(--color-red)';
   errorData.textContent = error;
 
