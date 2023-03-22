@@ -22,17 +22,26 @@
     --color-green:   #859900;
 }
 
-/* Light colorscheme by default */
+/* Custom Theme */
 :root {
+    --color-fg: var(--color-neutral-emphasis-plus);
+    --color-bg: var(--color-neutral-subtle);
+    --color-hl: var(--color-base2);
+    --color-em: var(--color-base01);
+    --color-co: var(--color-neutral-muted);
+}
+
+/* Light colorscheme by default */
+/* :root {
     --color-fg: var(--color-base00);
     --color-bg: var(--color-base3);
     --color-hl: var(--color-base2);
     --color-em: var(--color-base01);
     --color-co: var(--color-base1);
-}
+} */
 
 /* Dark colorscheme */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
     :root {
         --color-fg: var(--color-base0);
         --color-bg: var(--color-base03);
@@ -40,7 +49,7 @@
         --color-em: var(--color-base1);
         --color-co: var(--color-base01);
     }
-}
+} */
 
 ::placeholder{
     color: var(--color-fg);
@@ -481,4 +490,9 @@ input:checked + .slider:before {
 
 .slider.round:before {
     border-radius: 50%;
+}
+
+a,
+a:visited {
+    color: var(--color-accent-muted);
 }
