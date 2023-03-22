@@ -3,7 +3,7 @@
 ## Introduction
 
 **rvcodec.js** is a RISC-V instruction encoder/decoder available at
-<https://luplab.gitlab.io/rvcodecjs/>.
+<https://luplab.gitlab.io/rvcodecjs/> and <https://pisaucer.github.io/rvcodecjs/web-ui/>.
 
 **rvcodec.js** conveniently shows how each token of the assembly instruction is
 encoded as part of the binary representation.
@@ -12,7 +12,7 @@ encoded as part of the binary representation.
 
 ### Run locally
 
-- Clone this repo: `$ git clone git@gitlab.com:luplab/rvcodecjs.git`
+- Clone this repo: `$ git clone https://github.com/PiSaucer/rvcodecjs.git`
 - Install dependencies: `$ npm install`
 - Make changes
     * The encoding/decoding logic is in directory `core`
