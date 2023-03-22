@@ -1,5 +1,7 @@
 # rvcodec.js
 
+[![pages-build-deployment](https://github.com/PiSaucer/rvcodecjs/actions/workflows/pages/pages-build-deployment/badge.svg?branch=main)](https://github.com/PiSaucer/rvcodecjs/actions/workflows/pages/pages-build-deployment)
+
 ## Introduction
 
 **rvcodec.js** is a RISC-V instruction encoder/decoder available at
